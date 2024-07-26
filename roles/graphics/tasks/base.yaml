@@ -1,0 +1,31 @@
+---
+- name: Configure rofi app launcher
+  block:
+    - name: Ensure rofi package is installed
+      community.general.pacman:
+        name: rofi-wayland
+        state: present
+      become: true
+
+    - name: Install rofi-emoji-git package via AUR
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        _common_aur: rofi-emoji-git
+
+    - name: Clean rofi configuration
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/rofi"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render rofi configuration
+      ansible.builtin.template:
+        src: rofi/config.rasi.j2
+        dest: "{{ users.user.config }}/rofi/config.rasi"
+        mode: "0644"
+        lstrip_blocks: true
+        trim_blocks: true

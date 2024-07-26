@@ -31,7 +31,7 @@
 
 
 configuration {
-    modes: [window,drun,run];
+    modes: [ "window", "drun", "run", "emoji"];
     plugins: false;
 
     dpi: {{ env_ethalon }};
@@ -43,8 +43,8 @@ configuration {
         fallback-icon: "application-gnunet-directory";
     }
 
-    matching: "fuzzy";
-    matching-negate-char: '!';
+    matching: "prefix";
+    //matching-negate-char: '!';
     tokenize: true;
 
     drun-display-format: "{name} [<small><i>({exec})</i></small>]";
