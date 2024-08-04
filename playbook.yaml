@@ -1,1 +1,5 @@
 ---
+- name: Perform initial preparation of the system
+  hosts: bootstrappers
+  roles:
+    - { role: partition, tags: partition }
