@@ -1,1 +1,17 @@
 ---
+env_system_mount: /mnt
+
+env_mount_common: async,noatime,auto,dev,exec,noiversion,suid,rw,nouser
+env_mount_root: "{{ env_mount_common }},dax=always,nodiscard,noquota"
+env_mount_efi: >-
+  {{ env_mount_common }},fmask=0023,dmask=0022,check=s,discard,
+  errors=remount-ro,iocharset=utf8,tz=UTC,flush,utf8
+
+env_locale: en_US.UTF-8
+env_keymap: us
+env_timezone: Europe/Berlin
+env_hostname: hostname
+#
+# Root password hash made by mkpasswd, value is `test`.
+#
+env_root_hash: $y$j9T$bc6ILThq29/KeZ4nsvExl.$G81Y9dCNivTbZ75JCyVNbduZzI3dxMwwW185EMeIqsC

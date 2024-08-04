@@ -1,0 +1,62 @@
+---
+- name: Ensure arch-install-scripts installed
+  community.general.pacman:
+    name: arch-install-scripts
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install base system
+  ansible.builtin.command:
+    argv:
+      - pacstrap
+      - -M
+      - -K
+      - "{{ env_system_mount }}"
+      - base
+      - linux
+      - linux-firmware
+  register: pacstrap_output
+  changed_when: pacstrap_output.rc == 0
+  become: true
+
+- name: Generate fstab
+  block:
+    - name: Run genfstab
+      ansible.builtin.shell:
+        cmd: genfstab -t PARTUUID {{ env_system_mount }} > {{ env_system_mount }}/etc/fstab
+      register: genfstab_output
+      changed_when: genfstab_output.rc == 0
+      become: true
+
+    - name: Modify mount options of the root partition
+      ansible.builtin.replace:
+        path: "{{ env_system_mount }}/etc/fstab"
+        regexp: (?P<spec>[^\s]+)\s+(?P<file>{{ item.file }})\s+(?P<vfstype>\w+)\s+(?P<mntops>[\w=,-]+)\s+(?P<freq>[01])\s+(?P<passno>\d+)\s*
+        replace: "\\g<spec>\t\\g<file>\t\\g<vfstype>\t{{ item.mntops }}\t\\g<freq>\t\\g<passno>\n" # noqa: no-tabs
+      loop:
+        - file: /
+          mntops: "{{ env_mount_root }}"
+        - file: /boot
+          mntops: "{{ env_mount_efi }}"
+        - file: none
+          mntops: defaults
+      register: replace_result
+      failed_when: replace_result is not changed
+      become: true
+
+- name: Set up machine using systemd-firstboot
+  ansible.builtin.command:
+    argv:
+      - systemd-firstboot
+      - --root={{ env_system_mount }}
+      - --locale={{ env_locale }}
+      - --keymap={{ env_keymap }}
+      - --timezone={{ env_timezone }}
+      - --hostname={{ env_hostname }}
+      - --setup-machine-id
+      - --root-password-hashed={{ env_root_hash }}
+      - --force
+  register: systemd_firstboot_output
+  changed_when: systemd_firstboot_output.rc == 0
+  become: true

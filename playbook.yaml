@@ -3,3 +3,4 @@
   hosts: bootstrappers
   roles:
     - { role: partition, tags: partition }
+    - { role: bootstrap, tags: bootstrap }
