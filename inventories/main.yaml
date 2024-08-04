@@ -1,0 +1,8 @@
+bootstrappers:
+  hosts:
+    live:
+      ansible_host: 192.168.0.55
+      ansible_user: root
+      ansible_password: root
+
+      partition_disk_identifier: ata-SSD_256GB
