@@ -15,3 +15,19 @@ env_hostname: hostname
 # Root password hash made by mkpasswd, value is `test`.
 #
 env_root_hash: $y$j9T$bc6ILThq29/KeZ4nsvExl.$G81Y9dCNivTbZ75JCyVNbduZzI3dxMwwW185EMeIqsC
+
+env_user: xnd
+env_user_name: User
+env_user_full_name: User Name
+env_user_alt_name: Nom d'Utilisateur
+env_user_email: example@.local
+#
+# User password, with vault expansion, vault is `test`.
+#
+env_user_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  34353062616466656565633037616338356439303764346636363431353331353661366364656464
+  6231396365653439353333666632656234646232646137380a323863376462313637326366396133
+  64323438353434656130613238653261303961356335663561353763623131333135356438323736
+  3364356366313162310a633838616364626536386165653566653264636531323638373064343264
+  6463

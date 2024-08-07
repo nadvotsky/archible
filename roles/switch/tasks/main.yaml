@@ -1,0 +1,147 @@
+---
+- name: Check if provisioning needs to be done on the current system
+  ansible.builtin.stat:
+    path: "{{ env_system_mount }}/etc/os-release"
+  register: os_release_stat
+
+- name: Create a user if provisioning the current system
+  when: os_release_stat.stat.islnk is not defined
+  block:
+    - name: Enable systemd-homed service
+      ansible.builtin.systemd_service:
+        name: systemd-homed
+        state: started
+        enabled: true
+      become: true
+
+    - name: Add a user via homectl if needed
+      ansible.builtin.command:
+        cmd: "{{ switch_homectl_cmd }}"
+      environment:
+        NEWPASSWORD: "{{ env_user_password }}"
+      register: homectl_output
+      changed_when: homectl_output.rc == 0
+      become: true
+
+- name: Start a container to switch to
+  when: os_release_stat.stat.islnk is defined
+  block:
+    - name: Check if container is already booted
+      ansible.builtin.command:
+        argv:
+          - machinectl
+          - list
+          - --no-pager
+          - --no-legend
+      register: machinectl_output
+      failed_when: machinectl_output.rc != 0
+      changed_when: false
+
+    - name: Request container to boot
+      when: machinectl_output.stdout is not ansible.builtin.search(env_switch_container)
+      ansible.builtin.command:
+        argv:
+          - systemd-nspawn
+          - --settings=false
+          - --directory={{ env_system_mount }}
+          - --resolv-conf=bind-stub
+          - --boot
+          - --machine={{ env_switch_container }}
+          - --timezone=off
+      register: systemd_nspawn_output
+      changed_when: true
+      async: 300
+      poll: 0
+      become: true
+
+    - name: Wait for container to boot
+      ansible.builtin.wait_for:
+        path: /run/systemd/machines/{{ env_switch_container }}
+        state: present
+        delay: 1
+
+    - name: Enable and start systemd-homed service
+      ansible.builtin.command:
+        argv:
+          - systemctl
+          - --machine={{ env_switch_container }}
+          - enable
+          - --now
+          - systemd-homed
+      register: systemctl_output
+      changed_when: systemctl_output.rc == 0
+      become: true
+
+    - name: Add a user via homectl
+      ansible.builtin.command:
+        cmd: "{{ switch_homectl_cmd }} --machine={{ env_switch_container }}"
+      environment:
+        NEWPASSWORD: "{{ env_user_password }}"
+      register: homectl_output
+      changed_when: homectl_output.rc == 0
+      ignore_errors: true
+      become: true
+
+    - name: Install packages that are required for ansible
+      ansible.builtin.command:
+        #
+        # alternatively, it is possible to run host pacman with
+        # --sysroot switch, but systemd-run is a more generic solution
+        #
+        cmd: >-
+          systemd-run
+          --quiet
+          --pipe
+          --collect
+          --wait
+          --service-type=exec
+          --machine={{ env_switch_container }}
+          --
+          pacman
+          --upgrade
+          --needed
+          --noconfirm
+          https://archlinux.org/packages/core/x86_64/libedit/download/
+          https://archlinux.org/packages/core/x86_64/openssh/download/
+          https://archlinux.org/packages/core/x86_64/sudo/download/
+          https://archlinux.org/packages/core/x86_64/mpdecimal/download/
+          https://archlinux.org/packages/core/x86_64/python/download/
+      become: true
+      register: systemd_run_output
+      changed_when: systemd_run_output.rc == 0
+
+    - name: Configure sudo
+      tags: ssudo
+      ansible.builtin.copy:
+        src: 70-overrides
+        dest: "{{ env_system_mount }}/etc/sudoers.d/70-overrides"
+        mode: "0440"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Copy sshd drop-in to override port
+      ansible.builtin.template:
+        src: 50-port.conf.j2
+        dest: "{{ env_system_mount }}/etc/ssh/sshd_config.d/50-port.conf"
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Start sshd service
+      ansible.builtin.command:
+        argv:
+          - systemctl
+          - --machine={{ env_switch_container }}
+          - start
+          - sshd
+      register: systemctl_output
+      changed_when: systemctl_output.rc == 0
+      become: true
+
+    - name: Wait for sshd port
+      ansible.builtin.wait_for:
+        port: "{{ env_switch_port }}"
+        search_regex: OpenSSH
+        delay: 1
