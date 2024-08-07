@@ -1,0 +1,35 @@
+---
+# TODO: cleanup pacman cache, .cache, etc
+
+- name: Ensure container is stopped
+  ansible.builtin.command:
+    argv:
+      - machinectl
+      - poweroff
+      - "{{ env_switch_container }}"
+  register: machinectl_output
+  changed_when: machinectl_output.rc == 0
+  ignore_errors: true
+
+- name: Remove sshd drop-in
+  ansible.builtin.file:
+    path: "{{ env_system_mount }}/etc/ssh/sshd_config.d/50-port.conf"
+    state: absent
+  become: true
+
+- name: Create a resolv.conf stub link
+  ansible.builtin.file:
+    src: /run/systemd/resolve/stub-resolv.conf
+    path: "{{ env_system_mount }}/etc/resolv.conf"
+    state: link
+    follow: false
+    force: true
+  become: true
+
+- name: Unmount partitions
+  ansible.posix.mount:
+    path: "{{ env_system_mount }}{{ item }}"
+    state: unmounted
+  loop:
+    - /boot
+    - /
