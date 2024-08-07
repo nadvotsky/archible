@@ -1,0 +1,128 @@
+---
+- name: Configure booster initramfs generator
+  block:
+    - name: Install booster
+      community.general.pacman:
+        name: booster
+        state: present
+      become: true
+
+    - name: Copy booster configuration
+      ansible.builtin.copy:
+        src: booster.yaml
+        dest: /etc/booster.yaml
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Remove mkinitcpio
+      community.general.pacman:
+        name: mkinitcpio
+        state: removed
+        extra_args: --recursive
+      become: true
+
+- name: Remove all previously generated kernels and initrd images
+  block:
+    - name: List files to be removed
+      ansible.builtin.find:
+        paths: /boot
+        patterns: "*.img,vmlinuz*"
+      register: images
+
+    - name: Delete files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ images.files }}"
+      become: true
+
+- name: Configure kernel-install
+  block:
+    - name: Copy booster kernel-install plugin
+      ansible.builtin.copy:
+        src: 60-booster.install
+        dest: /etc/kernel/install.d/60-booster.install
+        mode: "0755"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Copy kernel-install configuration
+      ansible.builtin.copy:
+        src: install.conf
+        dest: /etc/kernel/install.conf
+        mode: "0755"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Ensure pacman.d/hooks exists
+      ansible.builtin.file:
+        path: /etc/pacman.d/hooks
+        state: directory
+        mode: "0755"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Mask booster pacman hooks
+      ansible.builtin.file:
+        src: /dev/null
+        path: /etc/pacman.d/hooks/{{ item }}
+        state: link
+        follow: false
+      loop:
+        - 90-booster-install.hook
+        - 60-booster-remove.hook
+      become: true
+
+    - name: Install pacman-hook-kernel-install
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        common_aur: pacman-hook-kernel-install
+
+- name: Trigger kernel-install by reinstalling booster
+  ansible.builtin.command:
+    cmd: pacman --sync --noconfirm booster
+  become: true
+  register: pacman_output
+  changed_when: pacman_output.rc == 0
+
+- name: Install systemd-boot
+  block:
+    - name: Render kernel command line parameters file
+      ansible.builtin.template:
+        src: cmdline.j2
+        dest: /etc/kernel/cmdline
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Run bootctl install
+      ansible.builtin.command:
+        cmd: bootctl install --no-variables
+      become: true
+      register: bootctl_output
+      changed_when: bootctl_output.rc == 0
+
+    - name: Copy loader.conf
+      ansible.builtin.copy:
+        src: loader.conf
+        dest: /boot/loader/loader.conf
+        mode: "0755"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Remove unnecessary directories
+      ansible.builtin.file:
+        path: /boot/EFI/{{ item }}
+        state: absent
+      loop:
+        - systemd
+        - Linux
+      become: true

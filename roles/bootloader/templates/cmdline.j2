@@ -1,0 +1,9 @@
+{% set params = [] -%}
+{% for key, value in bootloader_cmdline.items() -%}
+    {%- if value is not none -%}
+        {% set _ = params.append("{}={}".format(key, value)) %}
+    {%- else -%}
+        {% set _ = params.append(key) %}
+    {%- endif %}
+{%- endfor -%}
+{{ params | join(" ") }}

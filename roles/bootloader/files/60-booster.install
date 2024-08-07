@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+SELF=$(basename "$0")
+COMMAND="$1"
+KERNEL_VERSION="$2"
+ENTRY_DIR="$3"
+KERNEL_IMAGE="$4"
+
+
+if 
+    [[ "$KERNEL_INSTALL_INITRD_GENERATOR" != "booster" ]] ||
+    [[ "$COMMAND" != "add" ]];
+then
+    exit 0
+fi
+
+EXEC=(
+    booster
+    build
+    --force
+    --kernel-version=$KERNEL_VERSION
+    $KERNEL_INSTALL_STAGING_AREA/initrd
+)
+
+echo "+$SELF: ${EXEC[*]}"
+"${EXEC[@]}"

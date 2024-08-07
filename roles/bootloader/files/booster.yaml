@@ -1,0 +1,10 @@
+---
+universal: false
+compression: zstd
+modules_force_load: ""
+mount_timeout: 20s
+strip: true
+vconsole: false
+enable_lvm: false
+enable_mdraid: false
+enable_zfs: false
