@@ -6,13 +6,13 @@
     - { role: bootstrap, tags: bootstrap }
     - { role: switch, tags: switch }
 
-- name: Perform main provisioning of the system
-  hosts: systems
-  roles:
-    - { role: packaging, tags: packaging }
-    - { role: network, tags: network }
-    - { role: bootloader, tags: bootloader }
-    - { role: user, tags: user }
+# - name: Perform main provisioning of the system
+#   hosts: systems
+#   roles:
+#     - { role: packaging, tags: packaging }
+#     - { role: network, tags: network }
+#     - { role: bootloader, tags: bootloader }
+#     - { role: user, tags: user }
 
 - name: Perform a cleanup
   hosts: bootstrappers
