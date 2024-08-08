@@ -1,0 +1,16 @@
+[Match]
+Name=eth*
+Name=en*
+
+[Network]
+DHCP=ipv4
+LinkLocalAddressing=no
+LLMNR=false
+LLDP=false
+EmitLLDP=false
+
+[Address]
+DuplicateAddressDetection=none
+
+[DHCPV4]
+QuickAck=true
