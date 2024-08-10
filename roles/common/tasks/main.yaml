@@ -1,0 +1,12 @@
+---
+- name: Install aur package
+  when: common_aur is defined
+  ansible.builtin.command:
+    cmd: >-
+      paru
+      --noconfirm
+      --needed
+      --sync
+      "{{ common_aur }}"
+  register: paru_output
+  changed_when: paru_output.rc == 0

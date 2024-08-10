@@ -1,0 +1,2 @@
+---
+common_pacman_sysroot: "{{ env_is_online | ternary('', '--sysroot=' ~ env_mount_base) }}"
