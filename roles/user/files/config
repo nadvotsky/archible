@@ -1,0 +1,23 @@
+Host *
+    AddressFamily inet
+    IdentityFile none
+    Ciphers aes128-gcm@openssh.com,aes128-cbc,aes128-ctr,aes256-gcm@openssh.com,aes256-cbc,aes256-ctr,chacha20-poly1305@openssh.com
+    ForwardX11Timeout 0
+    HashKnownHosts yes
+
+    HostKeyAlgorithms ecdsa-sha2-nistp256,ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,rsa-sha2-512,rsa-sha2-512-cert-v01@openssh.com
+    PubkeyAcceptedAlgorithms ecdsa-sha2-nistp256,ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,rsa-sha2-512,rsa-sha2-512-cert-v01@openssh.com
+    KexAlgorithms ecdh-sha2-nistp256,curve25519-sha256,curve25519-sha256@libssh.org,sntrup761x25519-sha512@openssh.com,diffie-hellman-group-exchange-sha256
+    MACs umac-64-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+
+    ObscureKeystrokeTiming no
+    NoHostAuthenticationForLocalhost yes
+    KbdInteractiveDevices pam
+    RequestTTY yes
+
+    StrictHostKeyChecking accept-new
+    SyslogFacility AUTH
+
+    IdentityAgent ${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent.ssh
+
+    Match host * exec "gpg-connect-agent UPDATESTARTUPTTY /bye"
