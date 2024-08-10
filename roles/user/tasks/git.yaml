@@ -1,0 +1,38 @@
+---
+- name: Get gpg fingerprints
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --with-colons
+      - --with-keygrip
+      - --list-keys
+  register: user_git_gpg_output
+  changed_when: user_git_gpg_output.rc == 0
+
+- name: Cofigure git
+  ansible.builtin.command:
+    argv:
+      - git
+      - config
+      - --global
+      - "{{ item.key }}"
+      - "{{ item.value }}"
+  loop:
+    - key: user.name
+      value: 
+    - key: user.email
+      value:
+    - key: user.signingkey
+      value: >-
+        {{ 
+          user_git_gpg_output.stdout | 
+            regex_search('sub:.*:s:+nistp256:+\sfpr:+(\w+)', '\1')
+        }}
+    - key: commit.gpgSign
+      value: "true"
+    - key: push.gpgSign
+      value: "true"
+    - key: tag.gpgSign 
+      value: "true"
+  register: user_git_identity_output
+  changed_when: user_git_identity_output.rc == 0
