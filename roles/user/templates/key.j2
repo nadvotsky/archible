@@ -1,0 +1,28 @@
+{% set item = user_gpg_gen_cert | dict2items | first -%}
+{% set key_type = item.key -%}
+{% set key_spec = item.value -%}
+{% set preferences = [
+    "OCB",
+    "SHA512", "SHA384", "SHA256", "SHA224",
+    "AES", "AES-192", "AES-256",
+        "CAMELLIA128", "CAMELLIA192", "CAMELLIA256",
+        "CAST5",
+        "IDEA",
+    "Uncompressed", "ZIP", "ZLIB",
+] -%}
+
+Key-Type: {{ key_type }}
+{% if key_type.startswith(("ec", "ed")) -%}
+Key-Curve: {{ key_spec }}
+{% else %}
+Key-Length: {{ key_spec }}
+{% endif -%}
+Key-Usage: cert
+Name-Real: {{ user_gpg_gen_name }}
+Name-Comment: {{ user_gpg_gen_comment }}
+Name-Email: {{ user_gpg_gen_email }}
+Expire-Date: {{ env_gpg_expire }}
+Creation-Date: {{ now(utc=true, fmt="%Y") }}-01-01
+Passphrase: {{ user_gpg_gen_password }}
+Keyserver: hkps://keys.openpgp.org
+Preferences: {{ preferences | join(" ") }}

@@ -1,0 +1,227 @@
+---
+- name: Check whether local machine needs to generate keyring
+  delegate_to: localhost
+  ansible.builtin.stat:
+    path: "{{ role_path }}/files/keyring.tar"
+  register: user_gpg_keyring_stat
+
+- name: Generate keyring on local machine if it does not exist
+  when: not user_gpg_keyring_stat.stat.exists
+  delegate_to: localhost
+  block:
+    - name: Create temporary GNUPGHOME directory
+      ansible.builtin.tempfile:
+        state: directory
+      register: user_gpg_home
+
+    - name: Generate private GPG key
+      ansible.builtin.include_tasks:
+        file: gpg_gen.yaml
+      vars:
+        user_gpg_gen_name: "{{ env_user }}"
+        user_gpg_gen_comment: "private usage only"
+        user_gpg_gen_email: "{{ env_user }}@invalid."
+        user_gpg_gen_cert:
+          ecdsa: nistp256
+        user_gpg_gen_encr:
+          - nistp256/ecdh
+          - nistp256/ecdh
+        user_gpg_gen_ssh:
+          100: nistp256/ecdsa
+        user_gpg_gen_password: "{{ env_gpg_priv_password }}"
+
+    - name: Generate compat GPG key
+      ansible.builtin.include_tasks:
+        file: gpg_gen.yaml
+      vars:
+        user_gpg_gen_name: "{{ env_user_full_name }}"
+        user_gpg_gen_comment: "{{ env_user_alt_name }}; compat algorithms"
+        user_gpg_gen_email: "{{ env_user_email }}"
+        user_gpg_gen_cert:
+          rsa: 3072
+        user_gpg_gen_sign:
+          - dsa2048
+          - rsa3072
+        user_gpg_gen_encr:
+          - rsa3072
+        user_gpg_gen_ssh:
+          500: rsa3072
+        user_gpg_gen_password: "{{ env_gpg_compat_password }}"
+
+    - name: Generate primary GPG key
+      ansible.builtin.include_tasks:
+        file: gpg_gen.yaml
+      vars:
+        user_gpg_gen_name: "{{ env_user_full_name }}"
+        user_gpg_gen_comment: "{{ env_user_alt_name }}"
+        user_gpg_gen_email: "{{ env_user_email }}"
+        user_gpg_gen_cert:
+          ecdsa: nistp256
+        user_gpg_gen_sign:
+          - nistp256/ecdsa
+        user_gpg_gen_encr:
+          - nistp256/ecdh
+        user_gpg_gen_ssh:
+          -100: nistp256/ecdsa
+          -500: ed25519
+        user_gpg_gen_password: "{{ env_gpg_main_password }}"
+
+    - name: Export keyring
+      ansible.builtin.command:
+        cmd: >-
+          gpg
+          --batch --command-fd 0 --status-fd 0 --pinentry-mode loopback
+          --export-secret-keys --export-options backup
+          --output "{{ user_gpg_home.path }}/keyring.gpg"
+        stdin: "{{ env_gpg_priv_password }}\n{{ env_gpg_compat_password }}\n{{ env_gpg_main_password }}"
+      environment:
+        GNUPGHOME: "{{ user_gpg_home.path }}"
+      register: user_gpg_export_output
+      changed_when: user_gpg_export_output.rc == 0
+
+    - name: Export ownertrust
+      ansible.builtin.shell:
+        cmd: gpg --batch --export-ownertrust > "{{ user_gpg_home.path }}/ownertrust.lst"
+      environment:
+        GNUPGHOME: "{{ user_gpg_home.path }}"
+      register: user_gpg_ownertrust_output
+      changed_when: user_gpg_ownertrust_output.rc == 0
+
+    - name: Create an archive of keyring, ownertrust, and private keys
+      ansible.builtin.command:
+        argv:
+          - tar
+          - --create
+          - --file
+          - "{{ role_path }}/files/keyring.tar"
+          - ownertrust.lst
+          - keyring.gpg
+          - private-keys-v1.d
+        chdir: "{{ user_gpg_home.path }}"
+      register: user_gpg_export_output
+      changed_when: user_gpg_export_output.rc == 0
+  always:
+    - name: Remove temporary GNUPGHOME directory
+      ansible.builtin.file:
+        path: "{{ user_gpg_home.path }}"
+        state: absent
+
+- name: Stop GNUPG services
+  ansible.builtin.systemd_service:
+    name: "{{ item.name }}"
+    scope: user
+    state: stopped
+    masked: "{{ item.masked }}"
+  loop:
+    - name: keyboxd.socket
+      masked: true
+    - name: keyboxd.service
+      masked: true
+    - name: dirmngr.socket
+      masked: false
+    - name: dirmngr.service
+      masked: false
+    - name: gpg-agent-browser.socket
+      masked: true
+    - name: gpg-agent-extra.socket
+      masked: true
+    - name: gpg-agent-ssh.socket
+      masked: false
+    - name: gpg-agent.socket
+      masked: false
+    - name: gpg-agent.service
+      masked: false
+
+- name: Copy config files
+  block:
+    - name: Ensure config directory is empty
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/{{ item }}"
+        state: absent
+      loop:
+        - .gnupg
+        - .ssh
+
+    - name: Transfer config files
+      ansible.builtin.copy:
+        src: "{{ item.name }}"
+        dest: "/home/{{ env_user }}/{{ item.dir }}/"
+        directory_mode: "0700"
+        mode: "0644"
+      loop:
+        - name: common.conf
+          dir: .gnupg
+        - name: dirmngr.conf
+          dir: .gnupg
+        - name: gpg.conf
+          dir: .gnupg
+        - name: gpg-agent.conf
+          dir: .gnupg
+        - name: config
+          dir: .ssh
+
+- name: Start newly configured GPG
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    scope: user
+    state: started
+  loop:
+    - dirmngr.socket
+    - gpg-agent-ssh.socket
+    - gpg-agent.socket
+    - gpg-agent.service
+    - dirmngr.service
+
+- name: Import keyring and ownertrust
+  block:
+    - name: Create temporary directory to copy backup
+      ansible.builtin.tempfile:
+        state: directory
+      register: user_gpg_transfer
+
+    - name: Unpack keyring archive
+      ansible.builtin.unarchive:
+        src: keyring.tar
+        dest: "{{ user_gpg_transfer.path }}"
+
+    - name: Import keyring
+      ansible.builtin.command:
+        argv:
+          - gpg
+          - --batch
+          - --import-options
+          - restore
+          - --import
+          - "{{ user_gpg_transfer.path }}/keyring.gpg"
+      register: user_gpg_kimport_output
+      changed_when: user_gpg_kimport_output.rc == 0
+
+    - name: Import ownertrust
+      ansible.builtin.command:
+        argv:
+          - gpg
+          - --import-ownertrust
+          - "{{ user_gpg_transfer.path }}/ownertrust.lst"
+      register: user_gpg_oimport_output
+      changed_when: user_gpg_oimport_output.rc == 0
+
+    - name: Import private keys explicitly
+      ansible.builtin.copy:
+        remote_src: true
+        force: true
+        src: "{{ user_gpg_transfer.path }}/private-keys-v1.d/"
+        dest: "/home/{{ env_user }}/.gnupg/private-keys-v1.d/"
+        mode: "0600"
+        # makes no effect
+        directory_mode: "0700"
+
+    - name: Fix private keys directory permission 
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.gnupg/private-keys-v1.d"
+        mode: "0700"
+  always:
+    - name: Ensure copied backup files are deleted
+      when: user_gpg_transfer.path is defined
+      ansible.builtin.file:
+        path: "{{ user_gpg_transfer.path }}"
+        state: absent

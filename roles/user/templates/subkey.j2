@@ -1,0 +1,16 @@
+{% for a in ["sign", "encr", "auth"] if item[a] is defined -%}
+    {% set line = [
+        "gpg",
+        "--batch",
+        "--status-fd", "1",
+        "--pinentry-mode", "loopback",
+        "--passphrase-fd", 0,
+        "--faked-system-time", "{}0101T000000Z!".format(now(utc=true, fmt="%Y")),
+        "--quick-add-key", user_gpg_gen_master_fpr,
+        item.algo,
+        a,
+        env_gpg_expire,
+    ] -%}
+
+    {{ line | join(" ") -}}
+{% endfor -%}
