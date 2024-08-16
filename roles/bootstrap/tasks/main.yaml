@@ -17,6 +17,7 @@
       - linux
       - linux-firmware
       - python
+      - sudo
   register: pacstrap_output
   changed_when: pacstrap_output.rc == 0
   become: true

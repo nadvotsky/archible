@@ -4,9 +4,12 @@
   ansible.builtin.command:
     cmd: >-
       paru
+      --aur
+      --sudoflags "--stdin"
       --noconfirm
       --needed
       --sync
       "{{ common_aur }}"
+    stdin: "{{ env_user_password }}\n"
   register: paru_output
   changed_when: paru_output.rc == 0
