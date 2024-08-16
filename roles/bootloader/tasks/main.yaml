@@ -29,6 +29,7 @@
       ansible.builtin.find:
         paths: /boot
         patterns: "*.img,vmlinuz*"
+        hidden: true
       register: images
 
     - name: Delete files
