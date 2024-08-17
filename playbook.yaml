@@ -4,17 +4,19 @@
   roles:
     - { role: partition, tags: partition }
     - { role: bootstrap, tags: bootstrap }
+
+- name: Perform early preparation of the system
+  hosts: prelude
+  roles:
     - { role: switch, tags: switch }
 
-# - name: Perform main provisioning of the system
-#   hosts: systems
-#   roles:
-#     - { role: packaging, tags: packaging }
-#     - { role: network, tags: network }
-#     - { role: bootloader, tags: bootloader }
-#     - { role: user, tags: user }
-
-- name: Perform a cleanup
-  hosts: bootstrappers
+- name: Perform main provisioning of the system
+  hosts: systems
   roles:
-    - { role: unswitch, tags: unswitch }
+    - { role: packaging, tags: packaging }
+    - { role: bootloader, tags: bootloader }
+    - { role: user, tags: user }
+    - { role: env, tags: env }
+    - { role: devenv, tags: devenv }
+    - { role: graphics, tags: graphics }
+#    - { role: cleanup, tags: cleanup }
