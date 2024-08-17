@@ -1,0 +1,5 @@
+---
+- name: Pull backups
+  hosts: systems
+  roles:
+    - { role: pull, tags: pull }
