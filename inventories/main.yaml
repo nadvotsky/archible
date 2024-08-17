@@ -1,8 +1,34 @@
+---
 bootstrappers:
   hosts:
     live:
-      ansible_host: 192.168.0.55
-      ansible_user: root
-      ansible_password: root
+      ansible_connection: local
 
-      partition_disk_identifier: ata-SSD_256GB
+      partition_disk_identifier: ata-SSD_256GB_J390930E12482
+
+prelude:
+  hosts:
+    early:
+      ansible_connection: nspawn
+      ansible_nspawn_root: "{{ env_system_mount }}"
+      ansible_nspawn_args: >-
+        --quiet
+        --register=no
+        --as-pid2 --pipe
+        --hostname={{ env_hostname }} --machine={{ env_hostname }}
+        --resolv-conf=off --timezone=off --link-journal=no
+
+systems:
+  hosts:
+    main:
+      ansible_connection: nspawn
+      ansible_nspawn_user: "{{ env_user }}"
+      ansible_nspawn_root: "{{ env_system_mount }}"
+      ansible_nspawn_args: >-
+        --quiet
+        --register=no
+        --as-pid2 --pipe
+        --hostname={{ env_hostname }} --machine={{ env_hostname }}
+        --resolv-conf=bind-host --timezone=off --link-journal=no
+
+      ansible_become_password: "{{ env_user_password }}"
