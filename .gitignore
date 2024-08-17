@@ -4,6 +4,11 @@
 /.vscode
 
 #
+# Python.
+#
+__pycache__
+
+#
 # Ansible.
 #
 /.ansible
