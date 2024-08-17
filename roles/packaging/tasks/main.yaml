@@ -35,14 +35,12 @@
       become: true
 
 - name: Refuse to use GnuPG
-  tags: kek
   block:
     - name: Mask GnuPG pacman services
       ansible.builtin.systemd_service:
         name: "{{ item }}@etc-pacman.d-gnupg.socket"
         state: stopped
         masked: true
-      become: true
       loop:
         - dirmngr
         - gpg-agent-browser
@@ -50,6 +48,12 @@
         - gpg-agent-ssh
         - gpg-agent
         - keyboxd
+      become: true
+      #
+      # For containers, stopped state causes an error (system is not booted)
+      #
+      register: systemctl_status
+      failed_when: systemctl_status.msg is defined and "unknown state" not in systemctl_status.msg
 
     - name: Reset pacman keyring
       ansible.builtin.file:
