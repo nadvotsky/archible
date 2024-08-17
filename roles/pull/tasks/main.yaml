@@ -1,0 +1,4 @@
+---
+- name: Pull GPG backup
+  ansible.builtin.import_tasks:
+    file: gpg.yaml

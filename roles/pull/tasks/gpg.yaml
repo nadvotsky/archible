@@ -1,0 +1,59 @@
+- name: Export GPG
+  block:
+    - name: Create temporary export directory
+      ansible.builtin.tempfile:
+        state: directory
+        path: /var/tmp
+      register: user_gpg_export
+
+    - name: Export private keys
+      ansible.builtin.copy:
+        remote_src: true
+        src: "/home/{{ env_user }}/.gnupg/private-keys-v1.d"
+        dest: "{{ user_gpg_export.path }}"
+        mode: preserve
+
+    - name: Export keyring
+      ansible.builtin.command:
+        cmd: >-
+          gpg
+          --batch --command-fd 0 --status-fd 0 --pinentry-mode loopback
+          --export-secret-keys --export-options backup
+          --output "{{ user_gpg_export.path }}/keyring.gpg"
+        stdin: "{{ env_gpg_priv_password }}\n{{ env_gpg_compat_password }}\n{{ env_gpg_main_password }}"
+      register: user_gpg_export_keyring
+      changed_when: user_gpg_export_keyring.rc == 0
+
+    - name: Export ownertrust
+      ansible.builtin.shell:
+        cmd: >-
+          gpg --batch --export-ownertrust >
+          "{{ user_gpg_export.path }}/ownertrust.lst"
+      register: user_gpg_export_ownertrust
+      changed_when: user_gpg_export_ownertrust.rc == 0
+
+    - name: Create an archive of keyring, ownertrust, and private keys
+      ansible.builtin.command:
+        argv:
+          - tar
+          - --create
+          - --file
+          - keyring.tar
+          - ownertrust.lst
+          - keyring.gpg
+          - private-keys-v1.d
+        chdir: "{{ user_gpg_export.path }}"
+      register: user_gpg_export_tar
+      changed_when: user_gpg_export_tar.rc == 0
+
+    - name: Fetch archive to the control node
+      ansible.builtin.fetch:
+        src: "{{ user_gpg_export.path }}/keyring.tar"
+        dest: "{{ playbook_dir }}/persist/gpg/keyring.tar"
+        flat: true
+  always:
+    - name: Remove temporary export directory
+      when: user_gpg_export.path is defined
+      ansible.builtin.file:
+        path: "{{ user_gpg_export.path }}"
+        state: absent
