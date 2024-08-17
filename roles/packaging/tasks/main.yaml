@@ -63,7 +63,7 @@
 
 - name: Add chaotic-aur repository
   block:
-    - name: Install reflector
+    - name: Install chaotic-aur
       community.general.pacman:
         name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst
         state: present
