@@ -9,8 +9,6 @@
           --status-fd 1
           --generate-key
         stdin: "{{ lookup('ansible.builtin.template', 'key.j2') }}"
-      environment:
-        GNUPGHOME: "{{ user_gpg_home.path }}"
       register: user_gpg_gen_master_output
       changed_when: user_gpg_gen_master_output.rc == 0
 
@@ -25,14 +23,12 @@
   ansible.builtin.command:
     cmd: "{{ lookup('ansible.builtin.template', 'subkey.j2') }}"
     stdin: "{{ user_gpg_gen_password }}"
-  environment:
-    GNUPGHOME: "{{ user_gpg_home.path }}"
   loop: >-
     {{
       (
         (user_gpg_gen_sign | default([]) | community.general.json_query('[].{"sign": null, "algo": @}')) +
         (user_gpg_gen_encr | default([]) | community.general.json_query('[].{"encr": null, "algo": @}')) +
-        (user_gpg_gen_ssh  | default([]) | dict2items(key_name='auth', value_name='algo'))
+        (user_gpg_gen_ssh  | default([]) | ansible.builtin.dict2items(key_name='auth', value_name='algo'))
       ) | flatten
     }}
   register: user_gpg_gen_subkeys
@@ -46,8 +42,6 @@
       - --with-colons
       - --with-keygrip
       - --list-keys
-  environment:
-    GNUPGHOME: "{{ user_gpg_home.path }}"
   register: user_gpg_gen_keyring_output
   changed_when: user_gpg_gen_keyring_output.rc == 0
 
@@ -55,8 +49,6 @@
   when: user_gpg_gen_ssh is defined
   ansible.builtin.command:
     cmd: "{{ lookup('ansible.builtin.template', 'keyattr.j2') }}"
-  environment:
-    GNUPGHOME: "{{ user_gpg_home.path }}"
   loop: "{{ user_gpg_gen_subkeys.results | selectattr('item.auth', 'defined') }}"
   no_log: true
   register: user_gpg_gen_keyattr_output
