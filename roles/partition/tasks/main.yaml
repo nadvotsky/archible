@@ -18,6 +18,7 @@
         paths: /dev/disk/by-id
         file_type: link
         patterns: "{{ partition_disk_identifier }}-part*"
+        hidden: true
       register: partitions
 
     - name: Ensure none of the disk partitions are mounted
