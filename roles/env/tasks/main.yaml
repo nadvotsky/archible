@@ -1,1 +1,4 @@
 ---
+- name: Include Git related tasks
+  ansible.builtin.import_tasks:
+    file: git.yaml
