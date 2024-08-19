@@ -1,0 +1,9 @@
+---
+- name: Copy faillock configuration file
+  ansible.builtin.copy:
+    src: faillock/faillock.conf
+    dest: /etc/security/faillock.conf
+    mode: "0644"
+    owner: 0
+    group: 0
+  become: true

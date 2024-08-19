@@ -10,3 +10,7 @@
 - name: Include profile related tasks
   ansible.builtin.import_tasks:
     file: profile.yaml
+
+- name: Include faillock related tasks
+  ansible.builtin.import_tasks:
+    file: faillock.yaml
