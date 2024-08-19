@@ -6,3 +6,7 @@
 - name: Include XDG related tasks
   ansible.builtin.import_tasks:
     file: xdg.yaml
+
+- name: Include profile related tasks
+  ansible.builtin.import_tasks:
+    file: profile.yaml

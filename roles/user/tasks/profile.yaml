@@ -1,0 +1,21 @@
+---
+- name: Remove bash configuration and states from user profile
+  block:
+    - name: List bash file
+      ansible.builtin.find:
+        paths: "/home/{{ env_user }}"
+        patterns: ".bash*"
+        hidden: true
+      register: bash_files
+
+    - name: Delete bash configuration and states
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ bash_files.files }}"
+
+- name: Copy profile configuration file
+  ansible.builtin.copy:
+    src: profile/.profile
+    dest: "/home/{{ env_user }}/.profile"
+    mode: "0644"
