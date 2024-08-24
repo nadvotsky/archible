@@ -1,1 +1,20 @@
 ---
+- name: Configure starship prompt
+  block:
+    - name: Ensure starship package is installed
+      community.general.pacman:
+        name: starship
+        state: present
+      become: true
+
+    - name: Clean previous starship configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/starship"
+        state: absent
+
+    - name: Render starship configuration
+      ansible.builtin.template:
+        src: starship.j2
+        dest: "/home/{{ env_user }}/.config/starship.toml"
+        mode: "0644"
+        directory_mode: "0755"

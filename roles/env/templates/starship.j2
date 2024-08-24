@@ -1,0 +1,446 @@
+{#
+    Global util functions.
+#}
+{%- macro symbol(code) -%}
+    {%- if code | length <= 4 -%}
+        \u{{ code.zfill(4) }}
+    {%- else -%}
+        \U{{ code.zfill(8) }}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro cond(expression) -%}
+    ({{ expression }})
+{%- endmacro -%}
+
+{% set escape_table = "".maketrans({
+    "(": "\\\\(",
+    ")": "\\\\)",
+    "[": "\\\\[",
+    "]": "\\\\]",
+}) %}
+{%- macro escape(expression) -%}
+    {{- expression.translate(escape_table) -}}
+{%- endmacro -%}
+
+{%- set style_modifiers = (
+    "inverse", "bold", "italic", "underline", "dimmed", "blink", "strikethrough"
+)-%}
+{%- macro style(decoration) -%}
+    {%- set attrs = [] -%}
+    {%- for k, v in decoration.items() -%}
+        {# 'continue' is unknown tag in ansible, some spaghetti instead #}
+        {%- if k is not none -%}
+            {%- if k in ("fg", "bg") -%}
+                {% set _ = attrs.append("{}:{}".format(k, v)) %}
+            {%- elif v is true and k in style_modifiers -%}
+                {% set _ = attrs.append(k.replace("inverse", "inverted")) %}
+            {%- endif -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {{- attrs | join(" ") -}}
+{%- endmacro -%}
+
+{%- macro starship(expression, decoration) -%}
+    {%- if decoration is mapping -%}
+        [{{ expression }}]({{ style(decoration) }})
+    {%- else -%}
+        [{{ expression }}]({{ decoration }})
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro just(expression, n=1) -%}
+    {{- expression.center(expression | length + n * (space | length) * 2) -}}
+{%- endmacro -%}
+
+{%- macro mjust(expression) -%}
+    {{- multiline -}}{{- expression -}}{{- multiline -}}
+{%- endmacro -%}
+
+{%- macro arrow(expression, decoration) -%}
+    {%- set modifiers = 
+        decoration | dict2items | selectattr("key", "in", style_modifiers) | list | items2dict 
+    %}
+    {%- set fg = decoration.fg | default(None) -%}
+    {%- set bg = decoration.bg | default(None) -%}
+
+    {%- set lines = [
+        starship(arrow_symbol, dict(inverse=True, fg=bg, **modifiers)),
+        starship(just(expression), dict(bg=bg, fg=fg, **modifiers)),
+        starship(arrow_symbol, dict(fg=bg, **modifiers)),
+    ] -%}
+    {{- lines| join(multiline) -}}
+{%- endmacro -%}
+
+{#
+    Various configuration variables that are placed at the top
+    for easier configuration.
+    
+    Nothing stops from wrapping it into {% if %} expression
+    for dark-white theme customization or something such as that.
+#}
+{%- set space = " " -%}
+{%- set multiline = "\\\n" -%}
+{%- set trail = "\\" -%}
+{%- set arrow_symbol = symbol("e0b0") -%}
+
+{%- set os_symbol = symbol("f303") -%}
+{%- set os_style = dict(fg="bright-white") -%}
+{%- set os_fmt = starship(just(os_symbol), os_style) + space -%}
+
+{%- set username_hostname_symbol = symbol("eb3a") -%}
+{%- set username_hostname_parts = [
+    "[", "$username", username_hostname_symbol, "$hostname", "]"
+] | join(space) -%}
+{%- set username_hostname_style = dict(bold=True, fg="bright-black") -%}
+{%- set username_hostname_fmt = starship(
+    escape(username_hostname_parts), 
+    username_hostname_style
+) + space -%}
+
+{%- set username_hostname_root = dict(bold=True, fg="red") -%}
+{%- set username_hostname_ufmt = starship("$user", "$style") -%}
+{%- set username_hostname_hfmt = starship("$hostname", "$style") -%}
+
+{%- set directory_ro_symbol = symbol("e672") -%}
+{%- set directory_ro_fmt = "{}{}".format(space, directory_ro_symbol) -%}
+{%- set directory_fmt = "$path$read_only" -%}
+{%- set directory_style = dict(bg="bright-blue", fg="black") -%}
+
+{%- set git_bg = "bright-black" -%}
+{%- set git_fg = "bright-white" -%}
+{%- set git_plain_style = dict(bg=git_bg, fg=git_fg) -%}
+{%- set git_fmt = "($git_state{s})$git_branch{s}$git_status({s}$git_metrics)".format(s=space) -%}
+
+{%- set git_state_symbol = symbol("f47f") -%}
+{%- set git_state_style = dict(italic=True, bold=True, bg=git_bg, fg="purple") -%}
+{%- set git_state_fmt = [
+    starship("{}{}$state".format(git_state_symbol, space), git_state_style)
+] -%}
+
+{%- set git_branch_symbol = symbol("e727") -%}
+{%- set git_branch_style = dict(bold=True, bg=git_bg, fg="bright-blue") -%}
+{%- set git_branch_fmt = [
+    starship("on", git_plain_style),
+    starship(space + git_branch_symbol + space + "$branch", git_branch_style)
+] -%}
+
+{%- set git_status_symbol = symbol("f0d04") -%}
+{%- set git_status_style = dict(italic=True, bold=True, bg=git_bg, fg="bright-yellow") -%}
+{%- set git_status_fmt = [
+    starship("while" + space, git_plain_style), 
+    starship(git_status_symbol + "$all_status$ahead_behind", git_status_style) 
+] -%}
+
+{%- set git_metrics_added_style = dict(bold=True, bg=git_bg, fg="bright-green") -%}
+{%- set git_metrics_deleted_style = dict(bold=True, bg=git_bg, fg="bright-red") -%}
+{%- set git_metrics_fmt = [
+    starship("with", git_plain_style),
+    cond(starship(space + "+$added", git_metrics_added_style)),
+    cond(starship(space + "-$deleted", git_metrics_deleted_style))
+] -%}
+
+{%- set langs = {
+    "bun": dict(label="Bun", symbol="f2ef", bg="#fbf0df", fg="#000000"),
+    "c": dict(label="", symbol="f0671", bg="#a4b4c7", fg="#000000"),
+    "cmake": dict(label="CMake", symbol="f0537", bg="#003663", fg="#ffffff"),
+    "deno": dict(label="Deno", symbol="f2ef", bg="#ffffff", fg="#000000"),
+    "dotnet": dict(label=".NET", symbol="e77f", bg="#512bd4", fg="#000000"),
+    "golang": dict(label="Go", symbol="e627", bg="#00acd7", fg="#ffffff"),
+    "gradle": dict(label="Gradle", symbol="e660", bg="#02303a", fg="#ffffff"),
+    "java": dict(label="Java", symbol="edaf", bg="#5381a0", fg="#e76e01"),
+    "julia": dict(label="Julia", symbol="e624", bg="#9359a5", fg="#131313"),
+    "kotlin": dict(label="Kotlin", symbol="e634", bg="#7f52ff", fg="#000000"),
+    "meson": dict(label="Meson", symbol="eb9e", bg="#39207c", fg="#ffffff"),
+    "nim": dict(label="Nim", symbol="e677", bg="#ffe953", fg="#ffffff"),
+    "nodejs": dict(label="Node.js", symbol="ed44", bg="#539e43", fg="#ffffff"),
+    "python": dict(label="Python", symbol="e73c", bg="#3b77a7", fg="#ffde58"),
+    "ruby": dict(label="Ruby", symbol="e739", bg="#ab1400", fg="#ffffff"),
+    "rust": dict(label="Rust", symbol="e7a8", bg="#f64b00", fg="#000000"),
+    "scala": dict(label="Scala", symbol="e737", bg="#df311e", fg="#350502"),   
+} -%}
+
+{%- set fill_fmt = "$fill" -%}
+
+{%- set status_duration_bg = "bright-black" -%}
+{%- set status_duration_fg = "white" -%}
+{%- set status_duration_fmt = starship(
+    just("$status" + space + "$cmd_duration"),
+    dict(bg=status_duration_bg, fg=status_duration_fg)
+) + space -%}
+
+{%- set status_duration_fail_symbol = symbol("f530") -%}
+{%- set status_duration_fail_fmt = starship(
+    "{sym}{s}exit status{s}$int".format(sym=status_duration_fail_symbol, s=space),
+    dict(bold=True, bg=status_duration_bg, fg="bright-red")
+) -%}
+{%- set status_duration_success_symbol = symbol("f05e0") -%}
+{%- set status_duration_success_fmt = starship(
+    "{sym}{s}exit status{s}$int".format(sym=status_duration_success_symbol, s=space),
+    dict(bold=True, bg=status_duration_bg, fg="bright-green")
+) -%}
+
+{%- set status_duration_span_fmt = starship(
+    "in $duration",
+    dict(bold=True, bg=status_duration_bg, fg=status_duration_fg)
+) -%}
+
+{%- set time_fmt = "$time" -%}
+{%- set time_symbol = symbol("f0954") -%}
+{%- set time_conf_fmt = starship(
+    time_symbol + space + "$time",
+    dict(bold=True, fg="bright-black")
+) -%}
+
+{%- set line_break_fmt = "$line_break" -%}
+
+{#
+    OS section.
+#}
+{%- macro os_format() -%}
+    {#
+        Built-in 'os' module takes about 10ms to retrive information.
+        It makes no sense since this information is not dynamic and
+        we are not going to change distro on the fly.
+
+        I use arch btw...
+    #}
+    {{- os_fmt -}}
+{%- endmacro -%}
+{%- macro os_configure() -%}
+    {#
+        No use of the 'os' module, no configuration required.
+    #}
+{%- endmacro -%}
+
+
+{#
+    Username and hostname section.
+#}
+
+{%- macro username_hostname_format() -%}
+    {{- username_hostname_fmt -}}
+{%- endmacro -%}
+{%- macro username_hostname_configure() -%}
+[username]
+disabled = false
+show_always = true
+
+style_root = "{{- style(username_hostname_root) -}}"
+style_user = "{{- style(username_hostname_style) -}}"
+
+format = "{{- username_hostname_ufmt -}}"
+
+[hostname]
+disabled = false
+trim_at = ""
+
+ssh_only = false
+
+style = "{{- style(username_hostname_style) -}}"
+format = "{{- username_hostname_hfmt -}}"
+{%- endmacro -%}
+
+
+{#
+    directory section
+#}
+{%- macro directory_format() -%}
+    $directory
+{%- endmacro -%}
+{%- macro directory_configure() -%}
+[directory]
+disabled = false
+truncate_to_repo = false
+
+truncation_length = 7
+truncation_symbol = "[...]/"
+use_os_path_sep = false
+
+read_only = "{{- directory_ro_fmt -}}"
+
+format = """
+{{ arrow(directory_fmt, directory_style) + trail }}
+"""
+{%- endmacro -%}
+
+
+{#
+    git section.
+#}
+{%- macro git_format() -%}
+    {{- cond(arrow(git_fmt, git_plain_style)) -}}
+{%- endmacro -%}
+{%- macro git_configure() -%}
+[git_state]
+disabled = false
+
+format = """
+{{ git_state_fmt | join(multiline) + trail }}
+"""
+
+[git_branch]
+disabled = false
+always_show_remote = false
+
+format = """
+{{ git_branch_fmt | join(multiline) + trail }}
+"""
+
+[git_status]
+disabled = false
+
+conflicted = " conflict"
+ahead = " ahead"
+behind = " behind"
+diverged = " diverged"
+up_to_date = " uptodate"
+untracked = " untracked"
+stashed = " stashed"
+modified = " modified"
+staged = " staged"
+renamed = " renamed"
+deleted = " deleted"
+
+format = """
+{{ git_status_fmt | join(multiline) + trail }}
+"""
+
+[git_metrics]
+disabled = false
+only_nonzero_diffs = true
+format = """
+{{ cond(git_metrics_fmt | join(multiline)) + trail }}
+"""
+{%- endmacro -%}
+
+
+{#
+    langs section.
+#}
+{%- macro langs_format() -%}
+    {%- set acc = [] -%}
+    {%- for k, v in langs.items() -%}
+        {%- set _ = acc.append("$" + k) -%}
+    {%- endfor -%}
+    {{- acc | join("") -}}
+{%- endmacro -%}
+{%- macro langs_configure() -%}
+    {%- for lang, conf in langs.items() -%}
+        {%- set fmt = ["$symbol", conf.label] | reject("equalto", "") | join(space) -%}
+[{{ lang }}]
+disabled = false
+symbol = "{{ symbol(conf.symbol) }}"
+format = """
+{{ arrow(fmt, dict(bold=True, bg=conf.bg, fg=conf.fg)) + trail }}
+"""
+        {%- if not loop.last -%}
+            {{ "\n\n" }}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endmacro -%}
+
+
+{#
+    fill section.
+#}
+{%- macro fill_format() -%}
+    {{- fill_fmt -}}
+{%- endmacro -%}
+{%- macro fill_configure() -%}
+[fill]
+symbol = " "
+{%- endmacro -%}
+
+
+{#
+    status and duration section.
+#}
+{%- macro status_duration_format() -%}
+    {{- status_duration_fmt -}}
+{%- endmacro -%}
+{%- macro status_duration_configure() -%}
+[status]
+disabled = false
+
+pipestatus = false
+map_symbol = false
+recognize_signal_code = false
+
+symbol = "{{ status_duration_fail_fmt }}"
+success_symbol = "{{ status_duration_success_fmt }}"
+
+format = "$symbol"
+
+[cmd_duration]
+disabled = false
+min_time = 0
+show_milliseconds = true
+
+format = "{{ status_duration_span_fmt }}"
+{%- endmacro -%}
+
+
+{#
+    time section.
+#}
+{%- macro time_format() -%}
+    {{- time_fmt -}}
+{%- endmacro -%}
+{%- macro time_configure() -%}
+[time]
+disabled = false
+
+use_12hr = true
+
+format = "{{ time_conf_fmt }}"
+{%- endmacro -%}
+
+
+{#
+    line_break section.
+#}
+{%- macro line_break_format() -%}
+    {{- line_break_fmt -}}
+{%- endmacro -%}
+{%- macro line_break_configure() -%}
+{%- endmacro -%}
+
+
+{#
+    config file rendering itself
+#}
+format = """
+{{ [
+    os_format(),
+    username_hostname_format(),
+    directory_format(),
+    git_format(),
+    langs_format(),
+    fill_format(),
+    status_duration_format(),
+    time_format(),
+    line_break_format()
+] | join(multiline) }}
+"""
+
+add_newline = false
+
+
+{%- for f in [
+    os_configure,
+    username_hostname_configure,
+    directory_configure,
+    git_configure,
+    langs_configure,
+    fill_configure,
+    status_duration_configure,
+    time_configure,
+    line_break_configure
+] -%}
+    {{- f() -}}
+    {%- if not loop.last -%}
+        {{- "\n\n\n" -}}
+    {%- endif -%}
+{%- endfor -%}
