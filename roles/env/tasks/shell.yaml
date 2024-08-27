@@ -18,3 +18,23 @@
         dest: "/home/{{ env_user }}/.config/starship.toml"
         mode: "0644"
         directory_mode: "0755"
+
+- name: Configure fastfetch information tool
+  block:
+    - name: Ensure fastfetch package is installed
+      community.general.pacman:
+        name: fastfetch
+        state: present
+      become: true
+
+    - name: Clean previous fastfetch configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/fastfetch"
+        state: absent
+
+    - name: Generate fastfetch configuration
+      ansible.builtin.template:
+        src: fastfetch.j2
+        dest: "/home/{{ env_user }}/.config/fastfetch/config.jsonc"
+        mode: "0644"
+        directory_mode: "0755"
