@@ -38,3 +38,30 @@
         dest: "/home/{{ env_user }}/.config/fastfetch/config.jsonc"
         mode: "0644"
         directory_mode: "0755"
+
+- name: Configure micro editor
+  block:
+    - name: Ensure micro package is installed
+      community.general.pacman:
+        name: micro
+        state: present
+      become: true
+
+    - name: Clean previous micro configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/micro"
+        state: absent
+
+    - name: Copy micro binding, nord theme, and settings
+      ansible.builtin.copy:
+        src: "micro/{{ item.src }}"
+        dest: "/home/{{ env_user }}/.config/micro/{{ item.dest }}"
+        mode: "0644"
+        directory_mode: "0755"
+      loop:
+        - src: bindings.json
+          dest: ""
+        - src: settings.json
+          dest: ""
+        - src: nord.micro
+          dest: "colorschemes/"

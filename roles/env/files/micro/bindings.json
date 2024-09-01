@@ -1,0 +1,253 @@
+{
+    //
+    // Vim-Like bindings
+    //
+    // Missing:
+    // Shift-* -> Select (Micro does not implement kitty keyboard protocol)
+    // u -> Undo
+    // D -> DeleteLine
+    //
+    "Alt-Backspace":  "CursorLeft",
+    // "Alt-Ctrl-H":       "SelectLeft",
+    "Alt-Ctrl-j":     "CursorDown",
+    // "Alt-Ctrl-J":       "SelectDown",
+    "Alt-Ctrl-k":     "CursorUp",
+    // "Alt-Ctrl-K":       "SelectUp",
+    "Alt-Ctrl-l":     "CursorRight",
+    // "Alt-Ctrl-L":       "SelectRight",
+
+    "Alt-Ctrl-u":     "CursorUp,CursorUp,CursorUp",
+    // "Alt-Ctrl-U":       "SelectPageUp",
+    "Alt-Ctrl-d":     "CursorDown,CursorDown,CursorDown",
+    // "Alt-Ctrl-D":       "SelectPageDown",
+
+    "Alt-Ctrl-f":     "CursorStart",
+    // "Alt-Ctrl-F":       "SelectToStart",
+    "Alt-Ctrl-g":     "CursorEnd",
+    // "Alt-Ctrl-G":       "SelectToEnd",
+
+    "Alt-Ctrl-b":     "WordLeft",
+    // "Alt-Ctrl-B":       "SelectWordLeft",
+    "Alt-Ctrl-w":     "WordRight",
+    // "Alt-Ctrl-W":       "SelectWordRight",
+
+    "Alt-0":          "StartOfLine",
+    // "Alt-Ctrl-^":     "StartOfLine",
+    "Alt-)":          "SelectToStartOfLine",
+    // "Alt-Ctrl-\\":    "EndOfLine",
+    "Alt-$":          "SelectToEndOfLine",
+
+    "Alt-Ctrl-x":     "Delete",
+    "Alt-Ctrl-a":     "EndOfLine",
+    "Alt-Ctrl-p":     "Paste",
+
+    //
+    // Bash/Emacs-like bindings
+    //
+    "AltLeft":        "WordLeft",
+    "AltShiftLeft":   "SelectWordLeft",
+    "AltRight":       "WordRight",
+    "AltShiftRight":  "SelectWordRight",
+    "AltUp":          "MoveLinesUp",
+    "AltDown":        "MoveLinesDown",
+
+    "Alt-a":          "StartOfLine",
+    "Alt-A":          "SelectToStartOfLine",
+    "Alt-e":          "EndOfLine",
+    "Alt-E":          "SelectToEndOfLine",
+
+    "Alt-k":          "SelectToEndOfLine&Delete",
+    "Alt-d":          "DeleteLine",
+
+    "Alt-,":          "CursorStart",
+    "Alt-<":          "SelectToStart",
+    "Alt-.":          "CursorEnd",
+    "Alt->":          "SelectToEnd",
+
+    "Alt-w":          "DeleteWordLeft",
+
+    //
+    // Common (browser/gui-like) keybindings
+    //
+    "Up":             "CursorUp",
+    "Down":           "CursorDown",
+    "Right":          "CursorRight",    
+    "Left":           "CursorLeft",
+    "ShiftUp":        "SelectUp",
+    "ShiftDown":      "SelectDown",
+    "ShiftLeft":      "SelectLeft",
+    "ShiftRight":     "SelectRight",
+
+    "CtrlUp":         "CursorUp,CursorUp,CursorUp",
+    "CtrlShiftUp":    "SelectUp,SelectUp,SelectUp",
+    "CtrlDown":       "CursorDown,CursorDown,CursorDown",
+    "CtrlShiftDown":  "SelectDown,SelectDown,SelectDown",
+    "CtrlLeft":       "CursorLeft,CursorLeft,CursorLeft",
+    "CtrlShiftLeft":  "SelectLeft,SelectLeft,SelectLeft",
+    "CtrlRight":      "CursorRight,CursorRight,CursorRight",
+    "CtrlShiftRight": "SelectRight,SelectRight,SelectRight",
+
+    "Ctrl-a":         "SelectAll",
+    "Ctrl-d":         "DuplicateLine",
+    "Ctrl-/":         "lua:comment.comment",
+    "PageUp":         "CursorPageUp",
+    "PageDown":       "CursorPageDown",
+
+    "Esc":            "Escape",
+    "Enter":          "InsertNewline",
+
+    "Backspace":      "Backspace",
+    // "CtrlBackspace":  "DeleteWordLeft",
+    "Delete":         "Delete",
+    "Ctrl-Delete":    "DeleteWordRight",
+
+    "Tab":            "Autocomplete|IndentSelection|InsertTab",
+    "Backtab":        "OutdentSelection|OutdentLine",
+
+    "Ctrl-l":         "command-edit:goto ",
+    "Ctrl-b":         "ShellMode",
+    "Ctrl-o":         "OpenFile",
+    "Ctrl-s":         "Save",
+    //"Ctrl-S":         "SaveAs",
+    "Ctrl-q":         "Quit",
+    "Ctrl-e":         "CommandMode",
+
+    "Ctrl-c":         "Copy",
+    "Ctrl-x":         "Cut",
+    "Ctrl-v":         "Paste",
+
+    "Ctrl-f":         "Find",
+    "F3":             "FindNext",
+    "ShiftF3":        "FindPrevious",
+
+    "Ctrl-t":         "AddTab",
+    "Ctrl-w":         "NextTab",
+
+    "Ctrl-z":          "Undo",
+    "Ctrl-y":          "Redo",
+    "Ctrl-r":          "Redo",
+
+    //
+    // Mouse
+    //
+    "MouseWheelUp":   "ScrollUp",
+    "MouseWheelDown": "ScrollDown",
+    "MouseLeft":      "MousePress",
+    "MouseMiddle":    "PastePrimary",
+    // "MouseLeftDrag":    "MouseDrag",
+    // "MouseLeftRelease": "MouseRelease",
+
+    //
+    // Removed default keybindings
+    //
+    // "Up":             "CursorUp",
+    // "Down":           "CursorDown",
+    // "Right":          "CursorRight",
+    // "Left":           "CursorLeft",
+    // "ShiftUp":        "SelectUp",
+    // "ShiftDown":      "SelectDown",
+    // "ShiftLeft":      "SelectLeft",
+    // "ShiftRight":     "SelectRight",
+    // "AltLeft":        "WordLeft",
+    // "AltRight":       "WordRight",
+    // "AltUp":          "MoveLinesUp",
+    // "AltDown":        "MoveLinesDown",
+    // "CtrlShiftRight": "SelectWordRight",
+    // "CtrlShiftLeft":  "SelectWordLeft",
+    // "AltLeft":        "StartOfTextToggle",
+    // "AltRight":       "EndOfLine",
+    // "AltShiftRight":  "SelectWordRight",
+    // "AltShiftLeft":   "SelectWordLeft",
+    // "CtrlLeft":       "StartOfText",
+    // "CtrlRight":      "EndOfLine",
+    // "AltShiftLeft":   "SelectToStartOfTextToggle",
+    // "CtrlShiftLeft":  "SelectToStartOfTextToggle",
+    "ShiftHome":      "None", // "SelectToStartOfTextToggle",
+    // "AltShiftRight":  "SelectToEndOfLine",
+    // "CtrlShiftRight": "SelectToEndOfLine",
+    "ShiftEnd":       "None", // "SelectToEndOfLine",
+    // "CtrlUp":         "CursorStart",
+    // "CtrlDown":       "CursorEnd",
+    // "CtrlShiftUp":    "SelectToStart",
+    // "CtrlShiftDown":  "SelectToEnd",
+    "Alt-{":          "None", // "ParagraphPrevious",
+    "Alt-}":          "None", // "ParagraphNext",
+    // "Enter":          "InsertNewline",
+    "Ctrl-h":         "None", // "Backspace",
+    // "Backspace":      "Backspace",
+    "Alt-CtrlH":      "None", // "DeleteWordLeft",
+    // "Alt-Backspace":  "DeleteWordLeft",
+    // "Tab":            "Autocomplete|IndentSelection|InsertTab",
+    // "Backtab":        "OutdentSelection|OutdentLine",
+    // "Ctrl-o":         "OpenFile",
+    // "Ctrl-s":         "Save",
+    // "Ctrl-f":         "Find",
+    "Alt-F":          "None", // "FindLiteral",
+    "Ctrl-n":         "None", // "FindNext",
+    // "Ctrl-p":      "FindPrevious",
+    "Alt-[":          "None", // "DiffPrevious|CursorStart",
+    "Alt-]":          "None", // "DiffNext|CursorEnd",
+    // "Ctrl-z":         "Undo",
+    // "Ctrl-y":         "Redo",
+    // "Ctrl-c":         "CopyLine|Copy",
+    // "Ctrl-x":         "Cut",
+    "Ctrl-k":         "None", // "CutLine",
+    // "Ctrl-d":         "DuplicateLine",
+    // "Ctrl-v":         "Paste",
+    // "Ctrl-a":         "SelectAll",
+    // "Ctrl-t":         "AddTab",
+    // "Alt-,":          "PreviousTab",
+    // "Alt-.":          "NextTab",
+    "Home":           "None", // "StartOfText",
+    "End":            "None", // "EndOfLine",
+    "CtrlHome":       "None", // "CursorStart",
+    "CtrlEnd":        "None", // "CursorEnd",
+    // "PageUp":         "CursorPageUp",
+    // "PageDown":       "CursorPageDown",
+    "CtrlPageUp":     "None", // "PreviousTab",
+    "CtrlPageDown":   "None", // "NextTab",
+    "Ctrl-g":         "None", // "ToggleHelp",
+    "Alt-g":          "None", // "ToggleKeyMenu",
+    // "Ctrl-r":         "None", // "ToggleRuler",
+    // "Ctrl-l":         "command-edit:goto ",
+    // "Delete":         "Delete",
+    // "Ctrl-b":         "ShellMode",
+    // "Ctrl-q":         "Quit",
+    // "Ctrl-e":         "CommandMode",
+    // "Ctrl-w":         "NextSplit",
+    "Ctrl-u":         "None", // "ToggleMacro",
+    "Ctrl-j":         "None", // "PlayMacro",
+    "Insert":         "None", // "ToggleOverwriteMode",
+
+    // Emacs-style keybindings
+    "Alt-f": "None", // "WordRight",
+    "Alt-b": "None", // "WordLeft",
+    // "Alt-a": "StartOfLine",
+    // "Alt-e": "EndOfLine",
+
+    // Integration with file managers
+    "F2":  "None", // "Save",
+    // "F3":  "Find",
+    "F4":  "None", // "Quit",
+    "F7":  "None", // "Find",
+    "F10": "None", // "Quit",
+    // "Esc": "Escape",
+
+    // Mouse bindings
+    // "MouseWheelUp":     "ScrollUp",
+    // "MouseWheelDown":   "ScrollDown",
+    // "MouseLeft":        "MousePress",
+    // "MouseLeftDrag":    "MouseDrag",
+    // "MouseLeftRelease": "MouseRelease",
+    // "MouseMiddle":      "PastePrimary",
+    "Ctrl-MouseLeft":   "None", // "MouseMultiCursor",
+
+    // Multi-cursor bindings
+    "Alt-n":        "None", // "SpawnMultiCursor",
+    "AltShiftUp":   "None", // "SpawnMultiCursorUp",
+    "AltShiftDown": "None", // "SpawnMultiCursorDown",
+    "Alt-m":        "None", // "SpawnMultiCursorSelect",
+    "Alt-p":        "None", // "RemoveMultiCursor",
+    "Alt-c":        "None", // "RemoveAllMultiCursors",
+    "Alt-x":        "None", // "SkipMultiCursor",
+}

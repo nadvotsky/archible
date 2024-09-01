@@ -1,0 +1,17 @@
+{
+    "autosu": true, 
+    "backup": false,
+    "colorscheme": "nord",
+    "detectlimit": 200,
+    "hlsearch": true,
+    "hltaberrors": true,
+    "hltrailingws": true,
+    "indentchar": "⇥",
+    "keepautoindent": true,
+    "matchbracestyle": "highlight",
+    "mkparents": true,
+    "scrollbar": true,
+    "statusformatl": "$(filename) ($(line),$(col)) <tabs: $(opt:tabstospaces)> <wrap: $(opt:softwrap)> <lang: $(opt:filetype)> <file: $(opt:fileformat)+$(opt:encoding)>",
+    "statusformatr": "",
+    "tabstospaces": true
+}
