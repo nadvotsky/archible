@@ -65,3 +65,26 @@
           dest: ""
         - src: nord.micro
           dest: "colorschemes/"
+
+- name: Configure atuin history manager
+  block:
+    - name: Ensure atuin package is installed
+      community.general.pacman:
+        name: atuin
+        state: present
+      become: true
+
+    - name: Clean previous atuin database and config
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/{{ item }}"
+        state: absent
+      loop:
+        - .local/share/atuin
+        - .config/atuin
+
+    - name: Copy atuin configuration
+      ansible.builtin.copy:
+        src: atuin/config.toml
+        dest: "/home/{{ env_user }}/.config/atuin/"
+        mode: "0644"
+        directory_mode: "0755"

@@ -1,0 +1,13 @@
+update_check = false
+auto_sync = false
+
+history_filter = [
+    "^exit",
+    "^nu",
+    "^fish",
+    "^bash"
+]
+
+keymap_mode = "vim-insert"
+scroll_exits = false
+style = "compact"
