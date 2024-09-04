@@ -88,3 +88,35 @@
         dest: "/home/{{ env_user }}/.config/atuin/"
         mode: "0644"
         directory_mode: "0755"
+
+- name: Configure caparace autocompletition
+  block:
+    - name: Install carapace-bin AUR package
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        common_aur: carapace-bin
+
+    - name: Install zsh for external completitions
+      community.general.pacman:
+        name: zsh
+        state: present
+      become: true
+
+    - name: Clean carapace cache
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.cache/carapace"
+        state: absent
+
+- name: Configure zoxide directory navigator
+  block:
+    - name: Ensure zoxide package is installed
+      community.general.pacman:
+        name: zoxide
+        state: present
+      become: true
+
+    - name: Clean zoxide database
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.local/share/zoxide"
+        state: absent
