@@ -152,3 +152,14 @@
         dest: "/home/{{ env_user }}/.config/carapace/specs/"
         mode: "0644"
         directory_mode: "0755"
+
+- name: Configure additional tools
+  block:
+    - name: Ensure additional tools for theming, paging, and fuzzy-finding are installed
+      community.general.pacman:
+        name:
+          - vivid
+          - bat
+          - fzf
+        state: present
+      become: true
