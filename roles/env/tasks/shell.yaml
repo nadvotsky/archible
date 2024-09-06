@@ -120,3 +120,35 @@
       ansible.builtin.file:
         path: "/home/{{ env_user }}/.local/share/zoxide"
         state: absent
+
+- name: Configure mise version manager
+  block:
+    - name: Install mise-bin AUR package
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        common_aur: mise-bin
+  
+    - name: Clean previous mise data
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/{{ item }}"
+        state: absent
+      loop:
+        - .local/share/mise
+        - .local/state/mise
+        - .config/mise
+        - .cache/mise
+
+    - name: Copy mise configuration
+      ansible.builtin.copy:
+        src: mise/config.toml
+        dest: "/home/{{ env_user }}/.config/mise/"
+        mode: "0644"
+        directory_mode: "0755"
+
+    - name: Copy mise carapace autocomplete
+      ansible.builtin.copy:
+        src: mise/mise.yaml
+        dest: "/home/{{ env_user }}/.config/carapace/specs/"
+        mode: "0644"
+        directory_mode: "0755"
