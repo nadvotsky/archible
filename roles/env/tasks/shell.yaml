@@ -163,3 +163,26 @@
           - fzf
         state: present
       become: true
+
+- name: Configure nushell
+  block:
+    - name: Ensure nushell package is installed
+      community.general.pacman:
+        name: nushell
+        state: present
+      become: true
+
+    - name: Clean previous nushell config and state
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/nushell"
+        state: absent
+
+    - name: Copy nushell configuration files
+      ansible.builtin.copy:
+        src: "nushell/{{ item }}"
+        dest: "/home/{{ env_user }}/.config/nushell/"
+        mode: "0644"
+        directory_mode: "0755"
+      loop:
+        - env.nu
+        - config.nu
