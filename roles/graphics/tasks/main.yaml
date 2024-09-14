@@ -1,1 +1,4 @@
 ---
+- name: Include drivers tasks
+  ansible.builtin.import_tasks:
+    file: drivers.yaml

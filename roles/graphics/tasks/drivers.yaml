@@ -1,0 +1,24 @@
+---
+- name: Install proprietary nvidia graphics drivers
+  community.general.pacman:
+    name:
+      - nvidia
+      - nvidia-utils
+      - nvidia-settings
+      - libva-nvidia-driver
+    state: present
+  become: true
+
+- name: Configure VA-API <-> NvDEC bridge
+  ansible.builtin.lineinfile:
+    dest: /etc/environment
+    regexp: "^{{ item.key }}"
+    line: "{{ item.key }}={{ item.value }}"
+  loop:
+    - key: LIBVA_DRIVER_NAME
+      value: nvidia
+    - key: NVD_BACKEND
+      value: direct
+    - key: __GL_ALLOW_UNOFFICIAL_PROTOCOL
+      value: 1
+  become: true
