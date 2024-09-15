@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+    <match target="font">
+        <edit name="autohint" mode="assign">
+            <bool>true</bool>
+        </edit>
+        <edit name="embeddedbitmap" mode="assign">
+            <bool>false</bool>
+        </edit>
+        <edit name="lcdfilter" mode="assign">
+            <const>lcddefault</const>
+        </edit>
+        <edit name="antialias" mode="assign">
+            <bool>true</bool>
+        </edit>
+    </match>
+    <alias>
+        <family>serif</family>
+        <prefer>
+            <family>{{ env_font_serif }}</family>
+            <family>{{ env_font_emoji }}</family>
+        </prefer>
+    </alias>
+    <alias>
+        <family>sans-serif</family>
+        <prefer>
+            <family>{{ env_font_sans_serif }}</family>
+            <family>{{ env_font_emoji }}</family>
+        </prefer>
+    </alias>
+    <alias>
+        <family>monospace</family>
+        <prefer>
+            <family>{{ env_font_monospace }}</family>
+            <family>{{ env_font_icon }}</family>
+            <family>{{ env_font_emoji }}</family>
+        </prefer>
+    </alias>
+</fontconfig>

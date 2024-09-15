@@ -1,0 +1,47 @@
+---
+- name: Configure fonts
+  block:
+    - name: Install fonts and rendering libraries
+      community.general.pacman:
+        name:
+          - freetype2
+          - fontconfig
+          - adobe-source-code-pro-fonts
+          - inter-font
+          - ttf-nerd-fonts-symbols-mono
+          - ttf-joypixels
+        state: present
+      become: true
+
+    - name: Clean fontconfig configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/fontconfig"
+        state: absent
+
+    - name: Copy fontconfig configuration
+      ansible.builtin.copy:
+        src: fontconfig/fonts.conf
+        dest: "/home/{{ env_user }}/.config/fontconfig/fonts.conf"
+        mode: "0644"
+        directory_mode: "0755"
+
+- name: Configure icons
+  block:
+    - name: Install default fallback icon theme
+      community.general.pacman:
+        name: hicolor-icon-theme
+        state: present
+      become: true
+
+    - name: Install nordzy icons via AUR
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        common_aur: nordzy-icon-theme
+
+    - name: Install zorin icons via AUR
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        common_aur: zorin-icon-themes
+

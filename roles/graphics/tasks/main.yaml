@@ -2,3 +2,7 @@
 - name: Include drivers tasks
   ansible.builtin.import_tasks:
     file: drivers.yaml
+
+- name: Include look tasks
+  ansible.builtin.import_tasks:
+    file: look.yaml

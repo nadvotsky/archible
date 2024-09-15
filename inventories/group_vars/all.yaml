@@ -38,3 +38,13 @@ env_gpg_expire: 5y
 
 env_switch_container: ansible
 env_switch_port: 2222
+env_font_monospace: Source Code Pro
+env_font_monospace_package: adobe-source-code-pro-fonts
+env_font_serif: Inter
+env_font_serif_package: inter-font
+env_font_sans_serif: Inter
+env_font_sans_serif_package: inter-font
+env_font_emoji: JoyPixels
+env_font_emoji_package: ttf-joypixels
+env_font_icon: Symbols Nerd Font Mono
+env_font_icon_package: ttf-nerd-fonts-symbols-mono
