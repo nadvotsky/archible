@@ -48,9 +48,7 @@ bootloader_cmdline:
   selinux: "0"
   sysrq_always_enabled:
   transparent_hugepage: always
-  module_blacklist: snd_hda_codec_hdmi
   lsm: capability,yama,bpf
-  video: efifb:mode=0
   split_lock_detect: "off"
   no_timer_check:
   pci: pcie_bus_perf
@@ -64,6 +62,15 @@ bootloader_cmdline:
   systemd.verity: "no"
   systemd.gpt_auto: "0"
   systemd.firstboot: "off"
+  #
+  # video
+  #
+  module_blacklist: "snd_hda_codec_hdmi,asus_wmi"
+  video: efifb:mode=0
+  nvidia.NVreg_InitializeSystemMemoryAllocations: "0"
+  nvidia.NVreg_UsePageAttributeTable: "1"
+  nvidia_drm.modeset: "1"
+  #
   #
   # sysctl
   #
