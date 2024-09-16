@@ -1,0 +1,278 @@
+{%- set n = "\n" -%}
+
+{#
+    A bug workaround when format-prefix-padding is set to pixels or points,
+    then border-size pixels are drawn to the left.
+
+    Therefore, spacing is used instead. It is not precise though.
+#}
+{%- set section_text_spacing = (env_space_light * env_scale) | round | int -%}
+{%- set section_icon_spacing = (env_space_light * 2 * env_scale) | round | int -%}
+
+{%- set section_border_spacing = "{:.0f}px".format(
+    [env_space_thin * env_scale, 1] | max
+) -%}
+{%- set normal_spacing = "{:.0f}px".format((env_space_normal * env_scale) | round) -%}
+
+{#
+    Zero-width space.
+#}
+{%- set section_thin = "\u200B" -%}
+{%- set section_warn = "\uf071" -%}
+
+
+{%- macro section(icon, ns = "", important = false, warn = false, mini = false) -%}
+    {%- set literal = "\\U" + icon.rjust(8, "0") -%}
+    {%- set character = literal.encode().decode("unicode-escape") -%}
+    {%- set format_prefix = "format" + (("-" + ns) if ns else "") -%}
+    {%- set label_prefix = "label" + (("-" + ns) if ns else "") -%}
+    {%- set color = env_important if important else env_active -%}
+
+    {%- if mini -%}
+        {{- format_prefix }} = "{{ character }}"{{- n -}}
+        {{- format_prefix }}-background = "{{ color }}"{{- n -}}
+        {{- format_prefix }}-padding = {{ section_icon_spacing }}
+    {%- else -%}
+        {{- format_prefix }}-prefix = "{{ character }}"{{- n -}}
+        {{- format_prefix }}-prefix-background = "{{ color }}"{{- n -}}
+        {{- format_prefix }}-prefix-padding = {{ section_icon_spacing }}{{- n -}}
+        {{- format_prefix }}-underline = "{{ color }}"{{- n -}}
+        {{- format_prefix }}-overline = "{{ color }}"{{- n -}}
+
+        {%- if warn -%}
+            {{- format_prefix }}-suffix = "{{ section_warn }}"{{- n -}}
+            {{- format_prefix }}-suffix-background = "{{ color }}"{{- n -}}
+            {{- format_prefix }}-suffix-padding = {{ section_icon_spacing }}{{- n -}}
+        {%- else -%}
+            {{- format_prefix }}-suffix = "{{ section_thin }}"{{- n -}}
+            {{- format_prefix }}-suffix-background = "{{ color }}"{{- n -}}
+            {{- format_prefix }}-suffix-padding-left = {{ section_border_spacing }}{{- n -}}
+        {%- endif -%}
+
+        {{- label_prefix }}-padding = {{ section_text_spacing }}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro workspace(icon, prefix, f, t) -%}
+    {{- section(icon) -}}{{- n -}}
+
+    {{- n -}}
+    {%- for i in range(t - f + 1) -%}
+        icon-{{ i }} = {{ prefix }}-{{ f + i }};{{ i + 1 }}{{- n -}}
+    {%- endfor -%}
+    icon-default = ""{{- n -}}
+
+    {{- n -}}
+    label-active-foreground = "{{ env_accent }}"{{- n -}}
+    {%- for i in ["active", "empty", "occupied", "urgent"] -%}
+        label-{{ i }} = "%icon%"{{- n -}}
+        label-{{ i }}-padding = {{ section_text_spacing }}{{- n -}}
+    {%- endfor -%}
+    label-urgent-foreground = "{{ env_accent }}"
+{%- endmacro -%}
+
+
+[bar/mybar]
+wm-name = POLYBAR
+bottom = false
+
+fixed-center = false
+
+height = {{ "{:.0f}px".format(
+    ((([ env_font_size, env_font_icon_size] | max) + env_space_normal) * env_scale) | round) 
+}}
+border-size = {{ normal_spacing }}
+padding = {{ normal_spacing }}
+module-margin = {{ normal_spacing }}
+line-size = {{ section_border_spacing }}
+
+background = "{{ env_inactive }}"
+border-color = "{{ env_inactive }}"
+foreground = "{{ env_foreground }}"
+
+{#
+    Setting dpi to 72 to prevent polybar from scaling font sizes.
+#}
+dpi-x = 72
+dpi-y = 72
+
+{{- n -}}
+{%- for f, s, o in [
+    ("sans-serif:style=semibold", env_font_size, env_font_offset),
+    (env_font_icon, env_font_icon_size, env_font_icon_offset),
+] -%}
+    {%- set pixelsize = (s * env_scale) | round | int -%}
+    {%- set offset = (o * env_scale) | round | int -%}
+    font-{{ loop.index0 }} = "{{ f }}:pixelsize={{ pixelsize }};{{ offset }}"{{- n -}}
+{%- endfor -%}
+
+modules-left = cpu ram swap fs uptime
+modules-center = workspaces-primary time {%- for m in env_monitors -%}
+    {%- if not loop.first -%}
+        {{- " workspaces-{}".format(m.name) -}}
+    {%- endif -%}
+{%- endfor -%}
+{{- n -}}
+modules-right = player volume keyboard netns tray
+
+
+[module/cpu]
+type = internal/cpu
+
+{{ section("f4bc", mini=true) }}
+
+{{ section("f4bc", ns="warn", important=true, mini=true) }}
+
+warn-percentage = 90
+interval = 10
+
+
+[module/ram]
+type = internal/memory
+
+{{ section("efc5") }}
+
+{{ section("efc5", ns="warn", important=true, warn=true) }}
+
+format = <label>
+format-warn = <label-warn>
+label = %gb_used%
+label-warn = %gb_used%
+warn-percentage = 90
+interval = 10
+
+
+[module/swap]
+type = internal/memory
+
+{{ section("f0fb7") }}
+
+{{ section("f0fb7", ns="warn", important=true, warn=true) }}
+
+format = <label>
+label = %gb_swap_used%
+interval = 20
+
+
+[module/fs]
+type = internal/fs
+
+{{ section("f413", ns="mounted") }}
+
+mount-0 = /
+label-mounted = %used% / %total%
+interval = 60
+
+
+[module/uptime]
+type = custom/script
+
+{{ section("f1ae1") }}
+
+{%- set awk_cmdline = [ "gsub(/up /, _)" ] -%}
+{%- for r in ["days", "hours", "minutes"] -%}
+    {%- set _ = awk_cmdline.append(
+        "gsub(/ {}?,?/, \"{}\")".format(r, r[0])
+    ) -%}
+{%- endfor -%}
+{{- n -}}
+exec = uptime -p | awk '{ {{ awk_cmdline | join(";") }};print }'
+
+interval = 60
+
+
+[module/workspaces-primary]
+type = internal/xworkspaces
+
+{{ workspace("f1104", (env_monitors | first).name, 1, (env_monitors | first).workspaces) }}
+
+{%- set scratch_icon = "\uf044" -%}{{- n -}}
+icon-8 = scratch;{{ scratch_icon }}
+
+
+[module/time]
+type = internal/date
+
+{{ section("e383") }}
+
+date = "%a %b %d %r"
+date-alt = "%F %r %Z"
+
+
+{% for mon in env_monitors -%}
+{%- if not loop.first -%}
+[module/workspaces-{{ mon.name }}]
+type = internal/xworkspaces
+
+{{ workspace("f0ddc", mon.name, 1, mon.workspaces) }}{{- n -}}
+{{- n -}}{{- n -}}
+{%- endif -%}
+{%- endfor -%}
+
+
+[module/player]
+type = custom/script
+
+{{ section("ec1b") }}
+{{- n -}}
+
+{%- set artists = "{{artist}}" -%}
+{%- set title = "{{trunc(title, 10)}}" -%}
+{%- set wide_dash = "\u2012" -%}
+{{- n -}}
+
+exec = "playerctl metadata --format='{{ artists }} {{ wide_dash }} {{ title }}'"
+click-left = "playerctl next"
+click-right = "playerctl previous"
+double-click-left = "playerctl play-pause"
+interval = 1
+
+
+[module/volume]
+type = internal/pulseaudio
+
+{{ section("f0580", ns="volume") }}
+
+{{ section("f0581", ns="muted", important=true) }}
+
+format-volume = "<label-volume>"
+label-muted = "Muted"
+use-ui-max = true
+interval = 2
+
+
+[module/keyboard]
+type = internal/xkeyboard
+
+{{ section("f11c") }}
+
+format = "<label-indicator><label-layout>"
+label-indicator-on = "%icon%"
+label-indicator-on-padding-left = {{ section_text_spacing }}
+label-indicator-on-foreground = "{{ env_accent }}"
+{% set icon_caps = "\U000f0632" -%}
+{%- set icon_numlock = "\uf4f7" -%}
+indicator-icon-0 = caps lock;;{{ icon_caps }}
+indicator-icon-1 = num lock;;{{ icon_numlock }}
+label-layout = %layout%
+label-layout-padding = {{ section_text_spacing }}
+
+
+[module/netns]
+type = custom/script
+
+{{ section("f0484") }}
+
+{{ section("f0c9c", ns="fail", mini=true) }}
+
+exec = "test $(ip netns list | wc --lines) -ge 1 && (ip netns list | tr '\\n' ' ')"
+interval = 5
+
+
+[module/tray]
+type = internal/tray
+
+tray-size = 100%
+tray-foreground = "{{ env_active }}"
+tray-spacing = {{ section_text_spacing }}

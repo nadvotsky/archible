@@ -42,3 +42,26 @@
         owner: 0
         group: 0
       become: true
+
+- name: Configure polybar bar
+  block:
+    - name: Ensure polybar package is installed
+      community.general.pacman:
+        name: polybar
+        state: present
+      become: true
+
+    - name: Clean polybar configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/polybar"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render polybar configuration
+      ansible.builtin.template:
+        src: polybar/config.ini.j2
+        dest: "/home/{{ env_user }}/.config/polybar/config.ini"
+        mode: "0644"

@@ -110,3 +110,12 @@ env_font_emoji: JoyPixels
 env_font_emoji_package: ttf-joypixels
 env_font_icon: Symbols Nerd Font Mono
 env_font_icon_package: ttf-nerd-fonts-symbols-mono
+
+env_font_size: 13
+env_font_offset: 2
+
+env_font_size_big: 16
+env_font_offset_big: 3
+
+env_font_icon_size: 15
+env_font_icon_offset: 2
