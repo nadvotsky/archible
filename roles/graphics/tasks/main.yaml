@@ -6,3 +6,7 @@
 - name: Include look tasks
   ansible.builtin.import_tasks:
     file: look.yaml
+
+- name: Include x11 related tasks
+  ansible.builtin.import_tasks:
+    file: x11.yaml

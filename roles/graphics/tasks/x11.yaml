@@ -1,0 +1,44 @@
+- name: Configure Xorg server
+  block:
+    - name: Ensure Xorg suite is installed
+      community.general.pacman:
+        name:
+          - xorg-server
+          - xf86-input-libinput
+          - xorg-xrdb
+          - xorg-xsetroot
+          - xorg-xeyes
+          - numlockx
+          - hsetroot
+        state: present
+      become: true
+
+    - name: Clean xorg.conf.d configuration files
+      ansible.builtin.file:
+        path: /etc/X11/xorg.conf.d
+        mode: "0755"
+        owner: 0
+        group: 0
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+      become: true
+
+    - name: Copy xorg.conf.d configuration files
+      ansible.builtin.copy:
+        src: xorg/
+        dest: /etc/X11/xorg.conf.d/
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Render Xorg nvidia configuration template
+      ansible.builtin.template:
+        src: xorg/20-nvidia.conf.j2
+        dest: /etc/X11/xorg.conf.d/20-nvidia.conf
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true

@@ -36,8 +36,70 @@ env_gpg_compat_password: testtest
 env_gpg_priv_password: test
 env_gpg_expire: 5y
 
-env_switch_container: ansible
-env_switch_port: 2222
+env_monitors:
+  - name: primary
+    workspaces: 8
+    width: 1920
+    height: 1080
+    refresh: 60
+    x11: DFP-1
+    wayland: HDMI-A-1
+
+  - name: secondary
+    workspaces: 4
+    width: 1280
+    height: 1024
+    refresh: 75
+    x11: DFP-5
+    wayland: HDMI-A-3
+    notifications: true
+
+env_monitors_stack: horizontal
+
+#
+# Assuming that virtual perfect monitor has the following DPI.
+# All spacings are based on this value.
+#
+env_ethalon: 96
+#
+# Real monitor is different.
+#
+# Dpi is a very tricky metric, because it is up to the application
+# how to implement scaling. For example:
+#   herbstluftwm
+#     scales font,
+#     does not scale paddings, offsets, etc.
+#   polybar
+#     scales spaces, points, both :size and :pixelsize,
+#     does not scale pixels and font offsets.
+#   dunst
+#     scales sizes, spacings, and font when dpi is greater than 96,
+#     but only (down)scales font when dpi is smaller than 96
+#   and so on.
+#
+#   While it is okay for the regular user applications to be scaled arbitrary,
+#   it is not the case for the WM & related programs.
+#
+#   For instance, when herbstluftwm draws a 5 pixels border around window,
+#   it is quite noticable when rofi draws about 7 pixels. 
+#   Another example is that changing dpi for polybar will not affect other
+#   programs, as well as will break polybar itself, because font offset
+#   is not affected by the DPI.
+#
+#   Practically it means that it is impossible to create a dpi-aware stack
+#   of the window manager environment. Therefore, using its own dpi-like mechanism,
+#   where elements are being scaled at the template rendering stage.
+#
+env_scale: 0.9
+
+#
+# Spacing in pixels, measured for virtual env_ethalon.
+#
+env_space_thin: 1
+env_space_light: 2
+env_space_normal: 6
+env_space_big: 11
+
 env_font_monospace: Source Code Pro
 env_font_monospace_package: adobe-source-code-pro-fonts
 env_font_serif: Inter

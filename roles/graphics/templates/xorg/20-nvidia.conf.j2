@@ -1,0 +1,97 @@
+Section "Device"
+    Identifier "nvidia"
+
+    Driver "nvidia"
+
+    Option "UseEDID" "true"
+    Option "UseEdidFreqs" "true"
+    Option "UseEDIDDpi" "false"
+    Option "ModeValidation" "NoInterlacedModes, NoXServerModes, NoPredefinedModes, NoVesaModes"
+
+    #
+    # Use options below if EDID probing is enabled, but manual modeset is to be used instead.
+    # If EDID probing is not enabled, these options make no effect.
+    #
+    # Note that 'No*Check' options are not required if manual modeset was imported from EDID via external tools
+    #  (edid-decode, read-edid).
+    #
+    # Option "ModeValidation" "NoEdidMaxPClkCheck, NoMaxPClkCheck, NoHorizSyncCheck, NoVertRefreshCheck, NoEdidModes"
+    # Option "ExactModeTimingsDVI" "true"
+    # Option "ModeDebug" "true"
+
+    # Option "HorizSync" "DFP-1: 67.500; DFP-5: 79.976"
+    # Option "VertRefresh" "DFP-1: 60; DFP-5: 75.024675"
+
+    Option "ConnectedMonitor" "{{ env_monitors | map(attribute="x11") | join(", ") }}"
+    Option "nvidiaXineramaInfoOrder" "{{ env_monitors | map(attribute="x11") | join(", ") }}"
+    Option "MetaModes" "
+    {%- set hor = env_monitors_stack == "horizontal" -%}
+    {%- set panning_idx = 1 if hor else 0 -%}
+    {%- set panning =
+        (env_monitors | map(attribute="height") | max)
+        if hor else
+        (env_monitors | map(attribute="width") | max)
+    -%}
+    {%- for mon in env_monitors -%}
+        {{- "{}: ".format(mon.x11) -}}
+        {{- "{}x{}_{}".format(mon.width, mon.height, mon.refresh) -}}
+        {%- if [mon.width, mon.height][panning_idx] != panning -%}
+            {{- " @{}x{}".format(mon.width if hor else panning, panning if hor else mon.height) -}}
+        {%- endif -%}
+        {%- if not loop.last -%}
+            {{- ", " -}}
+        {%- endif -%}
+    {%- endfor -%}"
+    Option "MetaModeOrientation" "
+    {%- for mon in env_monitors -%}
+        {{- "{}".format(mon.x11) -}}
+        {%- if not loop.last -%}
+            {{- " LeftOf " if env_monitors_stack == "horizontal" else " Bottom " -}}
+        {%- endif -%}
+    {%- endfor -%}"
+    Option "PanAllDisplays" "false"
+
+    Option "DPI" "{{ (env_ethalon * env_scale) | round | int }} x {{ (env_ethalon * env_scale) | round | int }}"
+
+    Option "IncludeImplicitMetaModes" "false"
+
+    Option "GLShaderDiskCache" "true"
+    Option "SoftwareRenderCacheSize" "0x1000000"
+    Option "AllowUnofficialGLXProtocol" "true"
+    Option "Interactive" "false"
+    Option "SidebandSocketPath" "/tmp"
+    Option "ConnectToAcpid" "0"
+
+    # Option "TripleBuffer" "true"
+
+    # Option "ForceCompositionPipeline" ""
+    # Option "ForceFullCompositionPipeline" ""
+EndSection
+
+Section "Monitor"
+    Identifier "monitor"
+
+    VendorName "NVIDIA"
+    ModelName "The NVIDIA Linux Driver Meta Monitor"
+
+    # HorizSync 30.0 - 83.0
+    # VertRefresh 56.0 - 75.0
+    # ModeLine "mode-primary" 148.500 1920 2008 2052 2200 1080 1084 1089 1125 +HSync +VSync
+    # Modeline "mode-secondary" 135.000  1280 1296 1440 1688  1024 1025 1028 1066 +HSync +VSync
+
+    Option "DPMS"
+EndSection
+
+Section "Screen"
+    Identifier "screen"
+    Device "nvidia"
+    Monitor "monitor"
+
+    DefaultDepth 24
+    DefaultFbBpp 32
+
+    SubSection "Display"
+        Depth 24
+        FbBpp 32
+    EndSubSection
+EndSection
