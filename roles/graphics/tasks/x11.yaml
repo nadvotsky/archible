@@ -65,3 +65,26 @@
         src: polybar/config.ini.j2
         dest: "/home/{{ env_user }}/.config/polybar/config.ini"
         mode: "0644"
+
+- name: Configure dunst notification daemon
+  block:
+    - name: Ensure dunst package is installed
+      community.general.pacman:
+        name: dunst
+        state: present
+      become: true
+
+    - name: Clean dunst configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/dunst"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render dunst configuration
+      ansible.builtin.template:
+        src: dunst/dunstrc.j2
+        dest: "/home/{{ env_user }}/.config/dunst/dunstrc"
+        mode: "0644"

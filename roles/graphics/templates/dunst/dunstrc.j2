@@ -1,0 +1,112 @@
+{%- set monitor = env_monitors | selectattr("notifications", "true") | first -%}
+
+{%- set width = (monitor.width * 0.6 * env_scale) | round | int -%}
+{%- set height = (monitor.height * 0.3 * env_scale) | round | int -%}
+{%- set icon_width_min = (height * 0.2) | round | int -%}
+{%- set icon_width_max = (height * 0.3) | round | int -%}
+
+{%- set gap = (env_space_big * 2 * env_scale) | round | int -%}
+{#
+    env_space_normal
+    env_space_normal / 2
+    [ icon ] text
+    env_space_normal / 2
+    env_space_normal
+#}
+{%- set bar_size =
+    ((([ env_font_size, env_font_icon_size] | max) + env_space_normal * 3) * env_scale)
+    | round
+    | int
+-%}
+
+{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
+{%- set space_big = (env_space_big * env_scale) | round | int -%}
+
+
+[global]
+monitor = {{ env_monitors.index(monitor) }}
+scale = 1
+follow = none
+transparency = 0
+layer = overlay
+force_xwayland = false
+
+enable_posix_regex = false
+enable_recursive_icon_lookup = true
+
+origin = top-right
+width = {{ width }}
+height = {{ height }}
+offset = {{ gap }}x{{ bar_size + gap }}
+
+progress_bar = true
+progress_bar_horizontal_alignment = center
+progress_bar_height = {{ ((env_space_big + env_space_light) * env_scale) | round | int }}
+progress_bar_frame_width = {{ (env_space_light * env_scale) | round | int }}
+progress_bar_min_width = {{ width - gap }}
+progress_bar_max_width = {{ width - gap }}
+progress_bar_corner_radius = 0
+
+icon_corner_radius = 0
+icon_position = left
+min_icon_size = {{ icon_width_min }}
+max_icon_size = {{ icon_width_max }}
+enable_recursive_icon_lookup = true
+icon_theme = Nordzy
+default_icon = /usr/share/icons/Nordzy/categories/32/applications-other.svg
+# icon_path
+
+padding = {{ space_big }}
+horizontal_padding = {{ space_big }}
+frame_width = {{ space_normal}}
+gap_size = {{ space_big }}
+
+corner_radius = 0
+font = "monospace {{ (env_font_size_big * env_scale) | round | int }}px"
+line_height = {{ space_normal }}
+format = "<span weight='bold' color='{{ env_accent }}'>%a</span>\n<b>%s</b>\n%b"
+vertical_alignment = center
+
+mouse_left_click = "do_action"
+mouse_middle_click = "context"
+mouse_right_click = "close_current"
+
+sort = urgency_ascending
+word_wrap = true
+alignment = center
+markup = full
+
+notification_limit = 10
+indicate_hidden = true
+
+idle_threshold = 0
+# timeout = 24h
+override_dbus_timeout = 24h
+ignore_dbusclose = true
+
+show_age_threshold = 0
+hide_duplicate_count = false
+show_indicators = true
+ignore_newline = false
+stack_duplicates = true
+sticky_history = true
+history_length = 40
+dmenu = "/usr/bin/rofi -dmenu"
+
+
+[global]
+background = "{{ env_inactive }}"
+foreground = "{{ env_foreground }}"
+highlight = "{{ env_accent }}"
+
+
+[urgency_low]
+frame_color = "{{ env_active }}"
+
+
+[urgency_normal]
+frame_color = "{{ env_foreground }}"
+
+
+[urgency_critical]
+frame_color = "{{ env_important }}"
