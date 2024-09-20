@@ -111,3 +111,26 @@
         src: rofi/config.rasi.j2
         dest: "/home/{{ env_user }}/.config/rofi/config.rasi"
         mode: "0644"
+
+- name: Configure picom compositor
+  block:
+    - name: Ensure picom package is installed
+      community.general.pacman:
+        name: rofi
+        state: present
+      become: true
+
+    - name: Clean rofi configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/{{ item }}"
+        state: absent
+      loop:
+        - picom.conf
+        - picom
+
+    - name: Copy rofi configuration
+      ansible.builtin.copy:
+        src: picom/picom.conf
+        dest: "/home/{{ env_user }}/.config/picom/picom.conf"
+        mode: "0644"
+        directory_mode: "0755"
