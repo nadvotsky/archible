@@ -1,0 +1,186 @@
+{%- set spacing_tiny = "{}px".format((env_space_thin * env_scale) | round | int) -%}
+
+{%- set spacing_light = "{}px".format((env_space_light * env_scale) | round | int) -%}
+{%- set spacing_light_left = "0 0 0 {}".format(spacing_light) -%}
+
+{%- set spacing_normal = "{}px".format((env_space_normal * env_scale) | round | int) -%}
+{%- set spacing_normal_left = "0 0 0 {}".format(spacing_normal) -%}
+{%- set spacing_normal_top_right_bottom = "{0} {0} {0} 0".format(spacing_normal) -%}
+
+{%- set spacing_big = "{}px".format((env_space_big * env_scale) | round | int) -%}
+
+{#
+    Spacing is basically calculated as:
+        left margin of the input bar
+        left margin of the textbox-prompt-colon
+        ">" character size of the textbox-prompt-colon
+        right margin of the textbox-prompt-colon
+#}
+{%- set spacing_listview = "{0} {0} {0} {1}px".format(
+    spacing_normal,
+    (
+        (
+            env_space_normal +
+            env_space_normal +
+            (env_font_size_big / 2) +
+            env_space_normal
+        )
+        * env_scale
+    ) | round | int
+) -%}
+
+
+configuration {
+    modes: [window,drun,run];
+    plugins: false;
+
+    dpi: {{ env_ethalon }};
+    scroll-method: 1;
+
+    show-icons: true;
+    icon-theme: "Nordzy";
+    run,drun {
+        fallback-icon: "application-gnunet-directory";
+    }
+
+    matching: "fuzzy";
+    matching-negate-char: '!';
+    tokenize: true;
+
+    drun-display-format: "{name} [<small><i>({exec})</i></small>]";
+    drun-show-actions: true;
+
+    kb-move-front: "Alt+a";
+    kb-move-end: "Alt+e";
+
+    kb-move-word-forward: "Alt+Right";
+    kb-move-word-back: "Alt+Left";
+
+    kb-remove-word-back: "Alt+w,Control+BackSpace";
+    kb-remove-to-eol: "Alt+k";
+    kb-remove-to-sol: "Alt+d";
+
+    kb-secondary-copy: "";
+    kb-cancel: "Escape,Control+c,Super+q";
+
+    kb-mode-previous: "Alt+ISO_Left_Tab";
+    kb-mode-next: "Alt+Tab";
+}
+
+window {
+    padding: {{ spacing_big }};
+    background-color: {{ env_inactive }};
+    border-color: {{ env_active }};
+    border: {{ spacing_normal }};
+
+    font: "monospace {{ (env_font_size_big * env_scale) | round | int }}px";
+}
+
+mainbox {
+    children: [ "mode-switcher", "inputbar", "listview" ];
+}
+
+mode-switcher {
+    padding: {{ spacing_normal }};
+}
+
+button {
+    cursor: pointer;
+    text-color: {{ env_accent }};
+}
+
+button selected {
+    background-color: {{ env_accent }};
+    text-color: {{ env_inactive }};
+}
+
+inputbar {
+    padding: {{ spacing_normal }};
+    spacing: 0px ;
+    text-color: {{ env_accent }};
+    children: [ "textbox-prompt-colon", "entry" ];
+}
+
+textbox-prompt-colon {
+    padding: {{ spacing_normal_top_right_bottom }};
+    margin: 0px 0.3000em 0.0000em 0.0000em ;
+    expand: false;
+    str: "";
+    text-transform: bold;
+    text-color: {{ env_accent }};
+}
+
+entry {
+    cursor: text;
+    
+    text-color: {{ env_accent }};
+
+    padding: {{ spacing_normal }};
+    border-color: {{ env_accent }};
+    border: {{ spacing_tiny }};
+
+    placeholder-color: {{ env_unimportant }};
+    placeholder: "Type to filter";
+}
+
+listview {
+    fixed-height: false;
+    dynamic: false;
+    scrollbar: true;
+    cycle: true;
+    columns: 1;
+
+    border: none;
+
+    margin: {{ spacing_listview }};
+}
+
+scrollbar {
+    width: {{ spacing_big }};
+    handle-color: {{ env_accent }};
+    margin: {{ spacing_normal_left }};
+}
+
+element {
+    cursor: pointer;
+    spacing: {{ spacing_normal_left }};
+    highlight: bold;
+}
+
+element-text {
+    padding: {{ spacing_light }};
+}
+
+element-icon {
+    padding: {{ spacing_light }};
+}
+
+element normal.normal, element alternate.normal {
+    background-color: {{ env_inactive }};
+    text-color: {{ env_accent }};
+}
+
+element normal.urgent, element alternate.urgent {
+    background-color: {{ env_inactive }};
+    text-color: {{ env_important }};
+}
+
+element normal.active, element alternate.active {
+    background-color: {{ env_inactive }};
+    text-color: {{ env_foreground }};
+}
+
+element selected.normal {
+    background-color: {{ env_accent }};
+    text-color: {{ env_inactive }};
+}
+
+element selected.urgent {
+    background-color: {{ env_accent }};
+    text-color: {{ env_important }};
+}
+
+element selected.active {
+    background-color: {{ env_accent }};
+    text-color: {{ env_foreground }};
+}

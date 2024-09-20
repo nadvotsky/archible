@@ -88,3 +88,26 @@
         src: dunst/dunstrc.j2
         dest: "/home/{{ env_user }}/.config/dunst/dunstrc"
         mode: "0644"
+
+- name: Configure rofi app launcher
+  block:
+    - name: Ensure rofi package is installed
+      community.general.pacman:
+        name: rofi
+        state: present
+      become: true
+
+    - name: Clean rofi configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/rofi"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render rofi configuration
+      ansible.builtin.template:
+        src: rofi/config.rasi.j2
+        dest: "/home/{{ env_user }}/.config/rofi/config.rasi"
+        mode: "0644"
