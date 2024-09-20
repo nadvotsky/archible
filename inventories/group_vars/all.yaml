@@ -119,3 +119,37 @@ env_font_offset_big: 3
 
 env_font_icon_size: 15
 env_font_icon_offset: 2
+
+env_theme:
+  dark1: &dark1 "#2e3440"
+  dark2: &dark2 "#3b4252"
+  dark3: &dark3 "#434c5e"
+  dark4: &dark4 "#4c566a"
+
+  snow1: &snow1 "#d8dee9"
+  snow2: &snow2 "#e5e9f0"
+  snow3: &snow3 "#eceff4"
+
+  cyan1: &cyan1 "#8fbcbb"
+  cyan2: &cyan2 "#88c0d0"
+
+  blue1: &blue1 "#81a1c1"
+  blue2: &blue2 "#5e81ac"
+
+  red: &red "#bf616a"
+  orange: &orange "#d08770"
+
+  yellow: &yellow "#ebcb8b"
+  green: &green "#a3be8c"
+
+  purple: &purple "#b48ead"
+
+env_accent: *blue1
+env_secondary: *cyan1
+env_foreground: *snow1
+env_background: *dark3
+env_important: *purple
+env_unimportant: *dark4
+env_active: *dark4
+env_inactive: *dark2
+env_border: *dark1
