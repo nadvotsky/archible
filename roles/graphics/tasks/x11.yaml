@@ -134,3 +134,45 @@
         dest: "/home/{{ env_user }}/.config/picom/picom.conf"
         mode: "0644"
         directory_mode: "0755"
+
+- name: Configure herbstluftwm window manager
+  block:
+    #
+    # Only git version introduces --binary-pipe
+    #
+    - name: Ensure herbstluftwm package is not installed to omit conflict
+      community.general.pacman:
+        name: herbstluftwm
+        state: absent
+      become: true
+
+    - name: Install git version of the herbstluftwm via AUR
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        common_aur: herbstluftwm-git
+
+    - name: Ensure miscellaneous packages are installed for herbstluftwm configuration
+      community.general.pacman:
+        name:
+          - luajit
+          - awk
+          - jq
+          - playerctl
+        state: present
+      become: true
+
+    - name: Clean herbstluftwm configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/herbstluftwm"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render herbstluftwm configuration
+      ansible.builtin.template:
+        src: herbstluftwm/autostart.j2
+        dest: "/home/{{ env_user }}/.config/herbstluftwm/autostart"
+        mode: "0755"

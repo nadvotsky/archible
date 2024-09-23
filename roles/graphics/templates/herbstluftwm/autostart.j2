@@ -1,0 +1,505 @@
+{%- set dpi = (env_ethalon * env_scale) | round | int -%}
+{%- set space_thin = [env_space_thin * env_scale, 1] | max | round | int -%}
+{%- set space_light = (env_space_light * env_scale) | round | int -%}
+{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
+{%- set space_big = (env_space_big * env_scale) | round | int -%}
+{%- set gap = (env_space_big * 2 * env_scale) | round | int -%}
+
+{%- set font_size = (env_font_size * env_scale) | round | int -%}
+{%- set font_offset = (env_font_offset * env_scale) | round | int -%}
+{%- set font = "\"sans-serif:style=semibold:pixelsize={}\"".format(font_size) -%}
+
+{%- set accent = "\"{}\"".format(env_accent) -%}
+{%- set foreground = "\"{}\"".format(env_foreground) -%}
+{%- set background = "\"{}\"".format(env_background) -%}
+{%- set important = "\"{}\"".format(env_important) -%}
+{%- set active = "\"{}\"".format(env_active) -%}
+{%- set inactive = "\"{}\"".format(env_inactive) -%}
+{%- set border = "\"{}\"".format(env_border) -%}
+
+{#
+    Allocating F5..F8, F1..F4 for the first monitor,
+    and allocating F9..F12 for the second monitor.
+
+    All of them can be used, or just some of them if there are less monitors or workspaces.
+#}
+{%- set monitors_keybind = [
+    (range(5, 8+1) | list) + (range(1, 4+1) | list),
+    range(9, 12+1) | list,
+] -%}
+
+{%- set n = "\n" -%}
+{%- set t1 = " " * 4 -%}
+{%- set t2 = " " * 8 -%}
+{%- set t3 = " " * 12 -%}
+
+#!/usr/bin/env luajit
+
+function mod(k)
+    return "Mod4-" .. k 
+end
+
+function alt(k)
+    return "Mod4-Shift-" .. k
+end
+
+local config = {
+    debug = nil,
+
+    extra = {
+        {"picom", "--daemon"},
+        {"hsetroot", "-solid", "'{{ env_background }}'" },
+        {"xsetroot", "-cursor_name", "left_ptr"},
+        {"polybar", "--quiet", "&"},
+        {"dunst", "&"},
+        {"numlockx", "on"},
+        -- {"/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"},
+    },
+
+    xresources = {
+        dpi = {{ dpi }},
+        autohint = 1,
+        lcdfilter = "lcddefault",
+        antialias = 1,
+    },
+
+    env = {
+        XDG_SESSION_TYPE = "x11",
+        QT_QPA_PLATFORM = "xcb",
+        SDL_VIDEODRIVER = "x11",
+        WINIT_UNIX_BACKEND = "x11",
+        ELECTRON_OZONE_PLATFORM_HINT = "x11",
+    },
+
+    monitors = {
+        {{- n -}}
+        {%- for mon in env_monitors -%}
+            {%- set binds = monitors_keybind[loop.index0] -%}
+            {{- t2 -}}{{ "{" }}{{- n -}}
+            {{- t3 -}}name = "{{ mon.name }}",{{- n -}}
+            {{- t3 -}}resolution = {{ "{" }}{{ mon.width }}, {{ mon.height }}{{ "}" }},{{- n -}}
+            {{- t3 -}}tags = {
+                {%- for i in range(mon.workspaces) -%}
+                    "F{{ binds[i] }}"
+                    {%- if not loop.last -%}
+                        {{- ", " -}}
+                    {%- endif -%}
+                {%- endfor -%}
+            },{{- n -}}
+            {%- if loop.first -%}
+                {{- t3 -}}scratch = {name = "scratch", key = "r"},{{- n -}}
+            {%- endif -%}
+            {{- t2 -}}{{ "}," }}{{- n -}}
+        {%- endfor -%}
+        {{- n -}}{{- t2 -}}
+
+        stack = "{{ env_monitors_stack }}",
+    },
+
+    settings = {
+        auto_detect_monitors = false,
+        auto_detect_panels = true,
+        
+        default_direction_external_only = true,
+        default_frame_layout = "max",
+        focus_crosses_monitor_boundaries = false,
+        focus_follows_mouse = true,
+        focus_stealing_prevention = true,
+        show_frame_decorations = "all",
+
+        frame_bg_transparent = true,
+        frame_border_width = {{ space_normal }},
+        frame_border_active_color = {{ active }},
+        frame_border_normal_color = {{ inactive }},
+
+        frame_gap = {{ gap }},
+        show_frame_decorations = "all",
+
+        swap_monitors_to_get_tag = false,
+
+        snap_distance = 0,
+        snap_gap = 0,
+
+        -- pseudotile_center_threshold = 0,
+    },
+
+    attrs = {
+        {"theme.background_color", {{ background }}},
+
+        {"theme.outer_color", {{ border }} },
+        {"theme.tab_outer_width", {{ space_thin }}},
+        {"theme.tab_outer_color", {{ border }}},
+
+        --
+        -- border_width acts different when outer_width is used:
+        -- For top (tabs) total size = outer_width + border_width
+        -- For left, right, bottom total size = border_width
+        -- 
+        -- Therefore, emulating unified look with paddings
+        --
+        {"theme.border_width", {{ space_normal }}},
+        {"theme.outer_width", {{ space_thin }}},
+        {"theme.padding_left", {{ space_thin }}},
+        {"theme.padding_right", {{ space_thin }}},
+        {"theme.padding_bottom", {{ space_thin }}},
+
+        {"theme.title_font", {{ font }}},
+        {"theme.padding_top", {{ space_normal - space_thin }}},
+        {"theme.title_height", {{ font_size }}},
+        {"theme.title_depth", {{ font_offset }}},
+
+        --
+        -- When tab is NOT active, the following is drawn from the bottom:
+        --   border_width pixels with active color (while title and top are using inactive color instead)
+        --   outer_width pixels with with outer_color
+        -- instead of:
+        --   border_width pixels with inactive color
+        --
+        -- This means no bottom padding is applied, so emulating a new one via title_depth
+        --
+        {"theme.tiling.title_depth", {{ font_offset + space_normal + space_thin }}},
+
+        {"theme.title_color", {{ accent }}},
+        {"theme.tab_title_color", {{ foreground }}},
+        {"theme.title_align", "center"},
+
+        {"theme.color", {{ inactive }}},
+        {"theme.active.color", {{ active }}},
+        {"theme.urgent.title_color", {{ foreground }}},
+        {"theme.urgent.color", {{ important }}},
+    },
+
+    binds = {
+        {{- "\n" -}}
+        {%- for direction, binds in {
+            "left": ["Left", "h"],
+            "down": ["Down", "j"],
+            "up": ["Up", "k"],
+            "right": ["Right", "l"],
+        }.items() -%}
+            {%- for bind in binds -%}
+                {%- set d = "\"{}\"".format(direction) -%}
+                {%- set m = "\"{}\"".format(bind) %}
+                {{- t2 -}}[mod {{ m }}] = {"focus", {{ d }}},{{- n -}}
+                {{- t2 -}}[alt {{ m }}] = {"shift", {{ d }}},{{- n -}}
+            {%- endfor -%}
+        {%- endfor -%}
+        {{- n -}}
+
+        {%- for i in range(5) -%}
+            {{ t2 }}[mod "{{ loop.index }}"] = {"focus_nth", {{ loop.index0 }}},{{- n -}}
+        {%- endfor -%}
+        {{- n -}}{{- t2 -}}
+
+        [alt "BackSpace"] = {"quit"},
+
+        [mod "q"] = {"close_and_remove"},
+        [mod "w"] = {"spawn", "wezterm"},
+        [mod "e"] = {"spawn", "rofi", "-show", "drun"},
+        [alt "e"] = {"spawn", "rofi", "-show", "window"},
+        [mod "y"] = {
+            "spawn", "rofi",
+                "-show", "drun",
+                "-display-drun", "drun (network namespaced)",
+                "-run-command",
+                    "vopono exec --custom /home/xnd/kek -- {cmd}",
+        },
+        -- [mod "r"] = implemented in the 'monitors' section
+
+        [mod "a"] = {"fullscreen", "toggle"},
+        [mod "s"] = {"cycle_layout", "+1"},
+        [alt "s"] = {"rotate"},
+        [mod "d"] = {"set_attr", "clients.focus.floating", "toggle"},
+        [mod "f"] = {"split", "explode"},
+
+        --
+        -- z, Swap with master is not implemented
+        -- as there is no master in binary tree
+        --
+        [mod "x"] = {
+            "or",
+                "OR", "and",
+                    "AND", "compare", "clients.focus.my_flagged", "=", "true",
+                    "AND", "set_attr", "clients.focus.my_flagged", "false",
+                "OR", "chain",
+                    "SEP", "new_attr", "bool", "clients.focus.my_flagged",
+                    "SEP", "set_attr", "clients.focus.my_flagged", "true",
+        },
+        [mod "v"] = {
+            "foreach", "CLIENT", "clients",
+                "sprintf", "ATTR", "%c.my_flagged", "CLIENT", "and",
+                    "AND", "compare", "ATTR", "=", "true",
+                    "AND",
+                        "sprintf", "WINIDATTR", "%c.winid", "CLIENT",
+                        "substitute", "WNDID", "WINIDATTR",
+                        "bring", "WNDID",
+                    "AND",
+                        "set_attr", "clients.focus.my_flagged", "false",
+        },
+
+        [mod "c"] = {
+            "chain",
+                "SEP", "split", "bottom", 0.5,
+                "SEP", "focus", "down", 
+        },
+        [mod "n"] = {
+            "chain",
+                "SEP", "split", "right", 0.5,
+                "SEP", "focus", "right", 
+        },
+        [alt "c"] = {"mirror", "vertical"},
+        [alt "n"] = {"mirror", "horizontal"},
+
+        [mod "u"] = {"jumpto", "urgent"},
+        [alt "u"] = {
+            "spawn", "bash", "-c",
+                "dunstctl history-pop $(" ..
+                    "dunstctl history |" ..
+                    "jq --raw-output '.data[][] | [.id.data, .appname.data, .summary.data] | @tsv' |" ..
+                    "rofi -dmenu -i | " .. 
+                    "awk '{ print ($1 ? $1 : -1); }'" ..
+                ")",
+        },
+        [mod "p"] = {"pseudotile", "toggle"},
+        [mod "m"] = {"set_attr", "clients.focus.minimized", true},
+        [alt "m"] = {"jumpto", "last-minimized"},
+
+        [mod "Escape"] = {"cycle_monitor", "+1"},
+        [alt "Escape"] = {"cycle_monitor", "-1"},
+
+        [mod "grave"] = {"substitute", "NAME", "tags.focus.my_next_tag", "use", "NAME"},
+        [alt "grave"] = {"substitute", "NAME", "tags.focus.my_prev_tag", "use", "NAME"},
+
+        [mod "Tab"] = {"cycle_frame", "+1"},
+        [alt "Tab"] = {"cycle_frame", "-1"},
+
+        [mod "Caps_Lock"] = {"cycle", "+1"},
+        [alt "Caps_Lock"] = {"cycle", "-1"},
+
+        [mod "Button1"] = {"move"},
+        [mod "Button2"] = {"zoom"},
+        [mod "Button3"] = {"resize"},
+
+        [mod "Button4"] = {"call", "substitute", "NAME", "tags.focus.my_next_tag", "use", "NAME"},
+        [mod "Button5"] = {"call", "substitute", "NAME", "tags.focus.my_prev_tag", "use", "NAME"},
+
+        ["XF86AudioPlay"] = {"spawn", "playerctl", "play-pause"},
+        ["XF86AudioStop"] = {"spawn", "playerctl", "stop"},
+        ["XF86AudioPrev"] = {"spawn", "playerctl", "previous"},
+        ["XF86AudioNext"] = {"spawn", "playerctl", "next"},
+    },
+
+    rules = {
+        "floatplacement=center",
+        "focus=on",
+
+        ["windowtype~'_NET_WM_WINDOW_TYPE_(DIALOG|UTILITY|SPLASH)'"] = "floating=on",
+        ["windowtype='_NET_WM_WINDOW_TYPE_DIALOG'"] ="focus=on",
+        ["windowtype~'_NET_WM_WINDOW_TYPE_(NOTIFICATION|DOCK|DESKTOP)'"] = "manage=off",
+        ["fixedsize"] = "floating=on",
+    },
+}
+
+function exec(...)
+    local cmdline = table.concat({...}, " ")
+
+    local exit_code = os.execute(cmdline)
+    if exit_code ~= 0 then
+        error(string.format(
+            "fatal: execution of '%s' returned non-zero exit code (%d).",
+            cmdline,
+            exit_code
+        ))
+    end
+end
+
+local handle = assert(io.popen("/usr/bin/herbstclient --binary-pipe 2>/dev/null >/dev/null", "w"))
+local run_cmd = "RUN" .. string.char(0)
+local commit = function (...)
+    for _, arg in ipairs({...}) do
+        handle:write("ARG" .. string.char(0) .. tostring(arg) .. string.char(0))
+    end
+    handle:write(run_cmd)
+end
+
+function process_debug(debug)
+    commit("emit_hook", "reload")
+    commit("keyunbind", "--all")
+    commit("mouseunbind", "--all")
+    commit("unrule", "--all")
+    commit("set_attr", "theme.reset", 1)
+end
+
+function process_xresources(xresources)
+    local line = "";
+    for key, value in pairs(xresources) do
+        line = line .. "Xft." .. key .. ": " .. tostring(value) .. "\\n"
+    end
+
+    exec(
+        "xrdb", "-load", "<(",
+            "printf", "'", line, "'",
+        ")"
+    )
+end
+
+function process_env(env)
+    for key, value in pairs(env) do
+        commit("setenv", key, value)
+    end
+end
+
+function process_settings(settings)
+    for prop, value in pairs(settings) do
+        commit("set", prop, value)
+    end
+end
+
+function process_attrs(attrs)
+    for _, tuple in ipairs(attrs) do
+        commit("set_attr", tuple[1], tuple[2])
+    end
+end
+
+function process_tag(monitor, tag)
+    commit("add", tag.name)
+
+    --
+    -- in general, formula to wrap a value to [a, b] looks like this:
+    -- next = (v - min + 1) % (max - min + 1) + min
+    -- prev = (v - min - 1) % (max - min + 1) + min
+    --
+    local next_tag = monitor.name .. "-" .. (tag.index % tag.total + 1)
+    commit("new_attr", "string", "tags.by-name." .. tag.name .. ".my_next_tag", next_tag)
+
+    local prev_tag = monitor.name .. "-" .. ((tag.index - 1 - 1) % tag.total + 1)
+    commit("new_attr", "string", "tags.by-name." .. tag.name .. ".my_prev_tag", prev_tag)
+
+    commit(
+        "keybind",
+        mod(tag.key),
+        "and",
+            "AND", "focus_monitor", monitor.name,
+            "AND", "use", tag.name 
+    )
+    commit("keybind", alt(tag.key), "move", tag.name)
+end
+
+function process_scratch(scratch)
+    commit("add", scratch.name)
+    commit("floating", scratch.name, "on")
+    commit(
+        "keybind",
+        mod(scratch.key),
+        "or",
+            "OR", "and",
+                "AND", "compare", "tags.focus.name", "=", scratch.name,
+                "AND", "use_previous",
+            "OR", "use", scratch.name
+    )
+end
+
+function process_monitors(monitors)
+    local acc = {0, 0}
+    local rects = {}
+    local dimension = (monitors.stack == "vertical") and 2 or 1
+
+    function tag_name(monitor_name, i)
+        return monitor_name .. "-" .. i
+    end
+
+    for _, monitor in ipairs(monitors) do
+        rects[#rects + 1] = string.format(
+            "%dx%d+%d+%d",
+            monitor.resolution[1],
+            monitor.resolution[2],
+            acc[1],
+            acc[2]
+        )
+        acc[dimension] = acc[dimension] + monitor.resolution[dimension]
+
+        for i, tag in ipairs(monitor.tags) do
+            process_tag(
+                monitor, 
+                {
+                    name = tag_name(monitor.name, i),
+                    key = tag,
+                    index = i,
+                    total = #monitor.tags,
+                }
+            )
+        end
+
+        if monitor.scratch then
+            process_scratch(monitor.scratch)
+        end
+    end
+
+    commit("set_monitors", unpack(rects))
+    for i = #monitors, 1, -1 do
+        local monitor = monitors[i]
+
+        commit("set_attr", "monitors." .. (i - 1) .. ".name", monitor.name)
+        commit("focus_monitor", monitor.name)
+        commit("use", tag_name(monitor.name, 1))
+    end
+    commit("merge_tag", "default")
+end
+
+function process_binds(binds)
+    for bind, command in pairs(binds) do
+        commit(
+            (string.find(bind, "Button") ~= nil) and "mousebind" or "keybind",
+            bind,
+            unpack(command)
+        )
+    end
+end
+
+function process_rules(rules)
+    for _, global_rule in ipairs(rules) do
+        commit("rule", global_rule)
+    end
+    for selector, rule in pairs(rules) do
+        commit("rule", selector, rule)
+    end
+end
+
+function process_extra(extra)
+    --
+    -- It is crucial to invoke close() BEFORE spawning external processes
+    -- (daemons and detached processes via &) that might last longer than the current process.
+    --
+    -- Otherwise, a deadlock will occur due to file descriptor inheritance.
+    -- It means it would not be possible to close the pipe,
+    --   since external processes will hold the inherited file descriptor
+    --   that are used by the pipe process too.
+    --
+    -- Needless to say there must be no commit() calls after the pipe was closed.
+    --
+    commit("unlock")
+    handle:close()
+
+    for _, b in ipairs(extra) do
+        exec(unpack(b))
+    end
+end
+
+(function (conf)
+    for sub, tuple in ipairs({
+        {"xresources", process_xresources},
+        {"debug", process_debug},
+        {"env", process_env},
+        {"settings", process_settings},
+        {"monitors", process_monitors},
+        {"attrs", process_attrs},
+        {"rules",  process_rules},
+        {"binds", process_binds},
+        {"extra", process_extra},
+    }) do
+        local sub, fun = unpack(tuple)
+        if conf[sub] ~= nil then
+            fun(conf[sub])
+        end
+    end
+end)(config)
