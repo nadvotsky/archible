@@ -1,0 +1,219 @@
+{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
+{%- set space_text = " " * ((env_space_thin * env_scale) | round | int) -%}
+{%- set space_icon = " " * ((env_space_light * env_scale) | round | int) -%}
+
+{%- set font_icon = "{} {}px".format(env_font_icon, (env_font_icon_size * env_scale) | round | int) -%}
+
+{%- set warn_icon = "\uf071" -%}
+{%- macro section(icon, content="", class="", important=false, warn=false, micro=false) -%}
+    {%- set prefix = "<span font='{}' line_height='1.2' background='{}'>{}{}{}</span>".format(
+        font_icon,
+        env_important if warn or important else env_active,
+        space_icon,
+        ("\\U{:>08}".format(icon).encode().decode("unicode-escape") | tojson)[1:-1],
+        space_icon,
+    ) -%}
+    {%- set class = ("-" + class) if class else "" -%}
+
+    {%- if micro -%}
+        "format{{ class }}": "{{ prefix }}",
+    {%- else -%}
+        {%- set middle = "{}{}{}".format(space_text, content, space_text) -%}
+        {%- if warn -%}
+            {%- set suffix = "<span font='{}' background='{}'>{}{}{}</span>".format(
+                font_icon,
+                env_important,
+                space_icon,
+                warn_icon,
+                space_icon,
+            ) -%}
+            "format{{ class }}": "{{ prefix }}{{ middle }}{{ suffix }}",
+        {%- else -%}
+            "format{{ class }}": "{{ prefix }}{{ middle }}",
+        {%- endif -%}
+    {%- endif -%}
+{%- endmacro -%}
+
+{
+    // "include": [""],
+
+    "layer": "bottom",
+    "position": "top",
+    // "output": "{{ (env_monitors | first).wayland }}",
+    "mode": "dock",
+    "exclusive": true,
+    "passthrough": false,
+    "ipc": false,
+    // "id": "",
+    "start_hidden": false,
+
+    //?
+    "reload_style_on_change": true,
+
+    "modules-left": ["cpu", "memory#ram", "memory#swap", "disk", "custom/uptime"],
+    "modules-center": ["group/workspaces-primary-group", "clock"],
+    "modules-right": ["mpris", "wireplumber", "custom/netns"],
+    // "modules-left": ["cpu", "memory#ram", "memory#swap", "disk", "custom#uptime"],
+    // "modules-center": ["workspaces#primary", "clock"],
+    // "modules-right": ["mpris", "wireplumber", "group#keyboard", "custom#netns"],
+
+    // margin: "",
+    // margin-<top|left|bottom|right>: 0,
+    "spacing": {{ space_normal }},
+    "fixed-center": false,
+
+    "cpu": {
+        "interval": 10,
+        "states": {
+            "warn": 90,
+        },
+
+        {{ section("f4bc", micro=true) }}
+        {{ section("f4bc", micro=true, class="warn", warn=true) }}
+    },
+
+    "memory#ram": {
+        "interval": 10,
+        "tooltip": false,
+        "states": {
+            "warn": 90,
+        },
+
+        {{ section("efc5", "{used} GiB / {total} GiB") }}
+        {{ section("efc5", "{used} GiB / {total} GiB", class="warn", warn=true) }}
+    },
+
+    "memory#swap": {
+        "interval": 20,
+        "tooltip": false,
+        "states": {
+            "warn": 90,
+        },
+
+        {{ section("f0fb7", "{swapUsed} GiB") }}
+        {{ section("f0fb7", "{swapUsed} GiB", class="warn", warn=true) }}
+    },
+
+    "group/workspaces-primary-group": {
+        "orientation": "horizontal",
+        "modules": [
+            "custom/workspaces-primary-icon",
+            "hyprland/workspaces#primary"
+        ]
+    },
+    
+    "custom/workspaces-primary-icon": {
+        "format": "kek"
+    },
+
+    "hyprland/workspaces#primary": {
+        "active-only": false,
+        "all-outputs": true,
+        "persistent-workspaces": {
+            "primary-1": [],
+            "primary-2": [],
+        },
+        "show-special": true,
+
+        "format": "{name}",
+    },
+
+    "clock": {
+        "interval": 1,
+
+        {{ section("e383", "{:%a %b %d %r}") }}
+        {{ section("e383", "{:%F %r %Z}", class="alt") }}
+
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "weeks-pos": "",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='{{ env_accent }}'><b>{}</b></span>",
+                "days": "<span color='{{ env_foreground }}'><b>{}</b></span>",
+                "weekdays": "<span color='{{ env_secondary }}'><b>{}</b></span>",
+                "today": "<span color='{{ env_important }}'><b><u>{}</u></b></span>"
+            },
+        },
+        "actions": {
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down",
+        },
+    },
+
+    "disk": {
+        "interval": 60,
+        "unit": "GB",
+        "tooltip": false,
+        "path": "/",
+        "states": {
+            "warn": 90,
+        },
+
+        {{ section("f413", "{specific_used:0.2f} / {specific_total:0.2f}") }}
+        {{ section("f413", "{specific_used:0.2f} / {specific_total:0.2f}", class="warn", warn=true) }}
+    },
+
+    "custom/uptime": {
+        "tooltip": false,
+        "interval": 60,
+
+        "exec": "uptime -p | awk '{ gsub(/up /, _);
+        {%- for r in ["days", "hours", "minutes"] -%}
+            gsub(/ {{ r }}?,?/, \"{{ r[0] }}\");
+        {%- endfor -%}
+        print }'",
+
+        {{ section("f1ae1", "{}") }}
+    },
+
+    //
+
+    "mpris": {
+        "interval": 1,
+        "dynamic-order": [
+            "artist",
+            "title"
+        ],
+        "format-len": 20,
+        "dynamic-separator": " \u2012 ",
+
+        "tooltip": true,
+        "tooltip-format": "{dynamic}",
+
+        "on-click": "playerctl next",
+        "on-click-right": "playerctl previous",
+        "on-click-middle": "playerctl play-pause",
+
+        {{ section("ec1b", "{dynamic}") }}
+    },
+
+    "wireplumber": {
+        "scroll-step": 2.0,
+        "tooltip": false,
+        "on-click": "wpctl set-mute @DEFAULT_SINK@ toggle",
+
+        {{ section("f0580", "{volume}%") }}
+        {{ section("f0581", "Muted", class="muted", important=true) }}
+    },
+
+    "group/keyboard-group": {
+
+    },
+
+    "keyboard-state": {
+        "scrolllock": false,
+        "device-path": "/dev/input/event3",
+
+        {{ section("f11c", "{icon}") }}
+    },
+
+    "custom/netns": {
+        "interval": 5,
+        "tooltip": false,
+        "exec": "test $(ip netns list | wc --lines) -ge 1 && (ip netns list | tr '\\n' ' ') || echo default",
+
+        {{ section("f0484", "{}") }}
+    },
+}

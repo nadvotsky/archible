@@ -1,1 +1,35 @@
 ---
+- name: Configure waybar bar
+  block:
+    - name: Ensure waybar package is installed
+      community.general.pacman:
+        name: waybar
+        state: waybar
+      become: true
+
+    - name: Clean waybar configuration
+      ansible.builtin.file:
+        path: "/home/{{ env_user }}/.config/waybar"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render waybar configuration
+      ansible.builtin.template:
+        src: waybar/style.css.j2
+        dest: "/home/{{ env_user }}/.config/waybar/style.css"
+        mode: "0644"
+
+    - name: Render waybar configuration
+      ansible.builtin.template:
+        src: waybar/config.jsonc.j2
+        dest: "/home/{{ env_user }}/.config/waybar/config.jsonc"
+        mode: "0644"
+#
+# TODO: LIBSET_BACKEND to speed up
+# TODO: xorg-xwayland
+# TODO: __GL* variables
+# TODO: qt+gtk theme
+#

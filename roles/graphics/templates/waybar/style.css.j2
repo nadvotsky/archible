@@ -1,0 +1,38 @@
+{%- set space_thin = "{}px".format([env_space_thin * env_scale, 1] | max | round | int) -%}
+{%- set space_light = "{}px".format((env_space_light * env_scale) | round | int) -%}
+{%- set space_normal = "{}px".format((env_space_normal * env_scale) | round | int) -%}
+{%- set space_big = "{}px".format((env_space_big * env_scale) | round | int) -%}
+
+{%- set section_text_spacing = (env_space_light * env_scale) | round | int -%}
+{%- set section_icon_spacing = (env_space_light * 2 * env_scale) | round | int -%}
+
+{%- set font_size = "{}px".format((env_font_size * env_scale) | round | int) -%}
+{%- set font_icon_size = "{}px".format((env_font_icon_size * env_scale) | round | int) -%}
+
+window#waybar {
+    font: 600 {{ font_size }} sans-serif;
+
+    color: {{ env_foreground }};
+    background-color: {{ env_inactive }};
+}
+
+window#waybar > box {
+    margin: {{ space_normal }};
+}
+
+widget > label {
+    border: 1px solid {{ env_active }};
+}
+
+label.warn, label.muted {
+    border: 1px solid {{ env_important }};
+}
+
+tooltip {
+    border-radius: 0;
+    border: {{ space_thin }} solid {{ env_active }};
+}
+
+tooltip.background {
+    background: {{ env_inactive }};
+}
