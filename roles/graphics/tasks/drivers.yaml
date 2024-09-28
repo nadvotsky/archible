@@ -10,15 +10,13 @@
   become: true
 
 - name: Configure VA-API <-> NvDEC bridge
-  ansible.builtin.lineinfile:
-    dest: /etc/environment
-    regexp: "^{{ item.key }}"
-    line: "{{ item.key }}={{ item.value }}"
-  loop:
-    - key: LIBVA_DRIVER_NAME
-      value: nvidia
-    - key: NVD_BACKEND
-      value: direct
-    - key: __GL_ALLOW_UNOFFICIAL_PROTOCOL
-      value: 1
-  become: true
+  ansible.builtin.include_role:
+    name: common
+  vars:
+    _common_env:
+      - key: LIBVA_DRIVER_NAME
+        value: nvidia
+      - key: NVD_BACKEND
+        value: direct
+      - key: __GL_ALLOW_UNOFFICIAL_PROTOCOL
+        value: 1
