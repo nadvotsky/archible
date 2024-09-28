@@ -1,15 +1,14 @@
 ---
 - name: Install aur package
-  when: common_aur is defined
+  when: _common_aur is defined
   ansible.builtin.command:
     cmd: >-
       paru
-      --aur
       --sudoflags "--stdin"
       --noconfirm
       --needed
       --sync
-      "{{ common_aur }}"
+      {{ (_common_aur is string) | ternary([_common_aur], _common_aur) | join(" ") }}
     stdin: "{{ env_user_password }}\n"
-  register: paru_output
-  changed_when: paru_output.rc == 0
+  register: __paru_invocation
+  changed_when: __paru_invocation.rc == 0
