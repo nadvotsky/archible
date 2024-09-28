@@ -71,7 +71,7 @@
     //
     "Up":             "CursorUp",
     "Down":           "CursorDown",
-    "Right":          "CursorRight",    
+    "Right":          "CursorRight",
     "Left":           "CursorLeft",
     "ShiftUp":        "SelectUp",
     "ShiftDown":      "SelectDown",
@@ -110,9 +110,10 @@
     "Ctrl-s":         "Save",
     //"Ctrl-S":         "SaveAs",
     "Ctrl-q":         "Quit",
+    "Ctrl-c":         "Quit",
     "Ctrl-e":         "CommandMode",
 
-    "Ctrl-c":         "Copy",
+    "Alt-c":         "Copy",
     "Ctrl-x":         "Cut",
     "Ctrl-v":         "Paste",
 
@@ -248,6 +249,6 @@
     "AltShiftDown": "None", // "SpawnMultiCursorDown",
     "Alt-m":        "None", // "SpawnMultiCursorSelect",
     "Alt-p":        "None", // "RemoveMultiCursor",
-    "Alt-c":        "None", // "RemoveAllMultiCursors",
+    // "Alt-c":        "RemoveAllMultiCursors",
     "Alt-x":        "None", // "SkipMultiCursor",
 }
