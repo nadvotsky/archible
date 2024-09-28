@@ -12,3 +12,12 @@
     stdin: "{{ env_user_password }}\n"
   register: __paru_invocation
   changed_when: __paru_invocation.rc == 0
+
+- name: Modify global environmental variables
+  when: _common_env is defined
+  ansible.builtin.lineinfile:
+    dest: /etc/environment
+    regexp: "^{{ item.key }}"
+    line: "{{ item.key }}={{ item.value }}"
+  loop: "{{ _common_env }}"
+  become: true
