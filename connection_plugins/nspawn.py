@@ -93,12 +93,13 @@ class Connection(ChrootConnection):
         #
         # To be Python 2 compatible, no star (*) unpacking is used here
         #
-        self.nspawn_args = \
-            [self.get_option("nspawn_exe")] + \
-            shlex_split(self.get_option("nspawn_args")) + \
-            (["--user=%s" % user] if user is not None else []) + \
-            ["--directory=%s" % self.nspawn_root] + \
-            ["--"]
+        self.nspawn_args = (
+            [self.get_option("nspawn_exe")]
+            + shlex_split(self.get_option("nspawn_args"))
+            + (["--user=%s" % user] if user is not None else [])
+            + ["--directory=%s" % self.nspawn_root]
+            + ["--"]
+        )
         display.vvv("NSPAWN ARGS %s" % self.nspawn_args, host=self.nspawn_root)
 
         super(ChrootConnection, self)._connect()
