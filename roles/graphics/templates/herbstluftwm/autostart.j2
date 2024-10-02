@@ -197,12 +197,20 @@ local config = {
         [mod "w"] = {"spawn", "wezterm"},
         [mod "e"] = {"spawn", "rofi", "-show", "drun"},
         [alt "e"] = {"spawn", "rofi", "-show", "window"},
+        -- [mod "r"] = implemented in the 'monitors' section
         [mod "y"] = {
             "spawn", "rofi",
                 "-show", "drun",
                 "-display-drun", "drun (network namespaced)",
-                "-run-command",
-                    "vopono exec --custom /home/xnd/kek -- {cmd}",
+                "-run-command", "vopono exec -- {cmd}",
+        },
+        [mod "o"] = {
+            "spawn", "bash", "-c",
+                "shotgun -f png -g $(hacksaw) - | xclip -t 'image/png' -selection clipboard"
+        },
+        [alt "o"] = {
+            "spawn", "bash", "-c",
+                "shotgun -f png -g $(hacksaw) $(xdg-user-dir PICTURES)/shot-$(date +%s).png",
         },
         -- [mod "r"] = implemented in the 'monitors' section
 
