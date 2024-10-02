@@ -16,7 +16,7 @@ env_hostname: hostname
 #
 env_root_hash: $y$j9T$bc6ILThq29/KeZ4nsvExl.$G81Y9dCNivTbZ75JCyVNbduZzI3dxMwwW185EMeIqsC
 
-env_user: xnd
+env_user: test
 env_user_name: User
 env_user_full_name: User Name
 env_user_alt_name: Nom d'Utilisateur
@@ -81,7 +81,7 @@ env_ethalon: 96
 #   it is not the case for the WM & related programs.
 #
 #   For instance, when herbstluftwm draws a 5 pixels border around window,
-#   it is quite noticable when rofi draws about 7 pixels. 
+#   it is quite noticable when rofi draws about 7 pixels.
 #   Another example is that changing dpi for polybar will not affect other
 #   programs, as well as will break polybar itself, because font offset
 #   is not affected by the DPI.
@@ -153,3 +153,295 @@ env_unimportant: *dark4
 env_active: *dark4
 env_inactive: *dark2
 env_border: *dark1
+
+machine:
+  disk_identifier: ata-SSD_256GB
+  mount: /mnt
+
+  locale: en_US.UTF-8
+  keymap: us
+  timezone: Europe/Berlin
+  hostname: hostname
+
+  mountopts:
+    root: >-
+      async,noatime,auto,dev,exec,noiversion,suid,rw,nouser,
+      dax=always,nodiscard,noquota
+    efi: >-
+      sync,noatime,auto,dev,exec,noiversion,suid,rw,nouser,
+      fmask=0023,dmask=0022,check=s,discard,errors=remount-ro,iocharset=utf8,tz=UTC,flush,utf8
+
+users:
+  root:
+    hash: $y$j9T$yzLL6IpEY0hydoNHoqAmo.$uNfVS3UFtnFT9rYXQahcCwBM5hNlChGAZcn49x1.dL1
+
+  user:
+    name: test
+    groups:
+      - video
+      - kvm
+      - input
+      - wheel
+      - seat
+      - systemd-journal
+
+    home: /home/test
+    config: /home/test/.config
+    local_share: /home/test/.local/share
+
+    short: User
+    full: User Name
+    alt: Nom d'Utilisateur
+    email: example@.local
+
+    password: test
+    hash: $y$j9T$bc6ILThq29/KeZ4nsvExl.$G81Y9dCNivTbZ75JCyVNbduZzI3dxMwwW185EMeIqsC
+
+    xdg:
+      downloads: dls
+      documents: env
+      pictures: media/pics
+      videos: media/vids
+      music: media/music
+      templates: misc/templates
+      publicshare: misc/public
+      desktop: misc/desktop
+
+gpg:
+  private:
+    name: "{{ users.user.name }}"
+    comment: private usage only
+    email: "{{ users.user.name }}@invalid."
+    password: test
+    cert:
+      private_cert:
+        algo: ecdsa
+        hint: nistp256
+    encr:
+      private_encr_main:
+        algo: ecdh
+        hint: nistp256
+      private_encr_passwords:
+        algo: ecdh
+        hint: nistp256
+      private_encr_backups:
+        algo: ecdh
+        hint: nistp256
+    ssh:
+      private_ssh:
+        priority: 100
+        algo: ecdsa
+        hint: nistp256
+  compat:
+    name: "{{ users.user.full }}"
+    comment: "{{ users.user.alt }}; compat algorithms"
+    email: "{{ users.user.email }}"
+    password: test
+    cert:
+      compat_cert:
+        algo: rsa
+        hint: 3072
+    sign:
+      compat_sign_main:
+        algo: dsa
+        hint: 2048
+      compat_sign_alt:
+        algo: rsa
+        hint: 3072
+    encr:
+      compat_encr:
+        algo: rsa
+        hint: 3072
+    ssh:
+      compat_ssh:
+        priority: 500
+        algo: rsa
+        hint: 3072
+  primary:
+    name: "{{ users.user.full }}"
+    comment: "{{ users.user.alt }}"
+    email: "{{ users.user.email }}"
+    password: test
+    cert:
+      primary_cert:
+        algo: ecdsa
+        hint: nistp256
+    sign:
+      primary_sign:
+        algo: ecdsa
+        hint: nistp256
+    encr:
+      primary_encr:
+        algo: ecdh
+        hint: nistp256
+    ssh:
+      primary_ssh_main:
+        priority: -100
+        algo: ecdsa
+        hint: nistp256
+      primary_ssh_alt:
+        priority: -500
+        algo: ed25519
+        hint: ""
+
+icons:
+  main:
+    name: Zorin
+    package: zorin-icon-themes
+
+  launcher:
+    name: Nordzy
+    package: nordzy-icon-theme
+
+fonts:
+  sizes: &fonts-sizes
+    small: 11
+    medium: 13
+    big: 16
+  offsets:
+    small: 1
+    medium: 2
+    big: 3
+
+  monospace:
+    name: Source Code Pro
+    package: adobe-source-code-pro-fonts
+    sizes: *fonts-sizes
+  serif:
+    name: Inter
+    package: inter-font
+    sizes: *fonts-sizes
+  sans_serif:
+    name: Inter
+    package: inter-font
+    sizes: *fonts-sizes
+  emoji:
+    name: JoyPixels
+    package: ttf-joypixels
+    sizes: *fonts-sizes
+  icon:
+    name: Symbols Nerd Font Mono
+    package: ttf-nerd-fonts-symbols-mono
+    sizes:
+      small: 13
+      medium: 15
+      big: 18
+    offsets:
+      small: 2
+      medium: 2
+      big: 3
+
+gui:
+  gtk:
+    name: Arc-Dark-solid
+    package: arc-solid-gtk-theme
+
+  kvantum:
+    name: ArcDark
+    package: kvantum-theme-arc
+
+monitors:
+  stack: horizontal
+  items:
+    primary:
+      workspaces: 8
+      width: 1920
+      height: 1080
+      refresh: 60
+      x11: DFP-1
+      wayland: HDMI-A-1
+
+    secondary:
+      workspaces: 4
+      width: 1280
+      height: 1024
+      refresh: 75
+      x11: DFP-5
+      wayland: HDMI-A-3
+
+scale:
+  #
+  # Assuming that virtual perfect monitor has the following DPI.
+  # All spacings are based on this value.
+  #
+  ethalon: 96
+  #
+  # Real monitor is different.
+  #
+  # Dpi is a very tricky metric, because it is up to the application
+  # how to implement scaling. For example:
+  #   herbstluftwm
+  #     scales font,
+  #     does not scale paddings, offsets, etc.
+  #   polybar
+  #     scales spaces, points, both :size and :pixelsize,
+  #     does not scale pixels and font offsets.
+  #   dunst
+  #     scales sizes, spacings, and font when dpi is greater than 96,
+  #     but only (down)scales font when dpi is smaller than 96
+  #   and so on.
+  #
+  #   While it is okay for the regular user applications to be scaled arbitrary,
+  #   it is not the case for the WM & related programs.
+  #
+  #   For instance, when herbstluftwm draws a 5 pixels border around window,
+  #   it is quite noticable when rofi draws about 7 pixels.
+  #   Another example is that changing dpi for polybar will not affect other
+  #   programs, as well as will break polybar itself, because font offset
+  #   is not affected by the DPI.
+  #
+  #   Practically it means that it is impossible to create a dpi-aware stack
+  #   of the window manager environment. Therefore, using its own dpi-like mechanism,
+  #   where elements are being scaled at the template rendering stage.
+  #
+  real: 0.9
+
+spacing:
+  thin: 1
+  light: 2
+  normal: 6
+  big: 11
+
+notifications:
+  monitor: secondary
+  height: 0.3
+  width: 0.6
+
+theme:
+  dark1: &dark1 "#2e3440"
+  dark2: &dark2 "#3b4252"
+  dark3: &dark3 "#434c5e"
+  dark4: &dark4 "#4c566a"
+
+  snow1: &snow1 "#d8dee9"
+  snow2: &snow2 "#e5e9f0"
+  snow3: &snow3 "#eceff4"
+
+  cyan1: &cyan1 "#8fbcbb"
+  cyan2: &cyan2 "#88c0d0"
+
+  blue1: &blue1 "#81a1c1"
+  blue2: &blue2 "#5e81ac"
+
+  red: &red "#bf616a"
+  orange: &orange "#d08770"
+
+  yellow: &yellow "#ebcb8b"
+  green: &green "#a3be8c"
+
+  purple: &purple "#b48ead"
+
+preset:
+  accent: *blue1
+  alternative: *cyan1
+
+  foreground: *snow1
+  background: *dark3
+
+  important: *purple
+  unimportant: *dark4
+
+  active: *dark4
+  inactive: *dark2
+
+  border: *dark1

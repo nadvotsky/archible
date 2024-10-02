@@ -10,25 +10,24 @@ prelude:
   hosts:
     early:
       ansible_connection: nspawn
-      ansible_nspawn_root: "{{ env_system_mount }}"
+      ansible_nspawn_root: "{{ machine.mount }}"
       ansible_nspawn_args: >-
         --quiet
         --register=no
         --as-pid2 --pipe
-        --hostname={{ env_hostname }} --machine={{ env_hostname }}
+        --hostname={{ machine.hostname }} --machine={{ machine.hostname }}
         --resolv-conf=off --timezone=off --link-journal=no
 
 systems:
   hosts:
     main:
       ansible_connection: nspawn
-      ansible_nspawn_user: "{{ env_user }}"
-      ansible_nspawn_root: "{{ env_system_mount }}"
+      ansible_become_password: "{{ users.user.password }}"
+      ansible_nspawn_user: "{{ users.user.name }}"
+      ansible_nspawn_root: "{{ machine.mount }}"
       ansible_nspawn_args: >-
         --quiet
         --register=no
         --as-pid2 --pipe
-        --hostname={{ env_hostname }} --machine={{ env_hostname }}
+        --hostname={{ machine.hostname }} --machine={{ machine.hostname }}
         --resolv-conf=bind-host --timezone=off --link-journal=no
-
-      ansible_become_password: "{{ env_user_password }}"
