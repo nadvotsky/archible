@@ -64,7 +64,9 @@ local config = {
     },
 
     env = {
+        XDG_CURRENT_DESKTOP = "herbstluftwm",
         XDG_SESSION_TYPE = "x11",
+        GDK_BACKEND = "x11",
         QT_QPA_PLATFORM = "xcb",
         SDL_VIDEODRIVER = "x11",
         WINIT_UNIX_BACKEND = "x11",
@@ -212,7 +214,6 @@ local config = {
             "spawn", "bash", "-c",
                 "shotgun -f png -g $(hacksaw) $(xdg-user-dir PICTURES)/shot-$(date +%s).png",
         },
-        -- [mod "r"] = implemented in the 'monitors' section
 
         [mod "a"] = {"fullscreen", "toggle"},
         [mod "s"] = {"cycle_layout", "+1"},
@@ -352,9 +353,14 @@ function process_xresources(xresources)
 end
 
 function process_env(env)
+    local activation_env = {"DISPLAY"}
+
     for key, value in pairs(env) do
         commit("setenv", key, value)
+        activation_env[#activation_env+1] = key .. "=" .. value
     end
+
+    exec("dbus-update-activation-environment", "--systemd", unpack(activation_env))
 end
 
 function process_settings(settings)
