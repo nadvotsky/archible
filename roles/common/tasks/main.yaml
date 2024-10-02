@@ -9,7 +9,7 @@
       --needed
       --sync
       {{ (_common_aur is string) | ternary([_common_aur], _common_aur) | join(" ") }}
-    stdin: "{{ env_user_password }}\n"
+    stdin: "{{ users.user.password }}\n"
   register: __paru_invocation
   changed_when: __paru_invocation.rc == 0
 
