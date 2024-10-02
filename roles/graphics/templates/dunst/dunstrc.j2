@@ -22,6 +22,10 @@
 {%- set space_normal = (env_space_normal * env_scale) | round | int -%}
 {%- set space_big = (env_space_big * env_scale) | round | int -%}
 
+{%- macro format(color) -%}
+<span weight='bold' color='{{ color }}'>%a</span>\n<b>%s</b>\n%b
+{%- endmacro -%}
+
 
 [global]
 monitor = {{ env_monitors.index(monitor) }}
@@ -64,7 +68,7 @@ gap_size = {{ space_big }}
 corner_radius = 0
 font = "monospace {{ (env_font_size_big * env_scale) | round | int }}px"
 line_height = {{ space_normal }}
-format = "<span weight='bold' color='{{ env_accent }}'>%a</span>\n<b>%s</b>\n%b"
+format = "{{ format(env_foreground) }}"
 vertical_alignment = center
 
 mouse_left_click = "do_action"
@@ -76,7 +80,7 @@ word_wrap = true
 alignment = center
 markup = full
 
-notification_limit = 10
+notification_limit = {{ (monitor.height / height) | round | int }}
 indicate_hidden = true
 
 idle_threshold = 0
@@ -97,16 +101,17 @@ dmenu = "/usr/bin/rofi -dmenu"
 [global]
 background = "{{ env_inactive }}"
 foreground = "{{ env_foreground }}"
-highlight = "{{ env_accent }}"
-
-
-[urgency_low]
 frame_color = "{{ env_active }}"
+highlight = "{{ env_active }}"
 
 
 [urgency_normal]
-frame_color = "{{ env_foreground }}"
+frame_color = "{{ env_accent }}"
+highlight = "{{ env_accent }}"
+format = "{{ format(env_accent) }}"
 
 
 [urgency_critical]
 frame_color = "{{ env_important }}"
+highlight = "{{ env_important }}"
+format = "{{ format(env_important) }}"
