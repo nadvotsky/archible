@@ -10,6 +10,9 @@
           - xorg-xeyes
           - numlockx
           - hsetroot
+          - xclip
+          - shotgut
+          - hacksaw
         state: present
       become: true
 
