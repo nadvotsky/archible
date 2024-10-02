@@ -1,29 +1,36 @@
 ---
 - name: Configure fonts
   block:
-    - name: Install fonts and rendering libraries
+    - name: Install rendering libraries
       community.general.pacman:
         name:
           - freetype2
           - fontconfig
-          - adobe-source-code-pro-fonts
-          - inter-font
-          - ttf-nerd-fonts-symbols-mono
-          - ttf-joypixels
         state: present
       become: true
 
+    - name: Install fonts
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        _common_aur: "{{ fonts | dict2items | map(attribute='value.package') }}"
+
     - name: Clean fontconfig configuration
       ansible.builtin.file:
-        path: "/home/{{ env_user }}/.config/fontconfig"
-        state: absent
+        path: "{{ users.user.config }}/fontconfig"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
 
-    - name: Copy fontconfig configuration
-      ansible.builtin.copy:
-        src: fontconfig/fonts.conf
-        dest: "/home/{{ env_user }}/.config/fontconfig/fonts.conf"
+    - name: Render fontconfig configuration
+      ansible.builtin.template:
+        src: fontconfig/fonts.conf.j2
+        dest: "{{ users.user.config }}/fontconfig/fonts.conf"
         mode: "0644"
-        directory_mode: "0755"
+        lstrip_blocks: true
+        trim_blocks: true
 
 - name: Configure icons
   block:
@@ -33,7 +40,12 @@
         state: present
       become: true
 
-    - name: Install nordzy icons via AUR
+    - name: Install icons via AUR
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        _common_aur: "{{ item.value.package }}"
+      loop: "{{ icons | dict2items }}"
       ansible.builtin.include_role:
         name: common
       vars:
