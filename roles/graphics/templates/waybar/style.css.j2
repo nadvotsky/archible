@@ -17,20 +17,61 @@ window#waybar {
 }
 
 window#waybar > box {
-    margin: {{ space_normal }};
+    margin-top: {{ space_normal }};
+    margin-bottom: {{ space_normal }};
+
+    margin-left: {{ space_big }};
+    margin-right: {{ space_big }};
 }
 
-widget > label {
+.module, #workspaces {
     border: 1px solid {{ env_active }};
 }
 
-label.warn, label.muted {
+.module.warn, .module.muted {
     border: 1px solid {{ env_important }};
+}
+
+#tray {
+    border: 0;
+    padding-right: {{ space_normal }};
+}
+
+button {
+    color: {{ env_foreground }};
+
+    border: 0;
+    margin: 0;
+
+    padding: 0;
+    padding-left: {{ space_normal }};
+    padding-right: {{ space_normal }};
+
+    box-shadow: none;
+    text-shadow: none;
+    background: none;
+    transition: none;
+
+    min-height: 0;
+    min-width: 0;
+}
+
+button.active {
+    color: {{ env_accent }};
+}
+
+button.urgent {
+    color: {{ env_important }};
 }
 
 tooltip {
     border-radius: 0;
     border: {{ space_thin }} solid {{ env_active }};
+}
+
+tooltip * {
+    box-shadow: none;
+    text-shadow: none;
 }
 
 tooltip.background {

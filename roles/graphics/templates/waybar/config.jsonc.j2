@@ -1,8 +1,10 @@
 {%- set space_normal = (env_space_normal * env_scale) | round | int -%}
+{%- set space_big = (env_space_big * env_scale) | round | int -%}
 {%- set space_text = " " * ((env_space_thin * env_scale) | round | int) -%}
 {%- set space_icon = " " * ((env_space_light * env_scale) | round | int) -%}
 
-{%- set font_icon = "{} {}px".format(env_font_icon, (env_font_icon_size * env_scale) | round | int) -%}
+{%- set font_icon_size_int = (env_font_icon_size * env_scale) | round | int -%}
+{%- set font_icon = "{} {}px".format(env_font_icon, font_icon_size_int) -%}
 
 {%- set warn_icon = "\uf071" -%}
 {%- macro section(icon, content="", class="", important=false, warn=false, micro=false) -%}
@@ -18,7 +20,11 @@
     {%- if micro -%}
         "format{{ class }}": "{{ prefix }}",
     {%- else -%}
-        {%- set middle = "{}{}{}".format(space_text, content, space_text) -%}
+        {%- set middle = (
+            "{}{}{}".format(space_text, content, space_text)
+            if content else
+            "" 
+        ) -%}
         {%- if warn -%}
             {%- set suffix = "<span font='{}' background='{}'>{}{}{}</span>".format(
                 font_icon,
@@ -39,7 +45,7 @@
 
     "layer": "bottom",
     "position": "top",
-    // "output": "{{ (env_monitors | first).wayland }}",
+    "output": "{{ (env_monitors | first).wayland }}",
     "mode": "dock",
     "exclusive": true,
     "passthrough": false,
@@ -47,19 +53,21 @@
     // "id": "",
     "start_hidden": false,
 
-    //?
-    "reload_style_on_change": true,
+    "reload_style_on_change": false,
 
     "modules-left": ["cpu", "memory#ram", "memory#swap", "disk", "custom/uptime"],
-    "modules-center": ["group/workspaces-primary-group", "clock"],
-    "modules-right": ["mpris", "wireplumber", "custom/netns"],
-    // "modules-left": ["cpu", "memory#ram", "memory#swap", "disk", "custom#uptime"],
-    // "modules-center": ["workspaces#primary", "clock"],
-    // "modules-right": ["mpris", "wireplumber", "group#keyboard", "custom#netns"],
+    "modules-center": ["group/workspaces-{{ (env_monitors | first).name }}-group", "clock",
+        {%- for mon in env_monitors -%}
+            {%- if not loop.first -%}
+                {{ " " }}"group/workspaces-{{ mon.name }}-group",
+            {%- endif -%}
+        {%- endfor -%}
+    ],
+    "modules-right": ["mpris", "wireplumber", "hyprland/language", "custom/netns", "tray"],
 
     // margin: "",
     // margin-<top|left|bottom|right>: 0,
-    "spacing": {{ space_normal }},
+    "spacing": {{ space_big }},
     "fixed-center": false,
 
     "cpu": {
@@ -79,8 +87,8 @@
             "warn": 90,
         },
 
-        {{ section("efc5", "{used} GiB / {total} GiB") }}
-        {{ section("efc5", "{used} GiB / {total} GiB", class="warn", warn=true) }}
+        {{ section("efc5", "{used} GiB") }}
+        {{ section("efc5", "{used} GiB", class="warn", warn=true) }}
     },
 
     "memory#swap": {
@@ -94,29 +102,40 @@
         {{ section("f0fb7", "{swapUsed} GiB", class="warn", warn=true) }}
     },
 
-    "group/workspaces-primary-group": {
+    {%- for mon in env_monitors -%}
+    {%- set first_mon = loop.first -%}
+    {{ "\n" }}
+    "group/workspaces-{{ mon.name }}-group": {
         "orientation": "horizontal",
         "modules": [
-            "custom/workspaces-primary-icon",
-            "hyprland/workspaces#primary"
+            "custom/workspaces-{{ mon.name }}-icon",
+            "hyprland/workspaces#{{ mon.name }}"
         ]
     },
-    
-    "custom/workspaces-primary-icon": {
-        "format": "kek"
+    "custom/workspaces-{{ mon.name }}-icon": {
+        {{ section("f1104" if first_mon else "f0ddc", "") }}
     },
-
-    "hyprland/workspaces#primary": {
-        "active-only": false,
+    "hyprland/workspaces#{{ mon.name }}": {
+        "active-only": true,
         "all-outputs": true,
         "persistent-workspaces": {
-            "primary-1": [],
-            "primary-2": [],
+            {%- for _ in range(mon.workspaces) -%}
+                "{{ "" if first_mon else mon.name[0].upper() }}{{ loop.index }}": [],
+            {%- endfor -%}
         },
+        "ignore-workspaces": [
+            {%- for m in env_monitors -%}
+                {%- if m.name != mon.name -%}
+                    "^{{ "" if loop.first else m.name[0].upper() }}[0-9]+$",
+                {%- endif -%}
+            {%- endfor -%}
+        ],
         "show-special": true,
-
+        "sort-by": "name",
         "format": "{name}",
     },
+    {%- endfor -%}
+    {{ "" }}
 
     "clock": {
         "interval": 1,
@@ -151,8 +170,8 @@
             "warn": 90,
         },
 
-        {{ section("f413", "{specific_used:0.2f} / {specific_total:0.2f}") }}
-        {{ section("f413", "{specific_used:0.2f} / {specific_total:0.2f}", class="warn", warn=true) }}
+        {{ section("f413", "{specific_used:0.0f} / {specific_total:0.0f} GB") }}
+        {{ section("f413", "{specific_used:0.0f} / {specific_total:0.0f} GB", class="warn", warn=true) }}
     },
 
     "custom/uptime": {
@@ -167,8 +186,6 @@
 
         {{ section("f1ae1", "{}") }}
     },
-
-    //
 
     "mpris": {
         "interval": 1,
@@ -198,22 +215,23 @@
         {{ section("f0581", "Muted", class="muted", important=true) }}
     },
 
-    "group/keyboard-group": {
+    "hyprland/language": {
+        "format-en": "English (US)",
 
-    },
-
-    "keyboard-state": {
-        "scrolllock": false,
-        "device-path": "/dev/input/event3",
-
-        {{ section("f11c", "{icon}") }}
+        {{ section("f11c", "{}") }}
     },
 
     "custom/netns": {
         "interval": 5,
         "tooltip": false,
-        "exec": "test $(ip netns list | wc --lines) -ge 1 && (ip netns list | tr '\\n' ' ') || echo default",
+        "exec": "test $(ip netns list | wc --lines) -ge 1 && (ip netns list | tr '\\n' ' ') || echo 'default'",
 
         {{ section("f0484", "{}") }}
     },
+
+    "tray": {
+        "icon-size": {{ font_icon_size_int }},
+        "show-passive-items": true,
+        "spacing": {{ space_big }},
+    }
 }
