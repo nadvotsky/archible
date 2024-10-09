@@ -431,11 +431,15 @@ bind = {{ alt }}, Caps_Lock, changegroupactive, b
 
 {{- "\n\n" -}}
 {%- for direction in ["forward", "backwards"] -%}
-    {%- set awk_total_ws = {"v": "0"} -%}
+    {%- set awk_total_ws = {"v": (env_monitors | first).workspaces} -%}
     {%- for mon in env_monitors | reverse -%}
-        {%- set _ = awk_total_ws.update({
-            "v": "$1 == \"{}\" ? {} : ({})".format(mon.name, mon.workspaces, awk_total_ws.v)
-        }) -%}
+        {%- if not loop.last -%}
+            {%- set _ = awk_total_ws.update({
+                "v": "f == \"{}\" ? {} : ({})".format(
+                    mon.name[0].upper(), mon.workspaces, awk_total_ws.v,
+                )
+            }) -%}
+        {%- endif -%}
     {%- endfor -%}
 
     {#
@@ -447,10 +451,13 @@ bind = {{ alt }}, Caps_Lock, changegroupactive, b
         "hyprctl dispatch workspace name:$(",
             "hyprctl activeworkspace -j | ",
             "jq --raw-output '.name' | ",
-            "awk -F '-' '{",
-                "n = {}; ".format(awk_total_ws.v),
-                "print $1 \"-\" {}".format(
-                    "($2 % n + 1)" if direction == "forward" else "((($2 - 1 - 1) % n + n) % n + 1)"
+            "awk '{",
+                "f = substr($0, 1, 1); ",
+                "n = substr($0, (f ~ /^[0-9]+$/ ? 1 : 2)); ",
+                "t = {}; ".format(awk_total_ws.v),
+                "print {} {}".format(
+                    "(f ~ /^[0-9]+$/ ? \"\" : f)",
+                    "(n % t + 1)" if direction == "forward" else "(((n - 1 - 1) % t + t) % t + 1)",
                 ),
             "}'",
         ")",
@@ -468,7 +475,10 @@ bind = {{ alt }}, Caps_Lock, changegroupactive, b
     {%- set mon_index = loop.index0 -%}
     {%- for _ in range(mon.workspaces) -%}
         {%- set key = "F{}".format(monitors_keybind[mon_index][loop.index0]) -%}
-        {%- set ws_name = "name:{}-{}".format(mon.name, loop.index) -%}
+        {%- set ws_name = "name:{}{}".format(
+            "" if mon_index == 0 else mon.name[0].upper(),
+            loop.index,
+        ) -%}
 
         workspace = {{ ws_name }}, monitor:{{ mon.wayland }}, default:true{{- "\n" -}}
         bind = {{ mod }}, {{ key }}, workspace, {{ ws_name }}{{- "\n" -}}
