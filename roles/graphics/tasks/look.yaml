@@ -137,3 +137,90 @@
           - key: QT_QPA_PLATFORMTHEME
             value: qt5ct
 
+- name: Configure GTK applications
+  block:
+    - name: Install GTK packages
+      community.general.pacman:
+        name:
+          - gtk3
+          - gtk4
+        state: present
+      become: true
+
+    - name: Install GTK theme
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        _common_aur: "{{ gui.gtk.package }}"
+
+    - name: Clean GTK configuration
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/{{ item }}"
+        state: absent
+      loop:
+        - gtk3.0
+        - gtk4.0
+        - glib-2.0
+        - dconf
+
+    - name: Create GTK configuration directories
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - gtk3.0
+        - gtk4.0
+        - glib-2.0
+        - glib-2.0/settings
+
+    #
+    # GTK settings priority (also refer to the gtk/gtk/gtksettings.c):
+    # x11:
+    #  1) XSettings (xsettingsd)
+    #  2) settings.ini
+    # wayland:
+    #  1) portals (unless GIO_USE_PORTALS=0 and GTK_USE_PORTAL=0)
+    #  2) gsettings
+    #  3) settings.ini
+    #
+    - name: Configure gsettings backend to keyfile instead of dconf
+      ansible.builtin.include_role:
+        name: common
+      vars:
+        common_env:
+          - key: GSETTINGS_BACKEND
+            value: keyfile
+
+    - name: Render settings.ini for GTK3 and GTK4
+      ansible.builtin.copy:
+        content: |
+          [Settings]
+          gtk-font-name = {{ fonts.sans_serif.name }} {{ fonts.sans_serif.sizes.small }}
+          gtk-icon-theme-name = {{ icons.main.name }}
+          gtk-application-prefer-dark-theme = true
+          gtk-recent-files-enabled = false
+          gtk-enable-animations = false
+          gtk-error-bell = false
+          gtk-theme-name = {{ gui.gtk.name }}
+        dest: "{{ users.user.config }}/{{ item }}/settings.ini"
+        mode: "0644"
+      loop:
+        - gtk3.0
+        - gtk4.0
+
+    - name: Render gsettings keyfile
+      ansible.builtin.copy:
+        content: |
+          [org/gnome/desktop/interface]
+          icon-theme={{ icons.main.name }}
+          enable-animations=false
+          gtk-theme={{ gui.gtk.name }}
+          font-name={{ fonts.sans_serif.name }} {{ fonts.sans_serif.sizes.small }}
+          document-font-name={{ fonts.serif.name }} {{ fonts.serif.sizes.small }}
+          monospace-font-name={{ fonts.monospace.name }} {{ fonts.monospace.sizes.small }}
+          clock-format=12h
+          clock-show-seconds=true
+          color-scheme=prefer-dark
+        dest: "{{ users.user.config }}/glib-2.0/settings/keyfile"
+        mode: "0644"
