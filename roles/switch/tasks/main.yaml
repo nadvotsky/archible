@@ -53,6 +53,7 @@
       - kvm
       - input
       - wheel
+      - seat
       - systemd-journal
     name: "{{ env_user }}"
     password: "{{ env_user_hash }}"
