@@ -56,7 +56,7 @@
 
     - name: Clean polybar configuration
       ansible.builtin.file:
-        path: "/home/{{ env_user }}/.config/polybar"
+        path: "{{ users.user.config }}/polybar"
         mode: "0755"
         state: "{{ item }}"
       loop:
@@ -66,7 +66,7 @@
     - name: Render polybar configuration
       ansible.builtin.template:
         src: polybar/config.ini.j2
-        dest: "/home/{{ env_user }}/.config/polybar/config.ini"
+        dest: "{{ users.user.config }}/polybar/config.ini"
         mode: "0644"
 
 - name: Configure dunst notification daemon
@@ -79,7 +79,7 @@
 
     - name: Clean dunst configuration
       ansible.builtin.file:
-        path: "/home/{{ env_user }}/.config/dunst"
+        path: "{{ users.user.config }}/dunst"
         mode: "0755"
         state: "{{ item }}"
       loop:
@@ -125,7 +125,7 @@
 
     - name: Clean rofi configuration
       ansible.builtin.file:
-        path: "/home/{{ env_user }}/.config/{{ item }}"
+        path: "{{ users.user.config }}/{{ item }}"
         state: absent
       loop:
         - picom.conf
@@ -134,7 +134,7 @@
     - name: Copy rofi configuration
       ansible.builtin.copy:
         src: picom/picom.conf
-        dest: "/home/{{ env_user }}/.config/picom/picom.conf"
+        dest: "{{ users.user.config }}/picom/picom.conf"
         mode: "0644"
         directory_mode: "0755"
 
@@ -167,7 +167,7 @@
 
     - name: Clean herbstluftwm configuration
       ansible.builtin.file:
-        path: "/home/{{ env_user }}/.config/herbstluftwm"
+        path: "{{ users.user.config }}/herbstluftwm"
         mode: "0755"
         state: "{{ item }}"
       loop:
@@ -177,5 +177,5 @@
     - name: Render herbstluftwm configuration
       ansible.builtin.template:
         src: herbstluftwm/autostart.j2
-        dest: "/home/{{ env_user }}/.config/herbstluftwm/autostart"
+        dest: "{{ users.user.config }}/herbstluftwm/autostart"
         mode: "0755"
