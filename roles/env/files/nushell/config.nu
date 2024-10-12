@@ -33,12 +33,12 @@ def --env unset-env [name] {
 # Zoxide
 #
 
-#Zoxide, a smarter cd command.  
+#Zoxide, a smarter cd command.
 def --env z [...rest:string] {
     cd (^zoxide query --exclude $env.PWD -- ...$rest | str trim -r -c "\n")
 }
 
-#Zoxide, a smarter cd command (interactive selection). 
+#Zoxide, a smarter cd command (interactive selection).
 def --env zi [...rest:string] {
     cd (^zoxide query --exclude $env.PWD --interactive -- ...$rest | str trim -r -c "\n")
 }
@@ -213,7 +213,6 @@ do --env {
         #
         # Vim (Reedline) keybindings
         #
-        # w      -> Word
         # 0      -> Line start0.
         # $      -> Line end
         # f      -> (?) Right until char
@@ -400,8 +399,11 @@ do --env {
     
         { modifier: none, keycode: backspace, mode: [vi_normal, vi_insert], event: { edit: Backspace } },
         { modifier: control, keycode: backspace, mode: [vi_normal, vi_insert], event: { edit: BackspaceWord } },
+        { modifier: alt, keycode: backspace, mode: [vi_normal, vi_insert], event: { edit: BackspaceWord } },
+
         { modifier: control, keycode: char_h, mode: [vi_normal, vi_insert], event: { edit: Delete } },
         { modifier: control, keycode: delete, mode: [vi_normal, vi_insert], event: { edit: DeleteWord } },
+        { modifier: alt, keycode: delete, mode: [vi_normal, vi_insert], event: { edit: DeleteWord } },
 
         #
         # Atuin
