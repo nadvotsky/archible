@@ -384,8 +384,8 @@ do --env {
         { modifier: control, keycode: char_y, mode: [vi_normal, vi_insert], event: { edit: Redo } },
         { modifier: control, keycode: char_r, mode: [vi_normal, vi_insert], event: { edit: Redo } },
         { 
-            modifier: control_shift, keycode: char_c, mode: [vi_normal, vi_insert],
-            event: { edit: CopySelectionSystem } 
+            modifier: alt, keycode: char_c, mode: [vi_normal, vi_insert],
+            event: { edit: CopySelectionSystem }
         },
         { modifier: control, keycode: char_v, mode: [vi_normal, vi_insert], event: { edit: pastesystem } },
         { modifier: control, keycode: char_x, mode: [vi_normal, vi_insert], event: { edit: cutselectionsystem } },
@@ -393,8 +393,8 @@ do --env {
         { modifier: none, keycode: escape, mode: [vi_normal, vi_insert], event: { send: Esc } },
         { modifier: none, keycode: enter, mode: [vi_normal, vi_insert], event: { send: Enter } },
         { modifier: control, keycode: char_c, mode: [vi_normal, vi_insert], event: { send: CtrlC } },
+        { modifier: control, keycode: char_o, mode: [vi_normal, vi_insert], event: { send: OpenEditor } },
         { modifier: control, keycode: char_l, mode: [vi_normal, vi_insert], event: { send: ClearScreen } },
-        { modifier: control, keycode: char_o, mode: [vi_normal, vi_insert], event: { send: OpenEditor } }
         { modifier: control, keycode: char_a, mode: [vi_normal, vi_insert], event: { edit: SelectAll } },
     
         { modifier: none, keycode: backspace, mode: [vi_normal, vi_insert], event: { edit: Backspace } },
@@ -466,7 +466,6 @@ do --env {
         { modifier: none, keycode: home, mode: [emacs, vi_insert, vi_normal], event: null },
         { modifier: alt, keycode: backspace, mode: [emacs, vi_insert, vi_normal], event: null },
         { modifier: alt, keycode: char_b, mode: [emacs, vi_insert, vi_normal], event: null },
-        { modifier: alt, keycode: char_c, mode: [emacs, vi_insert, vi_normal], event: null },
         { modifier: alt, keycode: char_f, mode: [emacs, vi_insert, vi_normal], event: null },
         { modifier: alt, keycode: char_l, mode: [emacs, vi_insert, vi_normal], event: null },
         { modifier: alt, keycode: char_m, mode: [emacs, vi_insert, vi_normal], event: null },
