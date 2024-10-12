@@ -94,17 +94,18 @@
         owner: 0
         group: 0
       become: true
+
 - name: Configure waybar bar
   block:
     - name: Ensure waybar package is installed
       community.general.pacman:
         name: waybar
-        state: waybar
+        state: present
       become: true
 
     - name: Clean waybar configuration
       ansible.builtin.file:
-        path: "/home/{{ env_user }}/.config/waybar"
+        path: "{{ users.user.config }}/waybar"
         mode: "0755"
         state: "{{ item }}"
       loop:
@@ -113,9 +114,16 @@
 
     - name: Render waybar configuration
       ansible.builtin.template:
-        src: waybar/style.css.j2
-        dest: "/home/{{ env_user }}/.config/waybar/style.css"
+        src: "waybar/{{ item.template }}"
+        dest: "{{ users.user.config }}/waybar/{{ item.file }}"
         mode: "0644"
+        lstrip_blocks: true
+        trim_blocks: true
+      loop:
+        - template: config.jsonc.j2
+          file: config.jsonc
+        - template: style.css.j2
+          file: style.css
 
     - name: Render waybar configuration
       ansible.builtin.template:
