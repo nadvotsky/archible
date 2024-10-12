@@ -51,19 +51,22 @@ env = ELECTRON_OZONE_PLATFORM_HINT, wayland
 env = _JAVA_AWT_WM_NONREPARENTING, 1
 
 #
-# Scaling
-#
-env = QT_AUTO_SCREEN_SCALE_FACTOR, 0
-env = QT_ENABLE_HIGHDPI_SCALING, 0
-env = QT_SCALE_FACTOR, {{ env_scale }}
-env = GDK_DPI_SCALE, {{ env_scale }}
-env = ELM_SCALE, {{ env_scale }}
-
-
-#
-# Autostart.
+# Autostart before scaling is set.
 #
 exec-once = waybar
+exec-once = mako
+
+
+#
+# Scaling
+#
+
+#
+# QT_SCALE_FACTOR with fractions such as 0.9, 1.5 results in blurry icons
+#
+env = QT_FONT_DPI, {{ (env_ethalon * env_scale) | round | int }}
+env = GDK_DPI_SCALE, {{ env_scale }}
+env = ELM_SCALE, {{ env_scale }}
 
 
 #
@@ -384,22 +387,15 @@ bind = {{ alt }}, C, layoutmsg, swapnext
 bind = {{ alt }}, N, layoutmsg, swapprev
 
 bind = {{ mod }}, U, focusurgentorlast
-#bind = {{ alt }}, U, exec, {{
-    [
-        "dunstctl history-pop $(",
-            "dunstctl history |",
-            "jq --raw-output '.data[][] | [.id.data, .appname.data, .summary.data] | @tsv' |",
-            "rofi -dmenu -i | ",
-            "awk '{ print ($1 ? $1 : -1); }'",
-        ")",
-    ] | join(" ")
-}}
-#bind = {{ mod }}, Y, execr, {{
+bind = {{ alt }}, U, execr, makoctl restore
+bind = {{ alt }}, O, exec, grim -g "$(slurp -d)" - | wl-copy
+bind = {{ alt }}, O, exec, grim -g "$(slurp -d)" $(xdg-user-dir PICTURES)/shot-$(date +%s).png
+bind = {{ mod }}, Y, execr, {{
     [
         "rofi"
             "-show", "drun",
             "-display-drun", "'drun (network namespaced)'",
-            "-run-command", "'vopono exec --custom /home/xnd/kek -- {cmd}'",
+            "-run-command", "'vopono exec -- {cmd}'",
     ] | join(" ")
 }}
 #

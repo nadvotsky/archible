@@ -125,14 +125,27 @@
         - template: style.css.j2
           file: style.css
 
-    - name: Render waybar configuration
+- name: Configure mako notification daemon
+  block:
+    - name: Ensure mako package is installed
+      community.general.pacman:
+        name: mako
+        state: present
+      become: true
+
+    - name: Clean mako configuration
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/mako"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render mako configuration
       ansible.builtin.template:
-        src: waybar/config.jsonc.j2
-        dest: "/home/{{ env_user }}/.config/waybar/config.jsonc"
+        src: "mako/config.j2"
+        dest: "{{ users.user.config }}/mako/config"
         mode: "0644"
-#
-# TODO: LIBSET_BACKEND to speed up
-# TODO: xorg-xwayland
-# TODO: __GL* variables
-# TODO: qt+gtk theme
-#
+        lstrip_blocks: true
+        trim_blocks: true

@@ -1,0 +1,87 @@
+{%- set monitor = env_monitors | selectattr("notifications", "true") | first -%}
+
+{%- set width = (monitor.width * 0.6 * env_scale) | round | int -%}
+{%- set height = (monitor.height * 0.3 * env_scale) | round | int -%}
+
+{%- set space_light = (env_space_light * env_scale) | round | int -%}
+{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
+{%- set space_big = (env_space_big * env_scale) | round | int -%}
+
+{%- set font_size_big = (env_font_size_big * env_scale) | round | int -%}
+{%- set icon_width_max = (height * 0.3) | round | int -%}
+
+{%- set gap = (env_space_big * 2 * env_scale) | round | int -%}
+
+{%- macro format(color) -%}
+<span line_height="1.3"><span weight="bold" color="{{ color }}">%a</span> (%g)\n<b>%s</b>\n%b</span>
+{%- endmacro -%}
+
+
+history=1
+max-history=40
+sort=-time
+
+actions=1
+
+on-button-left=invoke-default-action
+on-button-right=dismiss
+on-button-middle=exec makoctl menu -n "$id" rofi -show drun -display-drun "Notification action"
+
+font=monospace {{ font_size_big }}px
+background-color={{ env_inactive }}
+text-color={{ env_foreground }}
+
+width={{ width }}
+height={{ width }}
+
+#
+# since waybar is a top layer, it does not occupy working area of the screen,
+# i.e. only gap is required
+#
+# however:
+#  1. hyprland werdly adds some margin to the top of the tap, thus fixing by adding env_space_light
+#  2. outer-margin is added to the margin, thus decreasing margin from the top gap
+#
+outer-margin={{ gap - space_big + space_light }},{{ gap }},0,0
+margin={{ space_big }},0,{{ space_big }},0
+padding={{ space_big }}
+
+border-size={{ space_normal }}
+border-color={{ env_active }}
+border-radius=0
+
+progress-color=over {{ env_active }}
+
+markup=1
+text-alignment=center
+format=<span line_height="1.3"><span weight="bold" color="{{ env_accent }}">%a</span>(%g)\n<b>%s</b>\n%b</span>
+
+default-timeout=0
+ignore-timeout=1
+
+group-by=body
+
+output={{ monitor.wayland }}
+max-visible={{ (monitor.height / height) | round | int }}
+layer=top
+anchor=top-right
+
+icons=1
+icon-location=left
+max-icon-size={{ icon_width_max }}
+icon-path=/usr/share/icons/{{ env_icon_alt }}:/usr/share/icons/{{ env_icon }}
+
+
+[urgency=low]
+border-color={{ env_active }}
+format={{ format(env_foreground) }}
+
+
+[urgency=normal]
+border-color={{ env_accent }}
+format={{ format(env_accent) }}
+
+
+[urgency=critical]
+border-color={{ env_important }}
+format={{ format(env_important) }}
