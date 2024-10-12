@@ -162,7 +162,7 @@ animations {
     "power-button-1",
 ] %}
 device {
-    name = "{{ dev }}"
+    name = {{ dev }}
     enabled = false
 }
 {% endfor -%}
@@ -265,10 +265,10 @@ misc {
     middle_click_paste = true
 
     enable_swallow = true
-    # swallow_regex = .*
+    #? swallow_regex = .*
     # swallow_exception_regex
 
-    #?disable_autoreload = true
+    disable_autoreload = true
     focus_on_activate = false
     mouse_move_focuses_monitor = true
 
@@ -319,7 +319,7 @@ cursor {
     zoom_factor = 1.0
     zoom_rigid = false
 
-    no_warps = true
+    no_warps = false
     persistent_warps = false
     warp_on_change_workspace = false
 }
