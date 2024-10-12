@@ -44,6 +44,8 @@
         mode: "0644"
         owner: 0
         group: 0
+        lstrip_blocks: true
+        trim_blocks: true
       become: true
 
 - name: Configure polybar bar
@@ -68,6 +70,8 @@
         src: polybar/config.ini.j2
         dest: "{{ users.user.config }}/polybar/config.ini"
         mode: "0644"
+        lstrip_blocks: true
+        trim_blocks: true
 
 - name: Configure dunst notification daemon
   block:
@@ -89,7 +93,7 @@
     - name: Render dunst configuration
       ansible.builtin.template:
         src: dunst/dunstrc.j2
-        dest: "/home/{{ env_user }}/.config/dunst/dunstrc"
+        dest: "{{ users.user.config }}/dunst/dunstrc"
         mode: "0644"
 
 - name: Configure rofi app launcher
@@ -114,6 +118,8 @@
         src: rofi/config.rasi.j2
         dest: "/home/{{ env_user }}/.config/rofi/config.rasi"
         mode: "0644"
+        lstrip_blocks: true
+        trim_blocks: true
 
 - name: Configure picom compositor
   block:
@@ -179,3 +185,5 @@
         src: herbstluftwm/autostart.j2
         dest: "{{ users.user.config }}/herbstluftwm/autostart"
         mode: "0755"
+        lstrip_blocks: true
+        trim_blocks: true
