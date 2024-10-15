@@ -1,4 +1,30 @@
 ---
+
+- name: Configure wezterm terminal
+  block:
+    - name: Ensure wezterm package is installed
+      community.general.pacman:
+        name: wezterm
+        state: present
+      become: true
+
+    - name: Clean wezterm configuration
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/wezterm"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render wezterm configuration
+      ansible.builtin.template:
+        src: wezterm/wezterm.lua.j2
+        dest: "{{ users.user.config }}/wezterm/wezterm.lua"
+        mode: "0644"
+        lstrip_blocks: true
+        trim_blocks: true
+
 - name: Configure rofi app launcher
   block:
     - name: Ensure rofi package is installed
