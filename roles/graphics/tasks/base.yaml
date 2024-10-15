@@ -1,4 +1,71 @@
 ---
+- name: Configure ly login manager
+  block:
+    - name: Ensure ly package is installed
+      community.general.pacman:
+        name: ly
+        state: present
+      become: true
+
+    - name: Configure ly
+      ansible.builtin.copy:
+        src: ly/config.ini
+        dest: /etc/ly/config.ini
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Configure ly xsetup and wsetup
+      ansible.builtin.copy:
+        content: |
+          #!/bin/sh
+          [ -f /etc/profile ] && . /etc/profile
+          exec "$@" >/dev/null
+        dest: "/etc/ly/{{ item }}"
+        mode: "0755"
+        owner: 0
+        group: 0
+      become: true
+      loop:
+        - xsetup.sh
+        - wsetup.sh
+
+    #
+    # While override.conf is a possible option, it is easier to simply replace
+    # the entire file. It is not going to be updated on each update, so no problem with
+    # .pacnew is expected.
+    #
+    - name: Configure ly systemd service to use tty1
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=TUI display manager
+          After=systemd-user-sessions.service plymouth-quit-wait.service
+          After=getty@tty1.service
+          Conflicts=getty@tty1.service
+
+          [Service]
+          Type=idle
+          ExecStart=/usr/bin/ly-dm
+          StandardInput=tty
+          TTYPath=/dev/tty1
+          TTYReset=yes
+          TTYVHangup=yes
+
+          [Install]
+          Alias=display-manager.service
+        dest: "/usr/lib/systemd/system/ly.service"
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Autostart ly
+      ansible.builtin.systemd_service:
+        name: ly
+        enabled: true
+      become: true
 
 - name: Configure wezterm terminal
   block:
