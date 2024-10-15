@@ -93,3 +93,30 @@
           config = "{{ users.user.config }}/vopono/custom-config"
         dest: "{{ users.user.config }}/vopono/config.toml"
         mode: "0644"
+
+- name: Configure XDG desktop portals
+  block:
+    - name: Install XDG desktop portals packages
+      community.general.pacman:
+        name:
+          - xdg-desktop-portal
+          - xdg-desktop-portal-gtk
+        state: present
+      become: true
+
+    - name: Clean XDG portals configuration
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/xdg-desktop-portal"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Render XDG portals configuration
+      ansible.builtin.copy:
+        content: |
+          [preferred]
+          default=gtk
+        dest: "{{ users.user.config }}/xdg-desktop-portal/portals.conf"
+        mode: "0644"
