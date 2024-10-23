@@ -60,14 +60,11 @@ from ansible.utils.shlex import shlex_split
 from ansible_collections.community.general.plugins.connection.chroot import Connection as ChrootConnection
 
 
-display = Display()
-
-
 class Connection(ChrootConnection):
     """ Systemd-nspawn (machinectl-less, i.e. stateless) connections """
 
     #
-    # Unlike chroot, we do have an option to select a user (via --user)
+    # Unlike the chroot plugin, we do have an option to select a user (via --user)
     #
     default_user = None
 
@@ -92,9 +89,9 @@ class Connection(ChrootConnection):
             raise AnsibleError("nspawn connection requires running ansible as root.")
 
         #
-        # self.chroot is required to be set for the chroot plugin
+        # `self.chroot` is required to be set for the chroot plugin
         #
-        self.chroot = self.nspawn_root = self.get_option("nspawn_root")
+        self.chroot = self._nspawn_root = self.get_option("nspawn_root")
         self._nspawn_log = functools.partial(Display().vvv, host=self._nspawn_root) 
 
         user = self.get_option("nspawn_user")
@@ -113,7 +110,7 @@ class Connection(ChrootConnection):
         #
         super(ChrootConnection, self)._connect()
         if not self._connected:
-            display.vvv("NSPAWN CONNECTION", host=self.nspawn_root)
+            self._nspawn_log("NSPAWN NEW CONNECTION")
             self._connected = True
 
     #
@@ -132,10 +129,10 @@ class Connection(ChrootConnection):
                 )
 
             become_output += chunk
-            display.vvv("NSPAWN BECOME CHUNK %s" % become_output, host=self.nspawn_root)
+            self._nspawn_log(f"NSPAWN BECOME CHUNK :: {become_output}")
 
-        become_pass = self.become.get_option('become_pass', playcontext=self._play_context)
-        out_fd.write(to_bytes(become_pass, errors='surrogate_or_strict') + b'\n')
+        become_pass = self.become.get_option("become_pass", playcontext=self._play_context)
+        out_fd.write(to_bytes(become_pass, errors="surrogate_or_strict") + b"\n")
 
     #
     # Slightly modifed version that additionally passes `sudoable` into the `_buffered_exec_command`.
@@ -147,27 +144,24 @@ class Connection(ChrootConnection):
         # Bypassing `ChrootConnection.exec_command` prior to `ConnectionBase.exec_command`.
         #
         super(ChrootConnection, self).exec_command(cmd, in_data=in_data, sudoable=sudoable)
-        
-        display.vvv("NSPAWN EXEC SUDOABLE %d COMMAND %s" % (sudoable, cmd), host=self.nspawn_root)
+
+        self._nspawn_log(f"NSPAWN EXEC SUDOABLE {sudoable} COMMAND :: {cmd}")
         p = self._buffered_exec_command(cmd, sudoable=sudoable)
 
         stdout, stderr = p.communicate(in_data)
         return p.returncode, stdout, stderr
 
+    #
+    # Run a command on the systemd-nspawn container.
+    #
     def _buffered_exec_command(self, cmd, stdin=subprocess.PIPE, sudoable=False):
-        """ run a command on the systemd-nspawn container.
-        Most of the logic is already implemented in community.general.chroot, 
-        except execution command and become.
-        """
         #
-        # Using shlex_split to skip one level of nesting /bin/sh -c
+        # Using `shlex_split` to skip one level of nesting /bin/sh -c
         #
         cmdline = [
             to_bytes(i, errors='surrogate_or_strict')
-            for i in self.nspawn_args + shlex_split(cmd)
+            for i in self._nspawn_args + shlex_split(cmd)
         ]
-
-        display.vvv("NSPAWN BUFFERED EXEC %s" % cmdline, host=self.nspawn_root)
         p = subprocess.Popen(
             cmdline, shell=False,
             stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE
