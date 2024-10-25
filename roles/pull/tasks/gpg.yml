@@ -1,3 +1,6 @@
+---
+## Important to use --owner=0 --group=0
+
 - name: Export GPG
   block:
     - name: Create temporary export directory
