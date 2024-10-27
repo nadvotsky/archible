@@ -1,0 +1,110 @@
+---
+- name: Configure booster initramfs generator
+  vars:
+    - name: Install and configure booster
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          install:
+            - booster
+
+        _common_install:
+          targets:
+            /etc/booster.yaml:
+              become: true
+              file: booster/booster.yaml
+
+    - name: Remove mkinitcpio, default initramfs generator
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          remove:
+            - mkinitcpio
+
+- name: Configure kernel-install
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      - pacman-hook-kernel-install
+
+    _common_install:
+      defaults:
+        become: true
+        base: /etc
+      targets:
+        kernel/install.conf:
+          file: install.conf
+
+        kernel/install.d/60-booster.install:
+          wipe: true
+          file: kernel-install/60-booster.install
+          filemode: "0755"
+
+        kernel/cmdline:
+          template: kernel-install/cmdline.j2
+
+        pacman.d/hooks/90-booster-install.hook:
+          link: /dev/null
+        pacman.d/hooks/60-booster-install.hook:
+          link: /dev/null
+
+- name: Install bootloader
+  block:
+    - name: Trigger kernel-install by reinstalling booster
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          install:
+            - booster
+          force: true
+
+    - name: Install systemd-boot
+      ansible.builtin.command:
+        argv:
+          - bootctl
+          - install
+          - --no-variables
+      register: __bootctl_invocation
+      changed_when: __bootctl_invocation.rc == 0
+      become: true
+
+    - name: Configure systemd-boot
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          targets:
+            /boot/loader/loader.conf:
+              become: true
+              file: systemd-boot/loader.conf
+              filemode: "0777"
+
+- name: Clean unnecessary files
+  when: policy.destructive is true
+  block:
+    - name: Remove systemd-boot directories that have no use
+      ansible.builtin.file:
+        path: "/boot/EFI/{{ item }}"
+        state: absent
+      loop:
+        - systemd
+        - Linux
+      become: true
+
+    - name: List previous kernels and initrd images by mkinitcpio
+      ansible.builtin.find:
+        paths: /boot
+        patterns: "*.img,vmlinuz*"
+        hidden: true
+      register: __files
+
+    - name: Remove previous kernels and initrd images by mkinitcpio
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      become: true
+      loop: "{{ __files.files }}"

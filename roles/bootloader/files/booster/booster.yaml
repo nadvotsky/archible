@@ -2,7 +2,7 @@
 universal: false
 compression: zstd
 modules_force_load: ""
-mount_timeout: 20s
+mount_timeout: 15s
 strip: true
 vconsole: false
 enable_lvm: false
