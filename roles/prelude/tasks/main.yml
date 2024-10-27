@@ -1,0 +1,108 @@
+---
+- name: Import partition tasks
+  ansible.builtin.import_tasks:
+    file: partition.yml
+  tags:
+    - predule-partition
+  vars:
+    __disk_path: "/dev/disk/by-id/{{ machine.disk_identifier }}"
+
+- name: Install prelude dependencies
+  tags:
+    - prelude-dependecies
+    - prelude-deps
+  ansible.builtin.package:
+    name:
+      - arch-install-scripts
+      - whois
+    state: present
+  become: true
+
+- name: Install base system
+  tags:
+    - prelude-bootstrap
+  ansible.builtin.command:
+    argv:
+      - pacstrap
+      - -M
+      - -K
+      - "{{ machine.mount }}"
+      - base
+      - linux
+      - linux-firmware
+      - sudo
+  register: __pacstrap_invocation
+  changed_when: __pacstrap_invocation.rc == 0
+  become: true
+
+- name: Generate fstab
+  tags:
+    - prelude-fstab
+  block:
+    - name: Run genfstab
+      ansible.builtin.shell:
+        cmd: genfstab -t PARTUUID "{{ machine.mount }}" > "{{ machine.mount }}/etc/fstab"
+      register: __genfstab_invocation
+      changed_when: __genfstab_invocation.rc == 0
+      become: true
+
+    - name: Modify mount options of the root partition
+      ansible.builtin.replace:
+        path: "{{ machine.mount }}/etc/fstab"
+        regexp: "\
+          (?P<spec>[^\\s]+)\\s+\
+          (?P<file>{{ item.file }})\\s+\
+          (?P<vfstype>\\w+)\\s+\
+          (?P<mntops>[\\w=,-]+)\\s+\
+          (?P<freq>[01])\\s+\
+          (?P<passno>\\d+)\\s*\
+          "
+        replace: >
+          \g<spec>
+          \g<file>
+          \g<vfstype>
+          {{ item.mntops }}
+          \g<freq>
+          \g<passno>
+        backrefs: true
+        mode: "0644"
+        owner: 0
+        group: 0
+      loop:
+        - file: /
+          mntops: "{{ machine.mountopts.root }}"
+        - file: /boot
+          mntops: "{{ machine.mountopts.efi }}"
+      register: __replace_invocation
+      failed_when: __replace_invocation is not changed
+      become: true
+
+- name: Set up machine using systemd-firstboot
+  tags:
+    - prelude-firstboot
+  block:
+    - name: Process user password via the yescrypt KDF
+      ansible.builtin.command:
+        argv:
+          - mkpasswd
+          - --method=yescrypt
+          - --stdin
+        stdin: "{{ users.root.password }}"
+      register: __mkpasswd_invocation
+      failed_when: __mkpasswd_invocation.rc != 0
+
+    - name: Run systemd-firstboot
+      ansible.builtin.command:
+        argv:
+          - systemd-firstboot
+          - --root={{ machine.mount }}
+          - --locale={{ machine.locale }}
+          - --keymap={{ machine.keymap }}
+          - --timezone={{ machine.timezone }}
+          - --hostname={{ machine.hostname }}
+          - --setup-machine-id
+          - --root-password-hashed={{ __mkpasswd_invocation.stdout }}
+          - --force
+      register: __systemd_firstboot_invocation
+      changed_when: __systemd_firstboot_invocation.rc == 0
+      become: true

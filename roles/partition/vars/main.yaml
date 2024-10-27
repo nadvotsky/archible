@@ -1,2 +1,0 @@
----
-partition_disk_path: /dev/disk/by-id/{{ partition_disk_identifier }}
