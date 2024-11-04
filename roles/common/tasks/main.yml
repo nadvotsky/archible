@@ -36,6 +36,13 @@
         stdin: "{{ users.user.password }}"
       <<: *paru-assert
 
+- name: Add user to groups
+  when: _common_groups is defined
+  ansible.builtin.user:
+    name: "{{ users.user.name }}"
+    groups: "{{ _common_groups }}"
+    append: true
+
 - name: Modify global environmental variables
   when: _common_environment is defined
   ansible.builtin.lineinfile:
