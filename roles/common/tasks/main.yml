@@ -36,6 +36,36 @@
         stdin: "{{ users.user.password }}"
       <<: *paru-assert
 
+- name: Common systemd service management
+  when: _common_services is defined
+  ansible.builtin.systemd_service:
+    name: "{{ item.key }}"
+    scope: "{{ item.value.user is true | ternary('user', omit) }}"
+    daemon_reload: "{{ item.value.reload is true | ternary(true, omit) }}"
+    masked: "{{ item.value.mask is true | ternary(true, omit) }}"
+    enabled: >-
+      {{
+        (
+          item.value.enable is true | ternary(true, None)
+          or item.value.disable is true | ternary(false, None)
+        ) | ternary(true, false, omit)
+      }}
+    state: >-
+      {{
+        (
+          item.value.enable is true | ternary(true, None)
+          or item.value.start is true | ternary(true, None)
+          or item.value.disable is true | ternary(false, None)
+          or item.value.mask is true | ternary(false, None)
+          or item.value.stop is true | ternary(false, None)
+        ) | ternary('restarted', 'stopped', omit)
+      }}
+  environment:
+    SYSTEMD_OFFLINE: "{{ '1' if ansible_connection == 'nspawn' else omit }}"
+    SYSTEMD_IN_CHROOT: "{{ '1' if ansible_connection == 'nspawn' else omit }}"
+  become: "{{ item.value.user is true | ternary(omit, true) }}"
+  loop: "{{ _common_services | dict2items }}"
+
 - name: Add user to groups
   when: _common_groups is defined
   ansible.builtin.user:
