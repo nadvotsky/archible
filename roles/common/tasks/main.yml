@@ -1,0 +1,46 @@
+---
+- name: Common packaging tasks
+  when: _common_packages is defined
+  vars:
+    __cmdline: /usr/bin/paru --sudoflags "--stdin" --noconfirm
+    __assert: &paru-assert
+        register: __paru_invocation
+        changed_when: __paru_invocation.rc == 0
+  block:
+    - name: Remove packages
+      when: _common_packages.remove is defined
+      ansible.builtin.command:
+        cmd: "{{ __cmdline }} --remove --recursive {{ _common_packages.remove | join(' ') }}"
+        stdin: "{{ users.user.password }}"
+      register: __paru_invocation
+      failed_when: false
+      changed_when: __paru_invocation.rc == 0
+
+    - name: Sync the database, update the system, or do both
+      when: _common_packages.sync is true or _common_packages.upgrade is true
+      ansible.builtin.command:
+        cmd: >-
+          {{ __cmdline }}
+          {{ _common_packages.sync is true | ternary('--refresh', '') }}
+          {{ _common_packages.upgrade is true | ternary('--sysupgrade', '') }}
+        stdin: "{{ users.user.password }}"
+      <<: *paru-assert
+
+    - name: Install packages
+      when: _common_packages.install is defined
+      ansible.builtin.command:
+        cmd: >-
+          {{ __cmdline }}
+          {{ ['--sync', _common_packages.force is true | ternary(none, '--needed')] | reject('none') | join(' ') }}
+          {{ _common_packages.install | join(' ') }}
+        stdin: "{{ users.user.password }}"
+      <<: *paru-assert
+
+- name: Modify global environmental variables
+  when: _common_environment is defined
+  ansible.builtin.lineinfile:
+    dest: /etc/environment
+    regexp: "^{{ item.key }}"
+    line: "{{ item.key }}={{ item.value }}"
+  become: true
+  loop: "{{ _common_environment }}"
