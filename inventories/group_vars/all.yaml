@@ -1,4 +1,15 @@
 ---
+policy:
+  #
+  # An unsafe flag that will ensure clearness of installation targets.
+  #
+  # This means it would entirely clean configuration directories (XDG_CONFIG_HOME/<package>)
+  # for most of the packages, as well as other state directories (~/.local/share/<package>).
+  #
+  # It also removes unnecessary files for bootloader, user profile, and similar.
+  #
+  destructive: true
+
 env_system_mount: /mnt
 
 env_mount_common: async,noatime,auto,dev,exec,noiversion,suid,rw,nouser

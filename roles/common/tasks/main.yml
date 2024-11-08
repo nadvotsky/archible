@@ -36,6 +36,122 @@
         stdin: "{{ users.user.password }}"
       <<: *paru-assert
 
+- name: Common installing tasks (akin install(1))
+  when: _common_install is defined
+  vars:
+    __defaults: >-
+      {{
+        {
+          'become': False,
+          'wipe': False,
+          'filemode': '0644',
+          'dirmode': '0755',
+          'base': users.user.config,
+        } | ansible.builtin.combine(_common_install.defaults | default({}))
+      }}
+    __become: &install-become
+      become: "{{ item.value.become | default(__defaults.become) }}"
+    __ownership: &install-ownership
+      owner: "{{ item.value.become | default(__defaults.become) is true | ternary(0, omit) }}"
+      group: "{{ item.value.become | default(__defaults.become) is true | ternary(0, omit) }}"
+  block:
+    - name: Wipe explicitly marked directories
+      when: policy.destructive is true and _common_install.wipes is defined
+      ansible.builtin.file:
+        path: "{{ item is abs | ternary(item, [__defaults.base, item] | path_join) }}"
+        state: absent
+      loop: "{{ _common_install.wipes }}"
+      <<: *install-become
+
+    - name: Wipe target directories
+      when: policy.destructive is true and _common_install.targets is defined
+      ansible.builtin.file:
+        path: >-
+          {{
+            item.key is abs | ternary(
+              item.key,
+              [item.value.base | default(__defaults.base), item.key] | path_join
+            )
+          }}
+        state: absent
+      vars:
+        __wipe_targets: >-
+          {{
+            _common_install.targets | dict2items | selectattr('value.wipe', 'true')
+            + (_common_install.targets | dict2items | selectattr('value.wipe', 'undefined') if __defaults.wipe else [])
+          }}
+      loop: >-
+        {{
+          dict(__wipe_targets | map(attribute='key') | map('dirname') | zip(__wipe_targets | map(attribute='value')))
+            | dict2items | selectattr('key', 'ne', '')
+        }}
+      <<: *install-become
+
+    - name: Ensure target directories are created
+      when: _common_install.targets is defined
+      ansible.builtin.file:
+        path: >-
+          {{
+            item.key is abs | ternary(
+              item.key,
+              [item.value.base | default(__defaults.base), item.key] | path_join
+            )
+          }}
+        state: directory
+        mode: "{{ item.dirmode | default(__defaults.dirmode) }}"
+        <<: *install-ownership
+      vars:
+        __targets: "{{ _common_install.targets | dict2items }}"
+      loop: >-
+        {{
+          dict(__targets | map(attribute='key') | map('dirname') | zip(__targets | map(attribute='value')))
+            | dict2items | selectattr('key', 'ne', '')
+        }}
+      <<: *install-become
+
+    - name: Copy files to the target directory
+      when: _common_install.targets is defined
+      ansible.builtin.copy:
+        src: "{{ item.value.file }}"
+        dest: "{{ item.key is abs | ternary(item.key, [__defaults.base, item.key] | path_join) }}"
+        mode: "{{ item.value.filemode | default(__defaults.filemode) }}"
+        <<: *install-ownership
+      loop: "{{ _common_install.targets | dict2items | selectattr('value.file', 'defined') }}"
+      <<: *install-become
+
+    - name: Render templates to the target directory
+      when: _common_install.targets is defined
+      ansible.builtin.template:
+        src: "{{ item.value.template }}"
+        dest: "{{ item.key is abs | ternary(item.key, [__defaults.base, item.key] | path_join) }}"
+        mode: "{{ item.value.filemode | default(__defaults.filemode) }}"
+        lstrip_blocks: true
+        trim_blocks: true
+        <<: *install-ownership
+      loop: "{{ _common_install.targets | dict2items | selectattr('value.template', 'defined') }}"
+      <<: *install-become
+
+    - name: Render files to the target directory
+      when: _common_install.targets is defined
+      ansible.builtin.copy:
+        content: "{{ item.value.content }}"
+        dest: "{{ item.key is abs | ternary(item.key, [__defaults.base, item.key] | path_join) }}"
+        mode: "{{ item.value.filemode | default(__defaults.filemode) }}"
+        <<: *install-ownership
+      loop: "{{ _common_install.targets | dict2items | selectattr('value.content', 'defined') }}"
+      <<: *install-become
+
+    - name: Create necessary links
+      when: _common_install.targets is defined
+      ansible.builtin.file:
+        src: "{{ item.value.link }}"
+        dest: "{{ item.key is abs | ternary(item.key, [__defaults.base, item.key] | path_join) }}"
+        state: link
+        follow: false
+        force: true
+      loop: "{{ _common_install.targets | dict2items | selectattr('value.link', 'defined') }}"
+      <<: *install-become
+
 - name: Common systemd service management
   when: _common_services is defined
   ansible.builtin.systemd_service:
