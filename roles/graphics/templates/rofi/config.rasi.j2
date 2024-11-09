@@ -1,13 +1,13 @@
-{%- set spacing_tiny = "{}px".format((env_space_thin * env_scale) | round | int) -%}
+{%- set _spacing_thin = "{}px".format(spacing.thin | scale(scaling.real)) -%}
 
-{%- set spacing_light = "{}px".format((env_space_light * env_scale) | round | int) -%}
-{%- set spacing_light_left = "0 0 0 {}".format(spacing_light) -%}
+{%- set _spacing_small = "{}px".format(spacing.small | scale(scaling.real)) -%}
+{%- set _spacing_small_left = "0 0 0 {}".format(_spacing_small) -%}
 
-{%- set spacing_normal = "{}px".format((env_space_normal * env_scale) | round | int) -%}
-{%- set spacing_normal_left = "0 0 0 {}".format(spacing_normal) -%}
-{%- set spacing_normal_top_right_bottom = "{0} {0} {0} 0".format(spacing_normal) -%}
+{%- set _spacing_medium = "{}px".format(spacing.medium | scale(scaling.real)) -%}
+{%- set _spacing_medium_left = "0 0 0 {}".format(_spacing_medium) -%}
+{%- set _spacing_medium_top_right_bottom = "{0} {0} {0} 0".format(_spacing_medium) -%}
 
-{%- set spacing_big = "{}px".format((env_space_big * env_scale) | round | int) -%}
+{%- set _spacing_big = "{}px".format(spacing.big | scale(scaling.real)) -%}
 
 {#
     Spacing is basically calculated as:
@@ -16,28 +16,20 @@
         ">" character size of the textbox-prompt-colon
         right margin of the textbox-prompt-colon
 #}
-{%- set spacing_listview = "{0} {0} {0} {1}px".format(
-    spacing_normal,
-    (
-        (
-            env_space_normal +
-            env_space_normal +
-            (env_font_size_big / 2) +
-            env_space_normal
-        )
-        * env_scale
-    ) | round | int
+{%- set _spacing_listview = "{0} {0} {0} {1}px".format(
+    _spacing_medium,
+    (spacing.medium + spacing.medium + (fonts.monospace.sizes.big / 2) + spacing.medium) | scale(scaling.real)
 ) -%}
 
 
 configuration {
-    modes: [ "window", "drun", "run", "emoji"];
+    modes: [ "window", "drun", "run", "emoji" ];
     plugins: false;
 
-    dpi: {{ env_ethalon }};
+    dpi: {{ scaling.ethalon }};
     scroll-method: 1;
 
-    icon-theme: "{{ env_icon_alt }}";
+    icon-theme: "{{ icons.launcher.name }}";
     show-icons: true;
     run,drun {
         fallback-icon: "application-gnunet-directory";
@@ -68,12 +60,12 @@ configuration {
 }
 
 window {
-    padding: {{ spacing_big }};
-    background-color: {{ env_inactive }};
-    border-color: {{ env_active }};
-    border: {{ spacing_normal }};
+    padding: {{ _spacing_big }};
+    background-color: {{ preset.inactive }};
+    border-color: {{ preset.active }};
+    border: {{ _spacing_medium }};
 
-    font: "monospace {{ (env_font_size_big * env_scale) | round | int }}px";
+    font: "monospace {{ fonts.monospace.sizes.big | scale(scaling.real) }}px";
 }
 
 mainbox {
@@ -81,45 +73,45 @@ mainbox {
 }
 
 mode-switcher {
-    padding: {{ spacing_normal }};
+    padding: {{ _spacing_medium }};
 }
 
 button {
     cursor: pointer;
-    text-color: {{ env_accent }};
+    text-color: {{ preset.accent }};
 }
 
 button selected {
-    background-color: {{ env_accent }};
-    text-color: {{ env_inactive }};
+    background-color: {{ preset.accent }};
+    text-color: {{ preset.inactive }};
 }
 
 inputbar {
-    padding: {{ spacing_normal }};
+    padding: {{ _spacing_medium }};
     spacing: 0px ;
-    text-color: {{ env_accent }};
+    text-color: {{ preset.accent }};
     children: [ "textbox-prompt-colon", "entry" ];
 }
 
 textbox-prompt-colon {
-    padding: {{ spacing_normal_top_right_bottom }};
+    padding: {{ _spacing_medium_top_right_bottom }};
     margin: 0px 0.3000em 0.0000em 0.0000em ;
     expand: false;
     str: "";
     text-transform: bold;
-    text-color: {{ env_accent }};
+    text-color: {{ preset.accent }};
 }
 
 entry {
     cursor: text;
     
-    text-color: {{ env_accent }};
+    text-color: {{ preset.accent }};
 
-    padding: {{ spacing_normal }};
-    border-color: {{ env_accent }};
-    border: {{ spacing_tiny }};
+    padding: {{ _spacing_medium }};
+    border-color: {{ preset.accent }};
+    border: {{ _spacing_thin }};
 
-    placeholder-color: {{ env_unimportant }};
+    placeholder-color: {{ preset.unimportant }};
     placeholder: "Type to filter";
 }
 
@@ -132,55 +124,55 @@ listview {
 
     border: none;
 
-    margin: {{ spacing_listview }};
+    margin: {{ _spacing_listview }};
 }
 
 scrollbar {
-    width: {{ spacing_big }};
-    handle-color: {{ env_accent }};
-    margin: {{ spacing_normal_left }};
+    width: {{ _spacing_big }};
+    handle-color: {{ preset.accent }};
+    margin: {{ _spacing_medium_left }};
 }
 
 element {
     cursor: pointer;
-    spacing: {{ spacing_normal_left }};
+    spacing: {{ _spacing_medium_left }};
     highlight: bold;
 }
 
 element-text {
-    padding: {{ spacing_light }};
+    padding: {{ _spacing_small }};
 }
 
 element-icon {
-    padding: {{ spacing_light }};
+    padding: {{ _spacing_small }};
 }
 
 element normal.normal, element alternate.normal {
-    background-color: {{ env_inactive }};
-    text-color: {{ env_accent }};
+    background-color: {{ preset.inactive }};
+    text-color: {{ preset.accent }};
 }
 
 element normal.urgent, element alternate.urgent {
-    background-color: {{ env_inactive }};
-    text-color: {{ env_important }};
+    background-color: {{ preset.inactive }};
+    text-color: {{ preset.important }};
 }
 
 element normal.active, element alternate.active {
-    background-color: {{ env_inactive }};
-    text-color: {{ env_foreground }};
+    background-color: {{ preset.inactive }};
+    text-color: {{ preset.foreground }};
 }
 
 element selected.normal {
-    background-color: {{ env_accent }};
-    text-color: {{ env_inactive }};
+    background-color: {{ preset.accent }};
+    text-color: {{ preset.inactive }};
 }
 
 element selected.urgent {
-    background-color: {{ env_accent }};
-    text-color: {{ env_important }};
+    background-color: {{ preset.accent }};
+    text-color: {{ preset.important }};
 }
 
 element selected.active {
-    background-color: {{ env_accent }};
-    text-color: {{ env_foreground }};
+    background-color: {{ preset.accent }};
+    text-color: {{ preset.foreground }};
 }
