@@ -499,3 +499,48 @@ theme:
   green: &green "#a3be8c"
 
   purple: &purple "#b48ead"
+
+ansi:
+  normal:
+    # black red green yellow blue magenta cyan white
+    - *dark2
+    - *red
+    - *green
+    - *orange
+    - *blue2
+    - *purple
+    - *cyan1
+    - *snow1
+  bright:
+    # black red green yellow blue magenta cyan white
+    - *dark4
+    - *red
+    - *green
+    - *yellow
+    - *blue1
+    - *purple
+    - *cyan2
+    - *snow3
+
+preset:
+  accent: *blue1
+  alternative: *cyan1
+
+  emphasis: *blue2
+  complement: *cyan2
+
+  sharp: *snow3
+  foreground: *snow1
+  background: *dark3
+
+  important: *purple
+  unimportant: *dark4
+
+  active: *dark4
+  inactive: *dark2
+
+  border: *dark1
+
+  positive: *green
+  neutral: *yellow
+  negative: *red
