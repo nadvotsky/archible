@@ -38,6 +38,18 @@ class FilterModule:
 
 
     @staticmethod
+    def is_tagged(tags, ansible_run_tags, ansible_skip_tags):
+        tags, ansible_run_tags, ansible_skip_tags = map(frozenset, (tags, ansible_run_tags, ansible_skip_tags))
+
+        if not tags.isdisjoint(ansible_skip_tags):
+            return False
+
+        if "all" in ansible_run_tags:
+            return True
+
+        return not tags.isdisjoint(ansible_run_tags)
+
+    @staticmethod
     def workspace_prefix(mon_name, is_first):
         return "" if is_first else mon_name[0].upper()
 
