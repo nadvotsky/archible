@@ -36,3 +36,27 @@ class FilterModule:
             for i, m in enumerate(mask)
         ])
 
+
+    @staticmethod
+    def workspace_prefix(mon_name, is_first):
+        return "" if is_first else mon_name[0].upper()
+
+    @staticmethod
+    def andnewline(string):
+        return string + ("\n" if len(string) else "")
+
+    @staticmethod
+    def newline(string):
+        return string + "\n"
+
+    @staticmethod
+    def quote(string):
+        return '"{}"'.format(string)
+
+    @staticmethod
+    def escaped_quote(string):
+        return '\\"{}\\"'.format(string)
+
+    @staticmethod
+    def scale(value, real):
+        return round(value * real)
