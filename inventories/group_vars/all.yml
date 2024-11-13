@@ -544,3 +544,319 @@ preset:
   positive: *green
   neutral: *yellow
   negative: *red
+
+keys:
+  modifiers:
+    wm:
+      main: SUPER
+      alt: SUPER+SHIFT
+    emacs:
+      main: ALT
+      alt: ALT+SHIFT
+    common:
+      main: CTRL
+      alt: CTRL+SHIFT
+    term:
+      main: CTRL+ALT
+      alt: CTRL+ALT+SHIFT
+    vim:
+      main: ~
+      alt: SHIFT
+    bare:
+      main: ~
+      alt: SHIFT
+    extra:
+      word: ALT
+      many: CTRL
+      select: SHIFT
+
+  binds:
+    escape:
+      - :bare Escape
+    close:
+      - :common w
+      - :wm q
+    kill:
+      - :common :alt w
+      - :wm :alt q
+    quit:
+      - :common q
+      - :wm :alt Backspace
+    terminate:
+      - :common :alt q
+
+    cycle_next:
+      - :bare Tab
+    cycle_prev:
+      - :bare BackTab
+
+    goto:
+      - :common g
+
+    open:
+      - :common o
+    invoke:
+      - :common i
+    clear_all:
+      - :term l
+      - :common l
+    save:
+      - :common s
+    external:
+      - :term p
+      - :common p
+    prompt:
+      - :vim :alt ;
+      - :common e
+
+    enter:
+      - :bare Enter
+    space:
+      - :bare Space
+    delete:
+      - :vim d
+      - :bare Backspace
+    delete_forward:
+      - :bare Delete
+      - :common h
+
+    switch_case:
+      - :vim c
+    search_selection:
+      - :vim s
+    files:
+      - :vim f
+
+    insert_mode:
+      - :vim i
+    select_mode:
+      - :vim v
+
+    select_all:
+      - :common a
+    select_swap:
+      - :vim o
+
+    undo:
+      - :vim u
+      - :common z
+    redo:
+      - :vim :alt u
+      - :common :alt z
+      - :common y
+      - :common r
+    copy:
+      - :vim y
+      - :common c
+      - :term c
+    paste:
+      - :common v
+      - :vim p
+      - :wm v
+    cut:
+      - :wm x
+      - :common x
+
+    left:
+      - :vim h
+      - :bare Left
+      - :wm h
+      - :wm Left
+    up:
+      - :vim k
+      - :bare Up
+      - :wm k
+      - :wm Up
+    right:
+      - :vim l
+      - :bare Right
+      - :wm l
+      - :wm Right
+    down:
+      - :vim j
+      - :bare Down
+      - :wm j
+      - :wm Down
+
+    line_up:
+      - :emacs Up
+    line_down:
+      - :emacs Down
+
+    line_begin:
+      - :vim 0
+      - :emacs a
+    line_begin_alt:
+      - :emacs :alt a
+    line_end:
+      - :vim :alt 4
+      - :emacs e
+    line_end_alt:
+      - :emacs :alt e
+    line_delete:
+      - :emacs d
+    line_clear:
+      - :emacs k
+      - :vim :alt d
+
+    word_next:
+      - :vim w
+    word_prev:
+      - :vim b
+    word_delete:
+      - :emacs w
+
+    pageup:
+      - :vim u
+      - :bare PageUp
+    pagedown:
+      - :vim d
+      - :bare PageDown
+    pageup_half:
+      - :vim :alt u
+    pagedown_half:
+      - :vim :alt d
+
+    file_begin:
+      - :vim g
+      - :emacs ,
+    file_end:
+      - :vim :alt g
+      - :emacs .
+
+    search:
+      - :term f
+      - :common f
+    search_next:
+      - :vim n
+      - :bare F3
+    search_prev:
+      - :vim :alt n
+      - :bare :alt F3
+
+    output_next:
+      - :wm Escape
+    output_prev:
+      - :wm :alt Escape
+
+    workspace_next:
+      - :wm Tilde
+    workspace_prev:
+      - :wm :alt Tilde
+    workspaces:
+      - :wm F5
+      - :wm F6
+      - :wm F7
+      - :wm F8
+      - :wm F1
+      - :wm F2
+      - :wm F3
+      - :wm F4
+      - :wm F9
+      - :wm F10
+      - :wm F11
+      - :wm F12
+    workspaces_move:
+      - :wm :alt F5
+      - :wm :alt F6
+      - :wm :alt F7
+      - :wm :alt F8
+      - :wm :alt F1
+      - :wm :alt F2
+      - :wm :alt F3
+      - :wm :alt F4
+      - :wm :alt F9
+      - :wm :alt F10
+      - :wm :alt F11
+      - :wm :alt F12
+
+    group_next:
+      - :wm Tab
+    group_prev:
+      - :wm :alt Tab
+
+    tab_next:
+      - :common Tab
+      - :wm CapsLock
+      - :wm MouseNext
+    tab_prev:
+      - :common :alt BackTab
+      - :wm :alt CapsLock
+      - :wm MousePrev
+    tabs:
+      - :wm 1
+      - :wm 2
+      - :wm 3
+      - :wm 4
+      - :wm 5
+
+    terminal:
+      - :wm w
+    terminal_topmost:
+      - :wm :alt w
+    run:
+      - :wm e
+    windows:
+      - :vim w
+      - :wm :alt e
+    scratch:
+      - :wm r
+
+    netns:
+      - :wm y
+    screenshot_clipboard:
+      - :wm o
+    screenshot_file:
+      - :wm :alt o
+
+    focus_urgent:
+      - :wm u
+    notifications:
+      - :wm :alt u
+    tiling:
+      - :wm p
+
+    fullscreen:
+      - :wm a
+    layout:
+      - :wm s
+    layout_alt:
+      - :wm :alt s
+    floating:
+      - :wm d
+    group:
+      - :wm f
+    layout_group:
+      - :wm :alt f
+
+    layout_master:
+      - :wm z
+    split_v:
+      - :wm c
+    split_h:
+      - :wm n
+    layout_v:
+      - :wm :alt c
+    layout_h:
+      - :wm :alt n
+
+    minimize:
+      - :wm m
+    focus_minimized:
+      - :wm :alt m
+
+    audio_play:
+      - :bare XF86AudioPlay
+    audio_stop:
+      - :bare XF86AudioStop
+    audio_prev:
+      - :bare XF86AudioPrev
+    audio_next:
+      - :bare XF86AudioNext
+
+    move:
+      - :wm MouseLeft
+    zoom:
+      - :wm MouseMiddle
+    resize:
+      - :wm MouseRight
