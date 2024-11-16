@@ -1,22 +1,24 @@
 ---
 - name: Perform initial preparation of the system
-  hosts: bootstrappers
-  roles:
-    - { role: partition, tags: partition }
-    - { role: bootstrap, tags: bootstrap }
-
-- name: Perform early preparation of the system
   hosts: prelude
   roles:
-    - { role: switch, tags: switch }
+    - { role: prelude, tags: prelude }
+
+- name: Perform early preparation of the system
+  hosts: catalyst
+  roles:
+    - { role: catalyst, tags: catalyst }
 
 - name: Perform main provisioning of the system
-  hosts: systems
+  hosts: apex
   roles:
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }
+    - { role: system, tags: system }
     - { role: user, tags: user }
-    - { role: env, tags: env }
-    - { role: devenv, tags: devenv }
     - { role: graphics, tags: graphics }
-#    - { role: cleanup, tags: cleanup }
+    - { role: shell, tags: shell }
+    - { role: apps, tags: apps }
+    - { role: dev, tags: dev }
+    - { role: cleanup, tags: cleanup }
+    - { role: pull, tags: pull }
