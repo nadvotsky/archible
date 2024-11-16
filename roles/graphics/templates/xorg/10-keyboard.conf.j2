@@ -1,0 +1,9 @@
+Section "InputClass"
+    Identifier "keyboard"
+
+    MatchIsKeyboard "true"
+
+    Option "XkbModel" "{{ inputs.keyboard.model }}"
+    Option "XkbLayout" "{{ inputs.keyboard.layout }}"
+    Option "XKbOptions" "{{ inputs.keyboard.options }}"
+EndSection

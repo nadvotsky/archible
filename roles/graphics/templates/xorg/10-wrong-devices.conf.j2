@@ -1,0 +1,24 @@
+{%- macro _sections_render() -%}
+    {% for _id, _product in inputs.mask.items() %}
+        Section "InputClass"
+            Identifier "disable-{{ _id }}"
+
+            MatchProduct "{{ _product }}"
+
+            Option "Ignore" "true"
+        EndSection
+        {##}
+        {% if not loop.last %}{{ "\n\n" }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+Section "InputClass"
+    Identifier "disable-root-keyboard"
+
+    MatchDevicePath "/dev/input/mouse0"
+
+    Option "Ignore" "true"
+EndSection
+
+
+{{ _sections_render() | relative_indent }}
