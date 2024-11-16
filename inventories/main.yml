@@ -1,14 +1,26 @@
 ---
-bootstrappers:
+debug_local:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_user: test
+      ansible_become_password: test
+
+debug_remote:
+  hosts:
+    192.168.0.100:
+      ansible_connection: ssh
+      ansible_user: test
+      ansible_become_password: "test"
+
+prelude:
   hosts:
     live:
       ansible_connection: local
 
-      partition_disk_identifier: ata-SSD_256GB_J390930E12482
-
-prelude:
+catalyst:
   hosts:
-    early:
+    container:
       ansible_connection: nspawn
       ansible_nspawn_root: "{{ machine.mount }}"
       ansible_nspawn_args: >-
@@ -18,12 +30,12 @@ prelude:
         --hostname={{ machine.hostname }} --machine={{ machine.hostname }}
         --resolv-conf=off --timezone=off --link-journal=no
 
-systems:
+apex:
   hosts:
-    main:
+    container:
       ansible_connection: nspawn
-      ansible_become_password: "{{ users.user.password }}"
       ansible_nspawn_user: "{{ users.user.name }}"
+      ansible_become_password: "{{ users.user.password }}"
       ansible_nspawn_root: "{{ machine.mount }}"
       ansible_nspawn_args: >-
         --quiet
