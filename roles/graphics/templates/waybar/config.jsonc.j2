@@ -1,43 +1,122 @@
-{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
-{%- set space_big = (env_space_big * env_scale) | round | int -%}
-{%- set space_text = " " * ((env_space_thin * env_scale) | round | int) -%}
-{%- set space_icon = " " * ((env_space_light * env_scale) | round | int) -%}
+{%- set _indent = {"space": 4} -%}
 
-{%- set font_icon_size_int = (env_font_icon_size * env_scale) | round | int -%}
-{%- set font_icon = "{} {}px".format(env_font_icon, font_icon_size_int) -%}
+{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
+{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
+{%- set _spacing_text = " " * (spacing.thin | scale(scaling.real)) -%}
+{%- set _spacing_icon = " " * (spacing.small | scale(scaling.real)) -%}
 
-{%- set warn_icon = "\uf071" -%}
-{%- macro section(icon, content="", class="", important=false, warn=false, micro=false) -%}
-    {%- set prefix = "<span font='{}' line_height='1.2' background='{}'>{}{}{}</span>".format(
-        font_icon,
-        env_important if warn or important else env_active,
-        space_icon,
-        ("\\U{:>08}".format(icon).encode().decode("unicode-escape") | tojson)[1:-1],
-        space_icon,
-    ) -%}
-    {%- set class = ("-" + class) if class else "" -%}
+{%- set _icon_size = fonts.icon.sizes.medium | scale(scaling.real) -%}
+{%- set _icon_pango = "{} {}px".format(fonts.icon.name, _icon_size) -%}
+{%- set _icon_lheight = "1.{}".format(fonts.icon.offsets.medium) -%}
 
-    {%- if micro -%}
-        "format{{ class }}": "{{ prefix }}",
-    {%- else -%}
-        {%- set middle = (
-            "{}{}{}".format(space_text, content, space_text)
-            if content else
-            "" 
-        ) -%}
-        {%- if warn -%}
-            {%- set suffix = "<span font='{}' background='{}'>{}{}{}</span>".format(
-                font_icon,
-                env_important,
-                space_icon,
-                warn_icon,
-                space_icon,
-            ) -%}
-            "format{{ class }}": "{{ prefix }}{{ middle }}{{ suffix }}",
-        {%- else -%}
-            "format{{ class }}": "{{ prefix }}{{ middle }}",
-        {%- endif -%}
-    {%- endif -%}
+{%- macro _icon_encode(_icon) -%}
+    {{ ("\\U{:>08}".format(_icon).encode().decode("unicode-escape") | tojson)[1:-1] }}
+{%- endmacro -%}
+
+{%- set _icon_warn = _icon_encode("f071") -%}
+{%- set _icon_sep = _icon_encode("2012") -%}
+
+{%- set _output_name = monitors.outputs.values() | map(attribute="wayland") | first -%}
+{%- set _modules_left = ["cpu", "memory#ram", "memory#swap", "disk", "custom/uptime"] -%}
+{%- set _modules_center = ["clock"] -%}
+{%- set _modules_right = ["mpris", "wireplumber", "hyprland/language"]
+    + ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(["custom/netns"], [])
+    + ["tray"]
+-%}
+
+{%- macro _modules_render() -%}
+    "modules-left": {{ _modules_left | tojson }},
+    {##}
+    {% set _ws = _modules_center %}
+    {% for _mon_name in monitors.outputs %}
+        {% set _ws_name = "group/workspaces-{}".format(_mon_name) %}
+        {% if loop.first %}
+            {% set _ = _ws.insert(0, _ws_name) %}
+        {% else %}
+            {% set _ = _ws.append(_ws_name) %}
+        {% endif %}
+    {% endfor %}
+    "modules-center": {{ _ws | tojson }},
+    {##}
+    "modules-right": {{ _modules_right | tojson }},
+{%- endmacro -%}
+
+{%- macro _section_span(_string, _bg) -%}
+    <span font=\"{{ _icon_pango }}\" line_height=\"{{ _icon_lheight }}\" background=\"{{ _bg }}\">{{ _string }}</span>
+{%- endmacro -%}
+
+{%- macro _section_render(_icon, _content="", _ns="", _important=false, _warn=false, _mini=false) -%}
+    {% set _parts = namespace(
+        prefix=_section_span(
+            "{0}{1}{0}".format(_spacing_icon, _icon_encode(_icon)),
+            preset.important if _warn or _important else preset.active,
+        ),
+        middle="",
+        suffix="",
+    ) %}
+    {% set _format = ["format", _ns] | select("ne", "") | join("-") %}
+    {##}
+    {% if not _mini %}
+        {% if _content %}
+            {% set _parts.middle = "{0}{1}{0}".format(_spacing_text, _content) %}
+        {% endif %}
+        {##}
+        {% if _warn %}
+            {% set _parts.suffix = _section_span("{0}{1}{0}".format(_spacing_icon, _icon_warn), preset.important) %}
+        {% endif %}
+    {% endif %}
+    {##}
+    "{{ _format }}": "{{ _parts.prefix }}{{ _parts.middle }}{{ _parts.suffix }}",
+{%- endmacro -%}
+
+{%- macro _workspaces_persistent(_mon, _ws_prefix) %}
+    {% for _ in range(_mon.workspaces) %}
+        "{{ _ws_prefix }}{{ loop.index }}": [],
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _workspaces_ignore(_ignored_mon_name, _is_first) %}
+    {% for _mon_name, _mon in monitors.outputs.items() %}
+        {% if _mon_name != _ignored_mon_name %}
+            "^{{ _mon_name | workspace_prefix(loop.first) }}[0-9]+$",
+        {% endif %}
+        {% if not _is_first %}
+            "^{{ wms.scratch }}$",
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _workspaces_render() -%}
+    {% for _mon_name, _mon in monitors.outputs.items() %}
+        {% set _mon_icon = "f1104" if loop.first else "f0ddc" %}
+        {% set _ws_prefix = _mon_name | workspace_prefix(loop.first) %}
+        {##}
+        "group/workspaces-{{ _mon_name }}": {
+            "orientation": "horizontal",
+            "modules": [
+                "custom/workspaces-{{ _mon_name }}-icon",
+                "hyprland/workspaces#{{ _mon_name }}"
+            ]
+        },
+        {##}
+        "custom/workspaces-{{ _mon_name }}-icon": {
+            {{ _section_render(_icon=_mon_icon) | relative_indent(times=3, **_indent) }}
+        },
+        {##}
+        "hyprland/workspaces#{{ _mon_name }}": {
+            "active-only": true,
+            "all-outputs": true,
+            "persistent-workspaces": {
+                {{ _workspaces_persistent(_mon, _ws_prefix) | relative_indent(times=4, **_indent) }}
+            },
+            "ignore-workspaces": [
+                {{ _workspaces_ignore(_mon_name, loop.first) | relative_indent(times=4, **_indent) }}
+            ],
+            "show-special": true,
+            "sort-by": "name",
+            "format": "{name}",
+        },
+    {% endfor %}
 {%- endmacro -%}
 
 {
@@ -45,7 +124,7 @@
 
     "layer": "bottom",
     "position": "top",
-    "output": "{{ (env_monitors | first).wayland }}",
+    "output": "{{ _output_name }}",
     "mode": "dock",
     "exclusive": true,
     "passthrough": false,
@@ -55,19 +134,11 @@
 
     "reload_style_on_change": false,
 
-    "modules-left": ["cpu", "memory#ram", "memory#swap", "disk", "custom/uptime"],
-    "modules-center": ["group/workspaces-{{ (env_monitors | first).name }}-group", "clock",
-        {%- for mon in env_monitors -%}
-            {%- if not loop.first -%}
-                {{ " " }}"group/workspaces-{{ mon.name }}-group",
-            {%- endif -%}
-        {%- endfor -%}
-    ],
-    "modules-right": ["mpris", "wireplumber", "hyprland/language", "custom/netns", "tray"],
+    {{ _modules_render() | relative_indent(times=1, **_indent) }}
 
     // margin: "",
     // margin-<top|left|bottom|right>: 0,
-    "spacing": {{ space_big }},
+    "spacing": {{ _spacing_big }},
     "fixed-center": false,
 
     "cpu": {
@@ -76,8 +147,8 @@
             "warn": 90,
         },
 
-        {{ section("f4bc", micro=true) }}
-        {{ section("f4bc", micro=true, class="warn", warn=true) }}
+        {{ _section_render(_icon="f4bc", _mini=true) | relative_indent }}
+        {{ _section_render(_icon="f4bc", _mini=true, _ns="warn", _warn=true) | relative_indent }}
     },
 
     "memory#ram": {
@@ -87,8 +158,8 @@
             "warn": 90,
         },
 
-        {{ section("efc5", "{used} GiB") }}
-        {{ section("efc5", "{used} GiB", class="warn", warn=true) }}
+        {{ _section_render(_icon="efc5", _content="{used} GiB") | relative_indent }}
+        {{ _section_render(_icon="efc5", _content="{used} GiB", _ns="warn", _warn=true) | relative_indent }}
     },
 
     "memory#swap": {
@@ -98,50 +169,17 @@
             "warn": 90,
         },
 
-        {{ section("f0fb7", "{swapUsed} GiB") }}
-        {{ section("f0fb7", "{swapUsed} GiB", class="warn", warn=true) }}
+        {{ _section_render(_icon="f0fb7", _content="{swapUsed} GiB") | relative_indent }}
+        {{ _section_render(_icon="f0fb7", _content="{swapUsed} GiB", _ns="warn", _warn=true) | relative_indent }}
     },
 
-    {%- for mon in env_monitors -%}
-    {%- set first_mon = loop.first -%}
-    {{ "\n" }}
-    "group/workspaces-{{ mon.name }}-group": {
-        "orientation": "horizontal",
-        "modules": [
-            "custom/workspaces-{{ mon.name }}-icon",
-            "hyprland/workspaces#{{ mon.name }}"
-        ]
-    },
-    "custom/workspaces-{{ mon.name }}-icon": {
-        {{ section("f1104" if first_mon else "f0ddc", "") }}
-    },
-    "hyprland/workspaces#{{ mon.name }}": {
-        "active-only": true,
-        "all-outputs": true,
-        "persistent-workspaces": {
-            {%- for _ in range(mon.workspaces) -%}
-                "{{ "" if first_mon else mon.name[0].upper() }}{{ loop.index }}": [],
-            {%- endfor -%}
-        },
-        "ignore-workspaces": [
-            {%- for m in env_monitors -%}
-                {%- if m.name != mon.name -%}
-                    "^{{ "" if loop.first else m.name[0].upper() }}[0-9]+$",
-                {%- endif -%}
-            {%- endfor -%}
-        ],
-        "show-special": true,
-        "sort-by": "name",
-        "format": "{name}",
-    },
-    {%- endfor -%}
-    {{ "" }}
+    {{ _workspaces_render() | relative_indent(times=1, **_indent) }}
 
     "clock": {
         "interval": 1,
 
-        {{ section("e383", "{:%a %b %d %r}") }}
-        {{ section("e383", "{:%F %r %Z}", class="alt") }}
+        {{ _section_render(_icon="e383", _content="{:%a %b %d %r}") | relative_indent }}
+        {{ _section_render(_icon="e383", _content="{:%F %r %Z}", _ns="alt") | relative_indent }}
 
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
@@ -149,10 +187,10 @@
             "weeks-pos": "",
             "on-scroll": 1,
             "format": {
-                "months": "<span color='{{ env_accent }}'><b>{}</b></span>",
-                "days": "<span color='{{ env_foreground }}'><b>{}</b></span>",
-                "weekdays": "<span color='{{ env_secondary }}'><b>{}</b></span>",
-                "today": "<span color='{{ env_important }}'><b><u>{}</u></b></span>"
+                "months": "<span color=\"{{ preset.accent }}\"><b>{}</b></span>",
+                "days": "<span color=\"{{ preset.foreground }}\"><b>{}</b></span>",
+                "weekdays": "<span color=\"{{ preset.alternative }}\"><b>{}</b></span>",
+                "today": "<span color=\"{{ preset.important }}\"><b><u>{}</u></b></span>"
             },
         },
         "actions": {
@@ -170,21 +208,24 @@
             "warn": 90,
         },
 
-        {{ section("f413", "{specific_used:0.0f} / {specific_total:0.0f} GB") }}
-        {{ section("f413", "{specific_used:0.0f} / {specific_total:0.0f} GB", class="warn", warn=true) }}
+        {{ 
+            _section_render(_icon="f413", _content="{specific_used:0.0f} / {specific_total:0.0f} GB")
+                | relative_indent 
+        }}
+        {{ 
+            _section_render(
+                _icon="f413", _content="{specific_used:0.0f} / {specific_total:0.0f} GB", _ns="warn", _warn=true
+            )
+                | relative_indent
+        }}
     },
 
     "custom/uptime": {
         "tooltip": false,
         "interval": 60,
+        "exec": "{{ execs.uptime }}",
 
-        "exec": "uptime -p | awk '{ gsub(/up /, _);
-        {%- for r in ["days", "hours", "minutes"] -%}
-            gsub(/ {{ r }}?,?/, \"{{ r[0] }}\");
-        {%- endfor -%}
-        print }'",
-
-        {{ section("f1ae1", "{}") }}
+        {{ _section_render(_icon="f1ae1", _content="{}") | relative_indent }}
     },
 
     "mpris": {
@@ -194,7 +235,7 @@
             "title"
         ],
         "format-len": 20,
-        "dynamic-separator": " \u2012 ",
+        "dynamic-separator": "{{ "{0}{1}{0}".format(_spacing_text, _icon_sep) }}",
 
         "tooltip": true,
         "tooltip-format": "{dynamic}",
@@ -203,7 +244,7 @@
         "on-click-right": "playerctl previous",
         "on-click-middle": "playerctl play-pause",
 
-        {{ section("ec1b", "{dynamic}") }}
+        {{ _section_render(_icon="ec1b", _content="{dynamic}") | relative_indent }}
     },
 
     "wireplumber": {
@@ -211,27 +252,33 @@
         "tooltip": false,
         "on-click": "wpctl set-mute @DEFAULT_SINK@ toggle",
 
-        {{ section("f0580", "{volume}%") }}
-        {{ section("f0581", "Muted", class="muted", important=true) }}
+        {{ _section_render(_icon="f0580", _content="{volume}%") | relative_indent }}
+        {{ 
+            _section_render(_icon="f0581", _content="Muted", _ns="muted", _important=true)
+                | relative_indent
+        }}
     },
 
     "hyprland/language": {
         "format-en": "English (US)",
 
-        {{ section("f11c", "{}") }}
+        {{ _section_render(_icon="f11c", _content="{}") | relative_indent }}
     },
 
+    {% if ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
     "custom/netns": {
         "interval": 5,
         "tooltip": false,
-        "exec": "test $(ip netns list | wc --lines) -ge 1 && (ip netns list | tr '\\n' ' ') || echo 'default'",
+        "exec": "{{ execs.netns }} || (echo default)",
 
-        {{ section("f0484", "{}") }}
+        {{ _section_render(_icon="f0484", _content="{}") | relative_indent }}
     },
 
+    {% endif %}
+    {##}
     "tray": {
-        "icon-size": {{ font_icon_size_int }},
+        "icon-size": {{ _icon_size }},
         "show-passive-items": true,
-        "spacing": {{ space_big }},
+        "spacing": {{ _spacing_big }},
     }
 }

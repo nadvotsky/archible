@@ -1,4 +1,24 @@
-{%- set n = "\n" -%}
+{%- set _indent = {"space": 4} -%}
+
+{%- set _fonts = [
+    {
+        "name": "sans-serif:style=semibold",
+        "size": fonts.sans_serif.sizes.medium | scale(scaling.real),
+        "offset": fonts.sans_serif.offsets.medium | scale(scaling.real),
+    },
+    {
+        "name": fonts.icon.name,
+        "size": fonts.icon.sizes.medium | scale(scaling.real),
+        "offset": fonts.icon.offsets.medium | scale(scaling.real),
+    }
+] -%}
+
+{%- set _modules_left = ["cpu", "ram", "swap", "fs", "uptime"] -%}
+{%- set _modules_center = ["time"] -%}
+{%- set _modules_right = ["player", "volume", "keyboard"]
+    + ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(["netns"], [])
+    + ["tray"]
+-%}
 
 {#
     A bug workaround when format-prefix-padding is set to pixels or points,
@@ -6,72 +26,121 @@
 
     Therefore, spacing is used instead. It is not precise though.
 #}
-{%- set section_text_spacing = (env_space_light * env_scale) | round | int -%}
-{%- set section_icon_spacing = (env_space_light * 2 * env_scale) | round | int -%}
+{%- set _spacing_text = spacing.small | scale(scaling.real) -%}
+{%- set _spacing_icon = (spacing.small * 2) | scale(scaling.real) -%}
 
-{%- set section_border_spacing = "{:.0f}px".format(
-    [env_space_thin * env_scale, 1] | max
+{%- set _spacing_border = "{}px".format([spacing.thin | scale(scaling.real), 1] | max) -%}
+{%- set _spacing_medium = "{}px".format(spacing.medium | scale(scaling.real)) -%}
+
+{%- set _bar_height = "{}px".format(
+    _fonts | map(attribute="size") | max + spacing.medium | scale(scaling.real)
 ) -%}
-{%- set normal_spacing = "{:.0f}px".format((env_space_normal * env_scale) | round) -%}
 
 {#
     Zero-width space.
 #}
-{%- set section_thin = "\u200B" -%}
-{%- set section_warn = "\uf071" -%}
+{%- set _icon_empty = "\u200B" -%}
+{%- set _icon_warn = "\uf071" -%}
+{%- set _icon_scratch = "\uf044" -%}
 
-
-{%- macro section(icon, ns = "", important = false, warn = false, mini = false) -%}
-    {%- set literal = "\\U" + icon.rjust(8, "0") -%}
-    {%- set character = literal.encode().decode("unicode-escape") -%}
-    {%- set format_prefix = "format" + (("-" + ns) if ns else "") -%}
-    {%- set label_prefix = "label" + (("-" + ns) if ns else "") -%}
-    {%- set color = env_important if important else env_active -%}
-
-    {%- if mini -%}
-        {{- format_prefix }} = "{{ character }}"{{- n -}}
-        {{- format_prefix }}-background = "{{ color }}"{{- n -}}
-        {{- format_prefix }}-padding = {{ section_icon_spacing }}
-    {%- else -%}
-        {{- format_prefix }}-prefix = "{{ character }}"{{- n -}}
-        {{- format_prefix }}-prefix-background = "{{ color }}"{{- n -}}
-        {{- format_prefix }}-prefix-padding = {{ section_icon_spacing }}{{- n -}}
-        {{- format_prefix }}-underline = "{{ color }}"{{- n -}}
-        {{- format_prefix }}-overline = "{{ color }}"{{- n -}}
-
-        {%- if warn -%}
-            {{- format_prefix }}-suffix = "{{ section_warn }}"{{- n -}}
-            {{- format_prefix }}-suffix-background = "{{ color }}"{{- n -}}
-            {{- format_prefix }}-suffix-padding = {{ section_icon_spacing }}{{- n -}}
-        {%- else -%}
-            {{- format_prefix }}-suffix = "{{ section_thin }}"{{- n -}}
-            {{- format_prefix }}-suffix-background = "{{ color }}"{{- n -}}
-            {{- format_prefix }}-suffix-padding-left = {{ section_border_spacing }}{{- n -}}
-        {%- endif -%}
-
-        {{- label_prefix }}-padding = {{ section_text_spacing }}
-    {%- endif -%}
+{%- macro _fonts_render() -%}
+    {% for _font in _fonts %}
+        font-{{ loop.index0 }} = "{{ _font.name }}:pixelsize={{ _font.size }};{{ _font.offset }}"
+    {% endfor %}
 {%- endmacro -%}
 
-
-{%- macro workspace(icon, prefix, f, t) -%}
-    {{- section(icon) -}}{{- n -}}
-
-    {{- n -}}
-    {%- for i in range(t - f + 1) -%}
-        icon-{{ i }} = {{ prefix }}-{{ f + i }};{{ i + 1 }}{{- n -}}
-    {%- endfor -%}
-    icon-default = ""{{- n -}}
-
-    {{- n -}}
-    label-active-foreground = "{{ env_accent }}"{{- n -}}
-    {%- for i in ["active", "empty", "occupied", "urgent"] -%}
-        label-{{ i }} = "%icon%"{{- n -}}
-        label-{{ i }}-padding = {{ section_text_spacing }}{{- n -}}
-    {%- endfor -%}
-    label-urgent-foreground = "{{ env_accent }}"
+{%- macro _modules_render() -%}
+    modules-left = {{ _modules_left | join(" ") }}
+    {##}
+    {% set _ws = [] %}
+    {% for _mon_name in monitors.outputs %}
+        {% set _ = _ws.append("workspaces-{}".format(_mon_name)) %}
+        {% if loop.first %}
+            {% set _ = _ws.extend(_modules_center) %}
+        {% endif %}
+    {% endfor %}
+    modules-center = {{ _ws | join(" ") }}
+    {##}
+    modules-right = {{ _modules_right | join(" ") }}
 {%- endmacro -%}
 
+{%- macro _section_warn(_warn, _format_prefix, _color) %}
+    {% if _warn %}
+        {{ _format_prefix }}-suffix = "{{ _icon_warn }}"
+        {{ _format_prefix }}-suffix-background = "{{ _color }}"
+        {{ _format_prefix }}-suffix-padding = {{ _spacing_icon }}
+    {% else %}
+        {{ _format_prefix }}-suffix = "{{ _icon_empty }}"
+        {{ _format_prefix }}-suffix-background = "{{ _color }}"
+        {{ _format_prefix }}-suffix-padding-left = {{ _spacing_border }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _section_render(_icon, _ns = "", _important = false, _warn = false, _mini = false) -%}
+    {% set _literal = "\\U" + _icon.rjust(8, "0") %}
+    {% set _character = _literal.encode().decode("unicode-escape") %}
+    {##}
+    {% set _format_prefix = ["format", _ns] | select("ne", "") | join("-") %}
+    {% set _label_prefix = ["label", _ns] | select("ne", "") | join("-") %}
+    {% set _color = preset.important if _important else preset.active %}
+    {##}
+    {% if _mini %}
+        {{ _format_prefix }} = "{{ _character }}"
+        {{ _format_prefix }}-background = "{{ _color }}"
+        {{ _format_prefix }}-padding = {{ _spacing_icon }}
+    {% else %}
+        {{ _format_prefix }}-prefix = "{{ _character }}"
+        {{ _format_prefix }}-prefix-background = "{{ _color }}"
+        {{ _format_prefix }}-prefix-padding = {{ _spacing_icon }}
+        {{ _format_prefix }}-underline = "{{ _color }}"
+        {{ _format_prefix }}-overline = "{{ _color }}"
+        {##}
+        {{ _section_warn(_warn, _format_prefix, _color) | relative_indent(times=2, **_indent) }}
+        {##}
+        {{ _label_prefix }}-padding = {{ _spacing_text }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _workspaces_icons(_primary, _mon_name, _ws) -%}
+    {% set _ns = namespace() %}
+    {% for _i in range(_ws) %}
+        icon-{{ _i }} = {{ _mon_name | workspace_prefix(_primary) }}{{ _i + 1 }};{{ _i + 1 }}
+        {% set _ns.i = _i %}
+    {% endfor %}
+    {##}
+    {% if _primary %}
+        icon-{{ _ns.i + 1 }} = {{ wms.scratch }};{{ _icon_scratch }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _workspaces_monitors(_primary, _mon_name, _ws) -%}
+    {{ _section_render(_icon="f1104" if _primary else "f0ddc") | relative_indent(times=1, **_indent) }}
+
+    {{ _workspaces_icons(_primary, _mon_name, _ws) | relative_indent(times=1, **_indent) }}
+{%- endmacro -%}
+
+{%- macro _workspaces_styles() %}
+    {% for i in ["active", "empty", "occupied", "urgent"] %}
+        label-{{ i }} = "%icon%"
+        label-{{ i }}-padding = {{ _spacing_text }}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _workspaces_render() -%}
+    {% for _mon_name, _mon in monitors.outputs.items() %}
+        [module/workspaces-{{ _mon_name }}]
+        type = internal/xworkspaces
+
+        {{ _workspaces_monitors(loop.first, _mon_name, _mon.workspaces) | relative_indent(times=2, **_indent) }}
+        icon-default = ""
+
+        label-active-foreground = "{{ preset.accent }}"
+        {{ _workspaces_styles() | relative_indent(times=2, **_indent) }}
+        label-urgent-foreground = "{{ preset.important }}"
+        {##}
+        {% if not loop.last %}{{ "\n\n" }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
 
 [bar/mybar]
 wm-name = POLYBAR
@@ -79,17 +148,15 @@ bottom = false
 
 fixed-center = false
 
-height = {{ "{:.0f}px".format(
-    ((([ env_font_size, env_font_icon_size] | max) + env_space_normal) * env_scale) | round) 
-}}
-border-size = {{ normal_spacing }}
-padding = {{ normal_spacing }}
-module-margin = {{ normal_spacing }}
-line-size = {{ section_border_spacing }}
+height = {{ _bar_height }}
+border-size = {{ _spacing_medium }}
+padding = {{ _spacing_medium }}
+module-margin = {{ _spacing_medium }}
+line-size = {{ _spacing_border }}
 
-background = "{{ env_inactive }}"
-border-color = "{{ env_inactive }}"
-foreground = "{{ env_foreground }}"
+background = "{{ preset.inactive }}"
+border-color = "{{ preset.inactive }}"
+foreground = "{{ preset.foreground }}"
 
 {#
     Setting dpi to 72 to prevent polybar from scaling font sizes.
@@ -97,32 +164,17 @@ foreground = "{{ env_foreground }}"
 dpi-x = 72
 dpi-y = 72
 
-{{- n -}}
-{%- for f, s, o in [
-    ("sans-serif:style=semibold", env_font_size, env_font_offset),
-    (env_font_icon, env_font_icon_size, env_font_icon_offset),
-] -%}
-    {%- set pixelsize = (s * env_scale) | round | int -%}
-    {%- set offset = (o * env_scale) | round | int -%}
-    font-{{ loop.index0 }} = "{{ f }}:pixelsize={{ pixelsize }};{{ offset }}"{{- n -}}
-{%- endfor -%}
+{{ _fonts_render() | relative_indent() }}
 
-modules-left = cpu ram swap fs uptime
-modules-center = workspaces-primary time {%- for m in env_monitors -%}
-    {%- if not loop.first -%}
-        {{- " workspaces-{}".format(m.name) -}}
-    {%- endif -%}
-{%- endfor -%}
-{{- n -}}
-modules-right = player volume keyboard netns tray
+{{ _modules_render() | relative_indent() }}
 
 
 [module/cpu]
 type = internal/cpu
 
-{{ section("f4bc", mini=true) }}
+{{ _section_render(_icon="f4bc", _mini=true) | relative_indent() }}
 
-{{ section("f4bc", ns="warn", important=true, mini=true) }}
+{{ _section_render(_icon="f4bc", _ns="warn", _important=true, _mini=true) | relative_indent() }}
 
 warn-percentage = 90
 interval = 10
@@ -131,9 +183,9 @@ interval = 10
 [module/ram]
 type = internal/memory
 
-{{ section("efc5") }}
+{{ _section_render(_icon="efc5") | relative_indent() }}
 
-{{ section("efc5", ns="warn", important=true, warn=true) }}
+{{ _section_render(_icon="efc5", _ns="warn", _important=true, _warn=true) | relative_indent() }}
 
 format = <label>
 format-warn = <label-warn>
@@ -146,9 +198,9 @@ interval = 10
 [module/swap]
 type = internal/memory
 
-{{ section("f0fb7") }}
+{{ _section_render(_icon="f0fb7") | relative_indent() }}
 
-{{ section("f0fb7", ns="warn", important=true, warn=true) }}
+{{ _section_render(_icon="f0fb7", _ns="warn", _important=true, _warn=true) | relative_indent() }}
 
 format = <label>
 label = %gb_swap_used%
@@ -158,7 +210,7 @@ interval = 20
 [module/fs]
 type = internal/fs
 
-{{ section("f413", ns="mounted") }}
+{{ _section_render(_icon="f413", _ns="mounted") | relative_indent() }}
 
 mount-0 = /
 label-mounted = %used% / %total%
@@ -168,61 +220,30 @@ interval = 60
 [module/uptime]
 type = custom/script
 
-{{ section("f1ae1") }}
+{{ _section_render(_icon="f1ae1") | relative_indent() }}
 
-{%- set awk_cmdline = [ "gsub(/up /, _)" ] -%}
-{%- for r in ["days", "hours", "minutes"] -%}
-    {%- set _ = awk_cmdline.append(
-        "gsub(/ {}?,?/, \"{}\")".format(r, r[0])
-    ) -%}
-{%- endfor -%}
-{{- n -}}
-exec = uptime -p | awk '{ {{ awk_cmdline | join(";") }};print }'
-
+exec = "{{ execs.uptime }}"
 interval = 60
-
-
-[module/workspaces-primary]
-type = internal/xworkspaces
-
-{{ workspace("f1104", (env_monitors | first).name, 1, (env_monitors | first).workspaces) }}
-
-{%- set scratch_icon = "\uf044" -%}{{- n -}}
-icon-8 = scratch;{{ scratch_icon }}
 
 
 [module/time]
 type = internal/date
 
-{{ section("e383") }}
+{{ _section_render(_icon="e383") | relative_indent() }}
 
 date = "%a %b %d %r"
 date-alt = "%F %r %Z"
 
 
-{% for mon in env_monitors -%}
-{%- if not loop.first -%}
-[module/workspaces-{{ mon.name }}]
-type = internal/xworkspaces
-
-{{ workspace("f0ddc", mon.name, 1, mon.workspaces) }}{{- n -}}
-{{- n -}}{{- n -}}
-{%- endif -%}
-{%- endfor -%}
+{{ _workspaces_render() | relative_indent() }}
 
 
 [module/player]
 type = custom/script
 
-{{ section("ec1b") }}
-{{- n -}}
+{{ _section_render(_icon="ec1b") | relative_indent() }}
 
-{%- set artists = "{{artist}}" -%}
-{%- set title = "{{trunc(title, 10)}}" -%}
-{%- set wide_dash = "\u2012" -%}
-{{- n -}}
-
-exec = "playerctl metadata --format='{{ artists }} {{ wide_dash }} {{ title }}'"
+exec = "playerctl metadata --format='{{ ["{{artist}}", "\u2012", "{{trunc(title, 10)}}"] | join(" ") }}'"
 click-left = "playerctl next"
 click-right = "playerctl previous"
 double-click-left = "playerctl play-pause"
@@ -232,9 +253,9 @@ interval = 1
 [module/volume]
 type = internal/pulseaudio
 
-{{ section("f0580", ns="volume") }}
+{{ _section_render(_icon="f0580", _ns="volume") | relative_indent() }}
 
-{{ section("f0581", ns="muted", important=true) }}
+{{ _section_render(_icon="f0581", _ns="muted", _important=true) | relative_indent() }}
 
 format-volume = "<label-volume>"
 label-muted = "Muted"
@@ -245,34 +266,36 @@ interval = 2
 [module/keyboard]
 type = internal/xkeyboard
 
-{{ section("f11c") }}
+{{ _section_render(_icon="f11c") | relative_indent() }}
 
 format = "<label-indicator><label-layout>"
 label-indicator-on = "%icon%"
-label-indicator-on-padding-left = {{ section_text_spacing }}
-label-indicator-on-foreground = "{{ env_accent }}"
-{% set icon_caps = "\U000f0632" -%}
-{%- set icon_numlock = "\uf4f7" -%}
-indicator-icon-0 = caps lock;;{{ icon_caps }}
-indicator-icon-1 = num lock;;{{ icon_numlock }}
+label-indicator-on-padding-left = {{ _spacing_text }}
+label-indicator-on-foreground = "{{ preset.accent }}"
+indicator-icon-0 = caps lock;;{{ "\U000f0632" }}
+indicator-icon-1 = num lock;;{{ "\uf4f7" }}
 label-layout = %layout%
-label-layout-padding = {{ section_text_spacing }}
+label-layout-padding = {{ _spacing_text }}
 
 
+{% if ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
 [module/netns]
 type = custom/script
 
-{{ section("f0484") }}
+{{ _section_render(_icon="f0484") | relative_indent() }}
 
-{{ section("f0c9c", ns="fail", mini=true) }}
+{{ _section_render(_icon="f0c9c", _ns="fail", _mini=true) | relative_indent() }}
 
-exec = "test $(ip netns list | wc --lines) -ge 1 && (ip netns list | tr '\\n' ' ')"
+exec = "{{ execs.netns}}"
 interval = 5
 
 
+{% endif %}
+{##}
+{##}
 [module/tray]
 type = internal/tray
 
 tray-size = 100%
-tray-foreground = "{{ env_active }}"
-tray-spacing = {{ section_text_spacing }}
+tray-foreground = "{{ preset.active }}"
+tray-spacing = {{ _spacing_text }}
