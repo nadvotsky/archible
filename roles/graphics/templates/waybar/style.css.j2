@@ -1,51 +1,51 @@
-{%- set space_thin = "{}px".format([env_space_thin * env_scale, 1] | max | round | int) -%}
-{%- set space_light = "{}px".format((env_space_light * env_scale) | round | int) -%}
-{%- set space_normal = "{}px".format((env_space_normal * env_scale) | round | int) -%}
-{%- set space_big = "{}px".format((env_space_big * env_scale) | round | int) -%}
+{%- set _spacing_thin = "{}px".format([spacing.thin | scale(scaling.real), 1] | max) -%}
+{%- set _spacing_small = "{}px".format(spacing.small | scale(scaling.real)) -%}
+{%- set _spacing_medium = "{}px".format(spacing.medium | scale(scaling.real)) -%}
+{%- set _spacing_big = "{}px".format(spacing.big | scale(scaling.real)) -%}
 
-{%- set section_text_spacing = (env_space_light * env_scale) | round | int -%}
-{%- set section_icon_spacing = (env_space_light * 2 * env_scale) | round | int -%}
+{%- set _spacing_text = spacing.small | scale(scaling.real) -%}
+{%- set _spacing_icon = (spacing.small * 2) | scale(scaling.real) -%}
 
-{%- set font_size = "{}px".format((env_font_size * env_scale) | round | int) -%}
-{%- set font_icon_size = "{}px".format((env_font_icon_size * env_scale) | round | int) -%}
+{%- set _font_sans_serif_size = "{}px".format(fonts.sans_serif.sizes.medium | scale(scaling.real)) -%}
+{%- set _font_icon_size = "{}px".format(fonts.icon.sizes.medium | scale(scaling.real)) -%}
 
 window#waybar {
-    font: 600 {{ font_size }} sans-serif;
+    font: 600 {{ _font_sans_serif_size }} sans-serif;
 
-    color: {{ env_foreground }};
-    background-color: {{ env_inactive }};
+    color: {{ preset.foreground }};
+    background-color: {{ preset.inactive }};
 }
 
 window#waybar > box {
-    margin-top: {{ space_normal }};
-    margin-bottom: {{ space_normal }};
+    margin-top: {{ _spacing_medium }};
+    margin-bottom: {{ _spacing_medium }};
 
-    margin-left: {{ space_big }};
-    margin-right: {{ space_big }};
+    margin-left: {{ _spacing_big }};
+    margin-right: {{ _spacing_big }};
 }
 
 .module, #workspaces {
-    border: 1px solid {{ env_active }};
+    border: 1px solid {{ preset.active }};
 }
 
 .module.warn, .module.muted {
-    border: 1px solid {{ env_important }};
+    border: 1px solid {{ preset.important }};
 }
 
 #tray {
     border: 0;
-    padding-right: {{ space_normal }};
+    padding-right: {{ _spacing_medium }};
 }
 
 button {
-    color: {{ env_foreground }};
+    color: {{ preset.foreground }};
 
     border: 0;
     margin: 0;
 
     padding: 0;
-    padding-left: {{ space_normal }};
-    padding-right: {{ space_normal }};
+    padding-left: {{ _spacing_medium }};
+    padding-right: {{ _spacing_medium }};
 
     box-shadow: none;
     text-shadow: none;
@@ -57,16 +57,16 @@ button {
 }
 
 button.active {
-    color: {{ env_accent }};
+    color: {{ preset.accent }};
 }
 
 button.urgent {
-    color: {{ env_important }};
+    color: {{ preset.important }};
 }
 
 tooltip {
     border-radius: 0;
-    border: {{ space_thin }} solid {{ env_active }};
+    border: {{ _spacing_thin }} solid {{ preset.active }};
 }
 
 tooltip * {
@@ -75,5 +75,5 @@ tooltip * {
 }
 
 tooltip.background {
-    background: {{ env_inactive }};
+    background: {{ preset.inactive }};
 }

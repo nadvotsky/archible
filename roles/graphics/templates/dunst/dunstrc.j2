@@ -1,34 +1,37 @@
-{%- set monitor = env_monitors | selectattr("notifications", "true") | first -%}
+{%- set _font_family = "monospace" -%}
+{%- set _font_size = fonts[_font_family].sizes.big | scale(scaling.real) -%}
 
-{%- set width = (monitor.width * 0.6 * env_scale) | round | int -%}
-{%- set height = (monitor.height * 0.3 * env_scale) | round | int -%}
-{%- set icon_width_min = (height * 0.2) | round | int -%}
-{%- set icon_width_max = (height * 0.3) | round | int -%}
+{%- set _bar_fonts = [fonts.sans_serif, fonts.icon] -%}
 
-{%- set gap = (env_space_big * 2 * env_scale) | round | int -%}
-{#
-    env_space_normal
-    env_space_normal / 2
-    [ icon ] text
-    env_space_normal / 2
-    env_space_normal
-#}
-{%- set bar_size =
-    ((([ env_font_size, env_font_icon_size] | max) + env_space_normal * 3) * env_scale)
-    | round
-    | int
+{%- set _monitor = monitors.outputs[notifications.monitor] -%}
+
+{%- set _width = (_monitor.width * notifications.width) | scale(scaling.real) -%}
+{%- set _height = (_monitor.height * notifications.height) | scale(scaling.real)-%}
+{%- set _limit = (_monitor.height / _height) | round | int -%}
+{%- set _icon_size = (_monitor.width * notifications.icon) | scale(scaling.real) -%}
+
+{%- set _gap = (spacing.big * 2) | scale(scaling.real) -%}
+{%- set _bar_size =
+    [
+        spacing.medium,
+        spacing.medium / 2,
+        _bar_fonts | map(attribute="sizes.medium") | max,
+        spacing.medium / 2,
+        spacing.medium,
+    ] | sum | scale(scaling.real)
 -%}
 
-{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
-{%- set space_big = (env_space_big * env_scale) | round | int -%}
+{%- set _spacing_small = spacing.small | scale(scaling.real) -%}
+{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
+{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
 
-{%- macro format(color) -%}
+{%- macro _format_render(color) -%}
 <span weight='bold' color='{{ color }}'>%a</span>\n<b>%s</b>\n%b
 {%- endmacro -%}
 
 
 [global]
-monitor = {{ env_monitors.index(monitor) }}
+monitor = {{ (monitors.outputs.keys() | list).index(notifications.monitor) }}
 scale = 1
 follow = none
 transparency = 0
@@ -39,36 +42,36 @@ enable_posix_regex = false
 enable_recursive_icon_lookup = true
 
 origin = top-right
-width = {{ width }}
-height = {{ height }}
-offset = {{ gap }}x{{ bar_size + gap }}
+width = {{ _width }}
+height = {{ _height }}
+offset = {{ _gap }}x{{ _bar_size + _gap }}
 
 progress_bar = true
 progress_bar_horizontal_alignment = center
-progress_bar_height = {{ ((env_space_big + env_space_light) * env_scale) | round | int }}
-progress_bar_frame_width = {{ (env_space_light * env_scale) | round | int }}
-progress_bar_min_width = {{ width - gap }}
-progress_bar_max_width = {{ width - gap }}
+progress_bar_height = {{ _spacing_big + _spacing_small }}
+progress_bar_frame_width = {{ _spacing_small }}
+progress_bar_min_width = {{ _width - _gap }}
+progress_bar_max_width = {{ _width - _gap }}
 progress_bar_corner_radius = 0
 
 icon_corner_radius = 0
 icon_position = left
-min_icon_size = {{ icon_width_min }}
-max_icon_size = {{ icon_width_max }}
+min_icon_size = {{ _icon_size }}
+max_icon_size = {{ _icon_size }}
 enable_recursive_icon_lookup = true
-icon_theme = {{ env_icon_alt }}
-default_icon = /usr/share/icons/{{ env_icon_alt }}/categories/32/applications-other.svg
+icon_theme = {{ icons.launcher.name }}
+default_icon = /usr/share/icons/{{ icons.launcher.name }}/categories/32/applications-other.svg
 # icon_path
 
-padding = {{ space_big }}
-horizontal_padding = {{ space_big }}
-frame_width = {{ space_normal}}
-gap_size = {{ space_big }}
+padding = {{ _spacing_big }}
+horizontal_padding = {{ _spacing_big }}
+frame_width = {{ _spacing_medium }}
+gap_size = {{ _spacing_big }}
 
 corner_radius = 0
-font = "monospace {{ (env_font_size_big * env_scale) | round | int }}px"
-line_height = {{ space_normal }}
-format = "{{ format(env_foreground) }}"
+font = "{{ _font_family }} {{ _font_size }}px"
+line_height = {{ _spacing_medium }}
+format = "{{ _format_render(preset.foreground) }}"
 vertical_alignment = center
 
 mouse_left_click = "do_action"
@@ -80,7 +83,7 @@ word_wrap = true
 alignment = center
 markup = full
 
-notification_limit = {{ (monitor.height / height) | round | int }}
+notification_limit = {{ _limit }}
 indicate_hidden = true
 
 idle_threshold = 0
@@ -99,19 +102,19 @@ dmenu = "/usr/bin/rofi -dmenu"
 
 
 [global]
-background = "{{ env_inactive }}"
-foreground = "{{ env_foreground }}"
-frame_color = "{{ env_active }}"
-highlight = "{{ env_active }}"
+background = "{{ preset.inactive }}"
+foreground = "{{ preset.foreground }}"
+frame_color = "{{ preset.active }}"
+highlight = "{{ preset.active }}"
 
 
 [urgency_normal]
-frame_color = "{{ env_accent }}"
-highlight = "{{ env_accent }}"
-format = "{{ format(env_accent) }}"
+frame_color = "{{ preset.accent }}"
+highlight = "{{ preset.accent }}"
+format = "{{ _format_render(preset.accent) }}"
 
 
 [urgency_critical]
-frame_color = "{{ env_important }}"
-highlight = "{{ env_important }}"
-format = "{{ format(env_important) }}"
+frame_color = "{{ preset.important }}"
+highlight = "{{ preset.important }}"
+format = "{{ _format_render(preset.important) }}"

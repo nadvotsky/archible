@@ -1,19 +1,24 @@
-{%- set monitor = env_monitors | selectattr("notifications", "true") | first -%}
 
-{%- set width = (monitor.width * 0.6 * env_scale) | round | int -%}
-{%- set height = (monitor.height * 0.3 * env_scale) | round | int -%}
+{%- set _monitor = monitors.outputs[notifications.monitor] -%}
 
-{%- set space_light = (env_space_light * env_scale) | round | int -%}
-{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
-{%- set space_big = (env_space_big * env_scale) | round | int -%}
+{%- set _width = (_monitor.width * notifications.width) | scale(scaling.real) -%}
+{%- set _height = (_monitor.height * notifications.height) | scale(scaling.real)-%}
+{%- set _limit = (_monitor.height / _height) | round | int -%}
+{%- set _icon_size = (_monitor.width * notifications.icon) | scale(scaling.real) -%}
 
-{%- set font_size_big = (env_font_size_big * env_scale) | round | int -%}
-{%- set icon_width_max = (height * 0.3) | round | int -%}
+{%- set _spacing_small = spacing.small | scale(scaling.real) -%}
+{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
+{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
 
-{%- set gap = (env_space_big * 2 * env_scale) | round | int -%}
+{%- set _font_name = "monospace" -%}
+{%- set _font_size = fonts[_font_name].sizes.big | scale(scaling.real) -%}
+{%- set _font_pango = "{} {}px".format(_font_name, _font_size) -%}
+{%- set _font_lh = "1.{}".format(fonts[_font_name].offsets.big) -%}
 
-{%- macro format(color) -%}
-<span line_height="1.3"><span weight="bold" color="{{ color }}">%a</span> (%g)\n<b>%s</b>\n%b</span>
+{%- set _gap = (spacing.big * 2) | scale(scaling.real) -%}
+
+{%- macro _format_render(_color) -%}
+    <span line_height="{{ _font_lh }}"><span weight="bold" color="{{ _color }}">%a</span> (%g)\n<b>%s</b>\n%b</span>
 {%- endmacro -%}
 
 
@@ -27,61 +32,61 @@ on-button-left=invoke-default-action
 on-button-right=dismiss
 on-button-middle=exec makoctl menu -n "$id" rofi -show drun -display-drun "Notification action"
 
-font=monospace {{ font_size_big }}px
-background-color={{ env_inactive }}
-text-color={{ env_foreground }}
+font={{ _font_pango }}
+background-color={{ preset.inactive }}
+text-color={{ preset.foreground }}
 
-width={{ width }}
-height={{ width }}
+width={{ _width }}
+height={{ _height }}
 
 #
-# since waybar is a top layer, it does not occupy working area of the screen,
+# since waybar is the top layer, it does not occupy working area of the screen,
 # i.e. only gap is required
 #
 # however:
-#  1. hyprland werdly adds some margin to the top of the tap, thus fixing by adding env_space_light
+#  1. hyprland werdly adds some margin to the top of the tap, thus fixing by adding spacing.light
 #  2. outer-margin is added to the margin, thus decreasing margin from the top gap
 #
-outer-margin={{ gap - space_big + space_light }},{{ gap }},0,0
-margin={{ space_big }},0,{{ space_big }},0
-padding={{ space_big }}
+outer-margin={{ _gap - _spacing_big + _spacing_small }},{{ _gap }},0,0
+margin={{ _spacing_big }},0,{{ _spacing_big }},0
+padding={{ _spacing_big }}
 
-border-size={{ space_normal }}
-border-color={{ env_active }}
+border-size={{ _spacing_medium }}
+border-color={{ preset.active }}
 border-radius=0
 
-progress-color=over {{ env_active }}
+progress-color=over {{ preset.active }}
 
 markup=1
 text-alignment=center
-format=<span line_height="1.3"><span weight="bold" color="{{ env_accent }}">%a</span>(%g)\n<b>%s</b>\n%b</span>
+format={{ _format_render(preset.accent) }}
 
 default-timeout=0
 ignore-timeout=1
 
 group-by=body
 
-output={{ monitor.wayland }}
-max-visible={{ (monitor.height / height) | round | int }}
+output={{ _monitor.wayland }}
+max-visible={{ _limit }}
 layer=top
 anchor=top-right
 
 icons=1
 icon-location=left
-max-icon-size={{ icon_width_max }}
-icon-path=/usr/share/icons/{{ env_icon_alt }}:/usr/share/icons/{{ env_icon }}
+max-icon-size={{ _icon_size }}
+icon-path=/usr/share/icons/{{ icons.launcher.name }}:/usr/share/icons/{{ icons.main.name }}
 
 
 [urgency=low]
-border-color={{ env_active }}
-format={{ format(env_foreground) }}
+border-color={{ preset.active }}
+format={{ _format_render(preset.foreground) }}
 
 
 [urgency=normal]
-border-color={{ env_accent }}
-format={{ format(env_accent) }}
+border-color={{ preset.accent }}
+format={{ _format_render(preset.accent) }}
 
 
 [urgency=critical]
-border-color={{ env_important }}
-format={{ format(env_important) }}
+border-color={{ preset.important }}
+format={{ _format_render(preset.important) }}
