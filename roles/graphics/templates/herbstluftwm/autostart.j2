@@ -1,63 +1,305 @@
-{%- set dpi = (env_ethalon * env_scale) | round | int -%}
-{%- set space_thin = [env_space_thin * env_scale, 1] | max | round | int -%}
-{%- set space_light = (env_space_light * env_scale) | round | int -%}
-{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
-{%- set space_big = (env_space_big * env_scale) | round | int -%}
-{%- set gap = (env_space_big * 2 * env_scale) | round | int -%}
+{%- set _indent = {"space": 4} -%}
 
-{%- set font_size = (env_font_size * env_scale) | round | int -%}
-{%- set font_offset = (env_font_offset * env_scale) | round | int -%}
-{%- set font = "\"sans-serif:style=semibold:pixelsize={}\"".format(font_size) -%}
+{%- set _dpi = scaling.ethalon | scale(scaling.real) -%}
 
-{%- set accent = "\"{}\"".format(env_accent) -%}
-{%- set foreground = "\"{}\"".format(env_foreground) -%}
-{%- set background = "\"{}\"".format(env_background) -%}
-{%- set important = "\"{}\"".format(env_important) -%}
-{%- set active = "\"{}\"".format(env_active) -%}
-{%- set inactive = "\"{}\"".format(env_inactive) -%}
-{%- set border = "\"{}\"".format(env_border) -%}
+{%- set _spacing_thin = [spacing.thin | scale(scaling.real), 1] | max -%}
+{%- set _spacing_small = spacing.small | scale(scaling.real) -%}
+{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
+{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
+{%- set _spacing_gap = (spacing.big * 2) | scale(scaling.real) -%}
 
-{#
-    Allocating F5..F8, F1..F4 for the first monitor,
-    and allocating F9..F12 for the second monitor.
+{%- set _font = fonts.sans_serif -%}
+{%- set _font_size = _font.sizes.medium | scale(scaling.real) -%}
+{%- set _font_offset = _font.offsets.medium | scale(scaling.real) -%}
+{%- set _font_fontconfig = "sans-serif:style=semibold:pixelsize={}".format(_font_size) | quote -%}
 
-    All of them can be used, or just some of them if there are less monitors or workspaces.
-#}
-{%- set monitors_keybind = [
-    (range(5, 8+1) | list) + (range(1, 4+1) | list),
-    range(9, 12+1) | list,
+{%- set _preset_accent = preset.accent | quote -%}
+{%- set _preset_foreground = preset.foreground | quote -%}
+{%- set _preset_background = preset.background | quote -%}
+{%- set _preset_important = preset.important | quote -%}
+{%- set _preset_active = preset.active | quote -%}
+{%- set _preset_inactive = preset.inactive | quote -%}
+{%- set _preset_border = preset.border | quote -%}
+
+{%- set _extras = [
+    ["graphics-x11-picom", "graphics-x11-compositor"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+        ["picom", "--daemon"], false,
+    ),
+    ["hsetroot", "-solid", "'{}'".format(preset.background)],
+    ["xsetroot", "-cursor_name", "left_ptr"],
+    ["graphics-bar", "graphics-x11-polybar"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+        ["polybar", "--quiet", "&"], false,
+    ),
+    ["graphics-x11-dunst", "graphics-notifications"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+        ["dunst", "&"], false,
+    ),
+    ["numlockx", "on"],
+] -%}
+{# ["/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"] #}
+{%- macro _extras_render() -%}
+    {% for _line in _extras | reject("false") %}
+        {{ "{" }}{{ _line | map("quote") | join(", ") }}{{ "}" }},
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _monitors_render() -%}
+    {% set _acc = {"width": 0, "height": 0} -%}
+    {% set _dim = "width" if monitors.stack == "horizontal" else "height" -%}
+    {##}
+    {% for _mon_name, _mon in monitors.outputs.items() %}
+        {
+            name = "{{ _mon_name }}",
+            index = {{ loop.index0 }},
+            dims = "{{ _mon.width }}x{{ _mon.height }}+{{ _acc.width }}+{{ _acc.height }}",
+            first_tag = "{{ _mon_name | workspace_prefix(loop.first) }}1",
+        },
+        {% set _ = _acc.__setitem__(_dim, _acc[_dim] + _mon[_dim]) %}
+    {% endfor %}
+{%- endmacro %}
+
+{%- set _tags_map = {"index": 0} %}
+{%- macro _tags_render() -%}
+    {% for _mon_name, _mon in monitors.outputs.items() %}
+        {% set _is_first = loop.first %}
+        {% set _prefix = _mon_name | workspace_prefix(_is_first) %}
+        {% for _ in range(_mon.workspaces) %}
+            {% set _name = "{}{}".format(_prefix, loop.index) %}
+            {##}
+            {% set _ = _tags_map.__setitem__(_tags_map.index, {"name": _name, "monitor": _mon_name}) %}
+            {% set _ = _tags_map.__setitem__("index", _tags_map.index + 1) %}
+            {##}
+            {% set _min = 1 %}
+            {% set _max = _mon.workspaces %}
+            {% set _next = "{}{}".format(_prefix, (loop.index - _min + 1) % (_max - _min + 1) + _min) %}
+            {% set _prev = "{}{}".format(_prefix, (loop.index - _min - 1) % (_max - _min + 1) + _min) %}
+            {##}
+            {name = {{ _name | quote }}, next = {{ _next | quote }}, prev = {{ _prev | quote }}},
+        {% endfor %}
+        {##}
+        {% if _is_first %}
+            {name = "{{ wms.scratch }}"},
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- set _parse_kwargs = dict(
+    modifiers_map={
+        "shift": "Shift",
+        "super": "Mod4",
+        "alt": "Mod1",
+        "ctrl": "Control",
+    },
+    keys_map={
+        "Backspace": "BackSpace",
+        "MouseLeft": "Button1",
+        "MouseMiddle": "Button2",
+        "MouseRight": "Button3",
+        "MouseNext": "Button8",
+        "MousePrev": "Button9",
+        "Tilde": "grave",
+        "CapsLock": "Caps_Lock",
+    },
+    sep=("-", "-"),
+    merge_shift=false,
+) -%}
+
+{%- macro _tags_keybinds_render() -%}
+    {% set _index_to_mon = [] %}
+    {% for _mon_name, _mon in monitors.outputs.items() %}
+        {% set _ = _index_to_mon.extend([_mon_name] * _mon.workspaces) %}
+    {% endfor %}
+    {##}
+    {% for _bind in keys
+        | parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
+        | selectattr("mode_name", "eq", "wm")
+    %}
+        [{{ _bind.line | quote }}] = {
+            "and",
+                "AND", "focus_monitor", "{{ _tags_map[loop.index0].monitor }}",
+                "AND", "use", "{{ _tags_map[loop.index0].name }}", 
+        },
+    {% endfor %}
+
+    {% for _bind in keys
+        | parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
+        | selectattr("mode_name", "eq", "wm")
+    %}
+        [{{ _bind.line | quote }}] = {"move", "{{ _tags_map[loop.index0].name }}"},
+    {% endfor %}
+
+    {% for _bind in keys
+        | parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
+        | selectattr("mode_name", "eq", "wm")
+    %}
+        [{{ _bind.line | quote }}] = {"focus_nth", "{{ loop.index0 }}"},
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _scratch() -%}
+    "or",
+        "OR", "and",
+            "AND", "compare", "tags.focus.name", "=", "{{ wms.scratch }}",
+            "AND", "use_previous",
+        "OR", "use", "{{ wms.scratch }}",
+{%- endmacro -%}
+
+{%- macro _netns() -%}
+    "spawn", "rofi",
+        "-show", "drun",
+        "-display-drun", "drun (network namespaced)",
+        "-run-command", "vopono exec -- {cmd}",
+{%- endmacro -%}
+
+{%- macro _screenshot_clip() %}
+    "spawn", "bash", "-c",
+        "shotgun -f png -g $(hacksaw) - | xclip -t 'image/png' -selection clipboard"
+{%- endmacro -%}
+
+{%- macro _screenshot_file() -%}
+    {% set _xdg_pictures = "{}/{}".format(users.user.home, users.user.xdg.pictures) %}
+    "spawn", "bash", "-c",
+        "shotgun -f png -g $(hacksaw) '{{ _xdg_pictures }}/shot-$(date +%s).png'",
+{%- endmacro -%}
+
+{%- macro _cut() -%}
+    "or",
+        "OR", "and",
+            "AND", "compare", "clients.focus.my_flagged", "=", "true",
+            "AND", "set_attr", "clients.focus.my_flagged", "false",
+        "OR", "chain",
+            "SEP", "new_attr", "bool", "clients.focus.my_flagged",
+            "SEP", "set_attr", "clients.focus.my_flagged", "true",
+{%- endmacro -%}
+
+{%- macro _paste() -%}
+    "foreach", "CLIENT", "clients",
+        "sprintf", "ATTR", "%c.my_flagged", "CLIENT", "and",
+            "AND", "compare", "ATTR", "=", "true",
+            "AND",
+                "sprintf", "WINIDATTR", "%c.winid", "CLIENT",
+                "substitute", "WNDID", "WINIDATTR",
+                "bring", "WNDID",
+            "AND",
+                "set_attr", "clients.focus.my_flagged", "false",
+{%- endmacro -%}
+
+{%- macro _split_v() -%}
+    "chain",
+        "SEP", "split", "bottom", 0.5,
+        "SEP", "focus", "down",
+{%- endmacro -%}
+
+{%- macro _split_h() -%}
+    "chain",
+        "SEP", "split", "right", 0.5,
+        "SEP", "focus", "right",
+{%- endmacro -%}
+
+{%- macro _notifications() -%}
+    "spawn", "bash", "-c",
+        "dunstctl history-pop $(" ..
+            "dunstctl history |" ..
+            "jq --raw-output '.data[][] | [.id.data, .appname.data, .summary.data] | @tsv' |" ..
+            "rofi -dmenu -i | " .. 
+            "awk '{ print ($1 ? $1 : -1); }'" ..
+        ")",
+{%- endmacro -%}
+
+{%- set _common_keybinds = [
+    ("quit", "quit"),
+    ("close", "close_and_remove"),
+
+    ("left", "focus left"),
+    ("up", "focus up"),
+    ("right", "focus right"),
+    ("down", "focus down"),
+
+    ("left", {"subs": "shift left", "select": true}),
+    ("up", {"subs": "shift up", "select": true}),
+    ("right", {"subs": "shift right", "select": true}),
+    ("down", {"subs": "shift down", "select": true}),
+
+    ("terminal", "spawn wezterm"),
+
+    ("screenshot_clipboard", _screenshot_clip),
+    ("screenshot_file", _screenshot_file),
+
+    ("fullscreen", "fullscreen toggle"),
+    ("layout", "cycle_layout +1"),
+    ("layout_alt", "rotate"),
+    ("floating", "set_attr clients.focus.floating toggle"),
+    ("group", "split explode"),
+    ("scratch", _scratch),
+    ("tiling", "pseudotile toggle"),
+    ("split_v", _split_v),
+    ("split_h", _split_h),
+    ("layout_v", "mirror vertical"),
+    ("layout_h", "mirror horizontal"),
+
+    ("cut", _cut),
+    ("paste", _paste),
+
+    ("focus_urgent", "jumpto urgent"),
+    ("minimize", "set_attr clients.focus.minimized true"),
+    ("focus_minimized", "jumpto last-minimized"),
+
+    ("output_next", "cycle_monitor +1"),
+    ("output_prev", "cycle_monitor -1"),
+    ("workspace_next", "substitute NAME tags.focus.my_next_tag use NAME"),
+    ("workspace_prev", "substitute NAME tags.focus.my_prev_tag use NAME"),
+    ("group_next", "cycle_frame +1"),
+    ("group_prev", "cycle_frame -1"),
+    ("tab_next", "cycle +1"),
+    ("tab_prev", "cycle -1"),
+
+    ("move", "move"),
+    ("zoom", "zoom"),
+    ("resize", "resize"),
+] + ["graphics-rofi", "graphics-app-launcher"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+    [("run", "spawn rofi -show drun"), ("windows", "spawn rofi -show window")], [],
+) + ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+    [("netns", _netns)], [],
+) + ["graphics-notifications", "graphics-x11-dunst"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+    [("notifications", _notifications)], [],
+) -%}
+
+{%- set _extra_keybinds = [
+    ("audio_play", "spawn playerctl play-pause"),
+    ("audio_stop", "spawn playerctl stop"),
+    ("audio_next", "spawn playerctl next"),
+    ("audio_prev", "spawn playerctl previous"),
 ] -%}
 
-{%- set n = "\n" -%}
-{%- set t1 = " " * 4 -%}
-{%- set t2 = " " * 8 -%}
-{%- set t3 = " " * 12 -%}
+{%- macro _keybinds_render(_keybinds, _filter) -%}
+    {% for _bind in keys
+        | parse_binds(actions_map=_keybinds, **_parse_kwargs)
+        | selectattr("mode_name", "in", _filter)
+    %}
+        {% set _action = _bind.action.subs %}
+        {% set _line = _bind.line | quote %}
+        {% if _action is string %}
+            [{{ _line }}] = {{ 
+                "{}{}{}".format("{", _action | split(" ") | map("quote") | join(", "), "}")
+            }},
+        {% else %}
+            [{{ _line }}] = {
+                {{ _action() | relative_indent(times=5, **_indent) }}
+            },
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
 
 #!/usr/bin/env luajit
-
-function mod(k)
-    return "Mod4-" .. k 
-end
-
-function alt(k)
-    return "Mod4-Shift-" .. k
-end
 
 local config = {
     debug = nil,
 
     extra = {
-        {"picom", "--daemon"},
-        {"hsetroot", "-solid", "'{{ env_background }}'" },
-        {"xsetroot", "-cursor_name", "left_ptr"},
-        {"polybar", "--quiet", "&"},
-        {"dunst", "&"},
-        {"numlockx", "on"},
-        -- {"/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"},
+        {{ _extras_render() | relative_indent(times=2, **_indent) }}
     },
 
     xresources = {
-        dpi = {{ dpi }},
+        dpi = {{ _dpi }},
         autohint = 1,
         lcdfilter = "lcddefault",
         antialias = 1,
@@ -74,28 +316,11 @@ local config = {
     },
 
     monitors = {
-        {{- n -}}
-        {%- for mon in env_monitors -%}
-            {%- set binds = monitors_keybind[loop.index0] -%}
-            {{- t2 -}}{{ "{" }}{{- n -}}
-            {{- t3 -}}name = "{{ mon.name }}",{{- n -}}
-            {{- t3 -}}resolution = {{ "{" }}{{ mon.width }}, {{ mon.height }}{{ "}" }},{{- n -}}
-            {{- t3 -}}tags = {
-                {%- for i in range(mon.workspaces) -%}
-                    "F{{ binds[i] }}"
-                    {%- if not loop.last -%}
-                        {{- ", " -}}
-                    {%- endif -%}
-                {%- endfor -%}
-            },{{- n -}}
-            {%- if loop.first -%}
-                {{- t3 -}}scratch = {name = "scratch", key = "r"},{{- n -}}
-            {%- endif -%}
-            {{- t2 -}}{{ "}," }}{{- n -}}
-        {%- endfor -%}
-        {{- n -}}{{- t2 -}}
+        {{ _monitors_render() | relative_indent(times=2, **_indent) }}
+    },
 
-        stack = "{{ env_monitors_stack }}",
+    tags = {
+        {{ _tags_render() | relative_indent(times=2, **_indent) }}
     },
 
     settings = {
@@ -110,11 +335,11 @@ local config = {
         show_frame_decorations = "all",
 
         frame_bg_transparent = true,
-        frame_border_width = {{ space_normal }},
-        frame_border_active_color = {{ active }},
-        frame_border_normal_color = {{ inactive }},
+        frame_border_width = {{ _spacing_medium }},
+        frame_border_active_color = {{ _preset_active }},
+        frame_border_normal_color = {{ _preset_inactive }},
 
-        frame_gap = {{ gap }},
+        frame_gap = {{ _spacing_gap }},
         show_frame_decorations = "all",
 
         swap_monitors_to_get_tag = false,
@@ -126,11 +351,11 @@ local config = {
     },
 
     attrs = {
-        {"theme.background_color", {{ background }}},
+        {"theme.background_color", {{ _preset_background }}},
 
-        {"theme.outer_color", {{ border }} },
-        {"theme.tab_outer_width", {{ space_thin }}},
-        {"theme.tab_outer_color", {{ border }}},
+        {"theme.outer_color", {{ _preset_border }} },
+        {"theme.tab_outer_width", {{ _spacing_thin }}},
+        {"theme.tab_outer_color", {{ _preset_border }}},
 
         --
         -- border_width acts different when outer_width is used:
@@ -139,16 +364,16 @@ local config = {
         -- 
         -- Therefore, emulating unified look with paddings
         --
-        {"theme.border_width", {{ space_normal }}},
-        {"theme.outer_width", {{ space_thin }}},
-        {"theme.padding_left", {{ space_thin }}},
-        {"theme.padding_right", {{ space_thin }}},
-        {"theme.padding_bottom", {{ space_thin }}},
+        {"theme.border_width", {{ _spacing_medium }}},
+        {"theme.outer_width", {{ _spacing_thin }}},
+        {"theme.padding_left", {{ _spacing_thin }}},
+        {"theme.padding_right", {{ _spacing_thin }}},
+        {"theme.padding_bottom", {{ _spacing_thin }}},
 
-        {"theme.title_font", {{ font }}},
-        {"theme.padding_top", {{ space_normal - space_thin }}},
-        {"theme.title_height", {{ font_size }}},
-        {"theme.title_depth", {{ font_offset }}},
+        {"theme.title_font", {{ _font_fontconfig }}},
+        {"theme.padding_top", {{ _spacing_medium - _spacing_thin }}},
+        {"theme.title_height", {{ _font_size }}},
+        {"theme.title_depth", {{ _font_offset }}},
 
         --
         -- When tab is NOT active, the following is drawn from the bottom:
@@ -159,143 +384,31 @@ local config = {
         --
         -- This means no bottom padding is applied, so emulating a new one via title_depth
         --
-        {"theme.tiling.title_depth", {{ font_offset + space_normal + space_thin }}},
+        {"theme.tiling.title_depth", {{ _font_offset + _spacing_medium + _spacing_thin }}},
 
-        {"theme.title_color", {{ accent }}},
-        {"theme.tab_title_color", {{ foreground }}},
+        {"theme.title_color", {{ _preset_accent }}},
+        {"theme.tab_title_color", {{ _preset_foreground }}},
         {"theme.title_align", "center"},
 
-        {"theme.color", {{ inactive }}},
-        {"theme.active.color", {{ active }}},
-        {"theme.urgent.title_color", {{ foreground }}},
-        {"theme.urgent.color", {{ important }}},
+        {"theme.color", {{ _preset_inactive }}},
+        {"theme.active.color", {{ _preset_active }}},
+        {"theme.urgent.title_color", {{ _preset_foreground }}},
+        {"theme.urgent.color", {{ _preset_important }}},
     },
 
     binds = {
-        {{- "\n" -}}
-        {%- for direction, binds in {
-            "left": ["Left", "h"],
-            "down": ["Down", "j"],
-            "up": ["Up", "k"],
-            "right": ["Right", "l"],
-        }.items() -%}
-            {%- for bind in binds -%}
-                {%- set d = "\"{}\"".format(direction) -%}
-                {%- set m = "\"{}\"".format(bind) %}
-                {{- t2 -}}[mod {{ m }}] = {"focus", {{ d }}},{{- n -}}
-                {{- t2 -}}[alt {{ m }}] = {"shift", {{ d }}},{{- n -}}
-            {%- endfor -%}
-        {%- endfor -%}
-        {{- n -}}
-
-        {%- for i in range(5) -%}
-            {{ t2 }}[mod "{{ loop.index }}"] = {"focus_nth", {{ loop.index0 }}},{{- n -}}
-        {%- endfor -%}
-        {{- n -}}{{- t2 -}}
-
-        [alt "BackSpace"] = {"quit"},
-
-        [mod "q"] = {"close_and_remove"},
-        [mod "w"] = {"spawn", "wezterm"},
-        [mod "e"] = {"spawn", "rofi", "-show", "drun"},
-        [alt "e"] = {"spawn", "rofi", "-show", "window"},
-        -- [mod "r"] = implemented in the 'monitors' section
-        [mod "y"] = {
-            "spawn", "rofi",
-                "-show", "drun",
-                "-display-drun", "drun (network namespaced)",
-                "-run-command", "vopono exec -- {cmd}",
-        },
-        [mod "o"] = {
-            "spawn", "bash", "-c",
-                "shotgun -f png -g $(hacksaw) - | xclip -t 'image/png' -selection clipboard"
-        },
-        [alt "o"] = {
-            "spawn", "bash", "-c",
-                "shotgun -f png -g $(hacksaw) $(xdg-user-dir PICTURES)/shot-$(date +%s).png",
-        },
-
-        [mod "a"] = {"fullscreen", "toggle"},
-        [mod "s"] = {"cycle_layout", "+1"},
-        [alt "s"] = {"rotate"},
-        [mod "d"] = {"set_attr", "clients.focus.floating", "toggle"},
-        [mod "f"] = {"split", "explode"},
-
         --
-        -- z, Swap with master is not implemented
-        -- as there is no master in binary tree
+        -- Tags bindings
         --
-        [mod "x"] = {
-            "or",
-                "OR", "and",
-                    "AND", "compare", "clients.focus.my_flagged", "=", "true",
-                    "AND", "set_attr", "clients.focus.my_flagged", "false",
-                "OR", "chain",
-                    "SEP", "new_attr", "bool", "clients.focus.my_flagged",
-                    "SEP", "set_attr", "clients.focus.my_flagged", "true",
-        },
-        [mod "v"] = {
-            "foreach", "CLIENT", "clients",
-                "sprintf", "ATTR", "%c.my_flagged", "CLIENT", "and",
-                    "AND", "compare", "ATTR", "=", "true",
-                    "AND",
-                        "sprintf", "WINIDATTR", "%c.winid", "CLIENT",
-                        "substitute", "WNDID", "WINIDATTR",
-                        "bring", "WNDID",
-                    "AND",
-                        "set_attr", "clients.focus.my_flagged", "false",
-        },
-
-        [mod "c"] = {
-            "chain",
-                "SEP", "split", "bottom", 0.5,
-                "SEP", "focus", "down", 
-        },
-        [mod "n"] = {
-            "chain",
-                "SEP", "split", "right", 0.5,
-                "SEP", "focus", "right", 
-        },
-        [alt "c"] = {"mirror", "vertical"},
-        [alt "n"] = {"mirror", "horizontal"},
-
-        [mod "u"] = {"jumpto", "urgent"},
-        [alt "u"] = {
-            "spawn", "bash", "-c",
-                "dunstctl history-pop $(" ..
-                    "dunstctl history |" ..
-                    "jq --raw-output '.data[][] | [.id.data, .appname.data, .summary.data] | @tsv' |" ..
-                    "rofi -dmenu -i | " .. 
-                    "awk '{ print ($1 ? $1 : -1); }'" ..
-                ")",
-        },
-        [mod "p"] = {"pseudotile", "toggle"},
-        [mod "m"] = {"set_attr", "clients.focus.minimized", true},
-        [alt "m"] = {"jumpto", "last-minimized"},
-
-        [mod "Escape"] = {"cycle_monitor", "+1"},
-        [alt "Escape"] = {"cycle_monitor", "-1"},
-
-        [mod "grave"] = {"substitute", "NAME", "tags.focus.my_next_tag", "use", "NAME"},
-        [alt "grave"] = {"substitute", "NAME", "tags.focus.my_prev_tag", "use", "NAME"},
-
-        [mod "Tab"] = {"cycle_frame", "+1"},
-        [alt "Tab"] = {"cycle_frame", "-1"},
-
-        [mod "Caps_Lock"] = {"cycle", "+1"},
-        [alt "Caps_Lock"] = {"cycle", "-1"},
-
-        [mod "Button1"] = {"move"},
-        [mod "Button2"] = {"zoom"},
-        [mod "Button3"] = {"resize"},
-
-        [mod "Button4"] = {"call", "substitute", "NAME", "tags.focus.my_next_tag", "use", "NAME"},
-        [mod "Button5"] = {"call", "substitute", "NAME", "tags.focus.my_prev_tag", "use", "NAME"},
-
-        ["XF86AudioPlay"] = {"spawn", "playerctl", "play-pause"},
-        ["XF86AudioStop"] = {"spawn", "playerctl", "stop"},
-        ["XF86AudioPrev"] = {"spawn", "playerctl", "previous"},
-        ["XF86AudioNext"] = {"spawn", "playerctl", "next"},
+        {{ _tags_keybinds_render() | relative_indent(times=2, **_indent) }}
+        --
+        -- Other bindings
+        --
+        {{ _keybinds_render(_common_keybinds, ["wm"]) | relative_indent(times=2, **_indent) }}
+        --
+        -- Extra (bare) bindings
+        --
+        {{ _keybinds_render(_extra_keybinds, ["bare"]) | relative_indent(times=2, **_indent) }}
     },
 
     rules = {
@@ -375,87 +488,32 @@ function process_attrs(attrs)
     end
 end
 
-function process_tag(monitor, tag)
-    commit("add", tag.name)
+function process_tags(tags)
+    for _, tag in ipairs(tags) do
+        commit("add", tag.name)
 
-    --
-    -- in general, formula to wrap a value to [a, b] looks like this:
-    -- next = (v - min + 1) % (max - min + 1) + min
-    -- prev = (v - min - 1) % (max - min + 1) + min
-    --
-    local next_tag = monitor.name .. "-" .. (tag.index % tag.total + 1)
-    commit("new_attr", "string", "tags.by-name." .. tag.name .. ".my_next_tag", next_tag)
-
-    local prev_tag = monitor.name .. "-" .. ((tag.index - 1 - 1) % tag.total + 1)
-    commit("new_attr", "string", "tags.by-name." .. tag.name .. ".my_prev_tag", prev_tag)
-
-    commit(
-        "keybind",
-        mod(tag.key),
-        "and",
-            "AND", "focus_monitor", monitor.name,
-            "AND", "use", tag.name 
-    )
-    commit("keybind", alt(tag.key), "move", tag.name)
-end
-
-function process_scratch(scratch)
-    commit("add", scratch.name)
-    commit("floating", scratch.name, "on")
-    commit(
-        "keybind",
-        mod(scratch.key),
-        "or",
-            "OR", "and",
-                "AND", "compare", "tags.focus.name", "=", scratch.name,
-                "AND", "use_previous",
-            "OR", "use", scratch.name
-    )
+        if tag.prev ~= nil and tag.next ~= nil then
+            commit("new_attr", "string", "tags.by-name." .. tag.name .. ".my_next_tag", tag.next)
+            commit("new_attr", "string", "tags.by-name." .. tag.name .. ".my_prev_tag", tag.prev)
+        else
+            commit("floating", tag.name, "on")
+        end
+    end
 end
 
 function process_monitors(monitors)
-    local acc = {0, 0}
-    local rects = {}
-    local dimension = (monitors.stack == "vertical") and 2 or 1
-
-    function tag_name(monitor_name, i)
-        return monitor_name .. "-" .. i
+    local dims = {}
+    for _, mon in ipairs(monitors) do
+        dims[#dims + 1] = mon.dims
     end
+    commit("set_monitors", unpack(dims))
 
-    for _, monitor in ipairs(monitors) do
-        rects[#rects + 1] = string.format(
-            "%dx%d+%d+%d",
-            monitor.resolution[1],
-            monitor.resolution[2],
-            acc[1],
-            acc[2]
-        )
-        acc[dimension] = acc[dimension] + monitor.resolution[dimension]
-
-        for i, tag in ipairs(monitor.tags) do
-            process_tag(
-                monitor, 
-                {
-                    name = tag_name(monitor.name, i),
-                    key = tag,
-                    index = i,
-                    total = #monitor.tags,
-                }
-            )
-        end
-
-        if monitor.scratch then
-            process_scratch(monitor.scratch)
-        end
-    end
-
-    commit("set_monitors", unpack(rects))
     for i = #monitors, 1, -1 do
-        local monitor = monitors[i]
+        local mon = monitors[i]
 
-        commit("set_attr", "monitors." .. (i - 1) .. ".name", monitor.name)
-        commit("focus_monitor", monitor.name)
-        commit("use", tag_name(monitor.name, 1))
+        commit("set_attr", "monitors." .. mon.index .. ".name", mon.name)
+        commit("focus_monitor", mon.name)
+        commit("use", mon.first_tag)
     end
     commit("merge_tag", "default")
 end
@@ -499,12 +557,17 @@ function process_extra(extra)
     end
 end
 
-(function (conf)
+(function ()
+    --
+    -- Lua tables are unordered, using array to
+    --  follow the strict sequence
+    --
     for sub, tuple in ipairs({
         {"xresources", process_xresources},
         {"debug", process_debug},
         {"env", process_env},
         {"settings", process_settings},
+        {"tags", process_tags},
         {"monitors", process_monitors},
         {"attrs", process_attrs},
         {"rules",  process_rules},
@@ -512,8 +575,8 @@ end
         {"extra", process_extra},
     }) do
         local sub, fun = unpack(tuple)
-        if conf[sub] ~= nil then
-            fun(conf[sub])
+        if config[sub] ~= nil then
+            fun(config[sub])
         end
     end
-end)(config)
+end)()
