@@ -1,42 +1,229 @@
-{%- set mod = "SUPER" -%}
-{%- set alt = "SUPER_SHIFT" -%}
+{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
+{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
+{%- set _gap = (spacing.big * 2) | scale(scaling.real) -%}
 
-{%- set space_normal = (env_space_normal * env_scale) | round | int -%}
-{%- set space_big = (env_space_big * env_scale) | round | int -%}
-{%- set gaps = (env_space_big * 2 * env_scale) | round | int -%}
+{%- set _preset_accent = "rgb({})".format(preset.accent[1:]) -%}
+{%- set _preset_background = "rgb({})".format(preset.background[1:]) -%}
+{%- set _preset_foreground = "rgb({})".format(preset.foreground[1:]) -%}
+{%- set _preset_active = "rgb({})".format(preset.active[1:]) -%}
+{%- set _preset_inactive = "rgb({})".format(preset.inactive[1:]) -%}
 
-{%- set accent = "rgb({})".format(env_accent[1:]) -%}
-{%- set background = "rgb({})".format(env_background[1:]) -%}
-{%- set foreground = "rgb({})".format(env_foreground[1:]) -%}
-{%- set active = "rgb({})".format(env_active[1:]) -%}
-{%- set inactive = "rgb({})".format(env_inactive[1:]) -%}
+{%- set _dpi = scaling.ethalon | scale(scaling.real) -%}
+{%- set _monitor = monitors.outputs.values() | first -%}
 
-{%- set font = "{} SemiBold".format(env_font_sans_serif) -%}
-{%- set px_to_pt = env_ethalon / 72 -%}
-{%- set font_size_px = ((env_font_size - env_font_offset) * env_scale) | round -%}
-{%- set font_size = (font_size_px / px_to_pt) | round | int -%}
+{%- set _font_pango = "{} SemiBold".format(fonts.sans_serif.name) -%}
+{%- set _font_size_px = (fonts.sans_serif.sizes.medium - fonts.sans_serif.offsets.medium) | scale(scaling.real) -%}
+{%- set _font_size_pt = (_font_size_px / (scaling.ethalon / 72)) | round | int -%}
+{%- set _groupbar_size = _font_size_px + _spacing_medium * 2 -%}
 
-{#
-    Allocating F5..F8, F1..F4 for the first monitor,
-    and allocating F9..F12 for the second monitor.
+{%- set _ws_map = {"index": 0} %}
+{%- set _ws_cycle_map = {} -%}
+{%- for _mon_name, _mon in monitors.outputs.items() -%}
+    {% set _prefix = _mon_name | workspace_prefix(loop.first) %}
+    {% for _ in range(_mon.workspaces) %}
+        {% set _ws_name = "{}{}".format(_prefix, loop.index) %}
+        {% set _ = _ws_map.update({
+            _ws_map.index: {
+                "name": "name:{}".format(_ws_name),
+                "wayland": _mon.wayland,
+            },
+            "index": _ws_map.index + 1,
+        }) %}
+        {##}
+        {% set _min = 1 %}
+        {% set _max = _mon.workspaces %}
+        {% set _next = "name:{}{}".format(_prefix, (loop.index - _min + 1) % (_max - _min + 1) + _min) %}
+        {% set _prev = "name:{}{}".format(_prefix, (loop.index - _min - 1) % (_max - _min + 1) + _min) %}
+        {% set _ = _ws_cycle_map.update({_ws_name: {"next": _next, "prev": _prev}}) %}
+    {% endfor %}
+{%- endfor -%}
 
-    All of them can be used, or just some of them if there are less monitors or workspaces.
-#}
-{%- set monitors_keybind = [
-    (range(5, 8+1) | list) + (range(1, 4+1) | list),
-    range(9, 12+1) | list,
+{%- macro _monitors_render() -%}
+    {% set _orient =  "auto-right" if monitors.stack == "horizontal" else "down" %}
+    {% for _mon in monitors.outputs.values() %}
+        monitor = {{ _mon.wayland }}, {{ _mon.width }}x{{ _mon.height }}@{{ _mon.refresh }}, {{ _orient }}, 1
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _wrong_devices_render() -%}
+    {% for _dev in inputs.mask.values() %}
+        {% set _stripped = _dev | lower | replace(" ", "-") %}
+        {% set _duplicate = "{}-1".format(_stripped) %}
+        {##}
+        device {
+            name = {{ _stripped }}
+            enabled = false
+        }
+
+        device {
+            name = {{ _duplicate }}
+            enabled = false
+        }
+        {##}
+        {% if not loop.last %}{{ "\n" }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _workspaces_render() -%}
+    {% for _ws in _ws_map.values() %}
+        {% if _ws is mapping %}
+            workspace = {{ _ws.name }}, monitor:{{ _ws.wayland }}, default:true
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- set _parse_kwargs = dict(
+    modifiers_map={
+        "shift": "SHIFT",
+        "super": "SUPER",
+    },
+    keys_map={
+        "MouseLeft": "mouse:272",
+        "MouseRight": "mouse:273",
+        "MouseNext": "mouse:275",
+        "MousePrev": "mouse:276",
+        "Backspace": "BackSpace",
+        "CapsLock": "Caps_Lock",
+        "Tilde": "Grave",
+    },
+    sep=("_", ", "),
+    merge_shift=false,
+) -%}
+
+{%- macro _workspaces_keybinds_render() -%}
+    {% for _bind in keys
+        | parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
+        | selectattr("mode_name", "eq", "wm")
+    %}
+        bind = {{ _bind.line }}, workspace, {{ _ws_map[loop.index0].name }}
+    {% endfor %}
+
+    {% for _bind in keys
+        | parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
+        | selectattr("mode_name", "eq", "wm")
+    %}
+        bind = {{ _bind.line }}, movetoworkspacesilent, {{ _ws_map[loop.index0].name }}
+    {% endfor %}
+
+    {% for _bind in keys
+        | parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
+        | selectattr("mode_name", "eq", "wm")
+    %}
+        bind = {{ _bind.line }}, changegroupactive, {{ loop.index }}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _workspace_cycle_keybind(_direction) -%}
+    {% set _current_ws = "$(hyprctl activeworkspace -j | jq -r .name)" %}
+    {% set _selector = ".{0}{1}{0}.{2}".format("\\\"", _current_ws, _direction) %}
+    {% set _process = "jq -r {} <<< '{}'".format(_selector, _ws_cycle_map | tojson) %}
+    {##}
+    {% set _exec_line = "hyprctl dispatch workspace $({})".format(_process) %}
+    {##}
+    exec, {{ _exec_line }}
+{%- endmacro -%}
+
+{%- set _keybinds = [
+    ("quit", "exit"),
+    ("close", "closewindow, activewindow"),
+    ("kill", "killactive"),
+
+    ("left", "movefocus, l"),
+    ("up", "movefocus, u"),
+    ("right", "movefocus, r"),
+    ("down", "movefocus, d"),
+
+    ("left", {"subs": "movewindoworgroup, l", "select": true}),
+    ("up", {"subs": "movewindoworgroup, u", "select": true}),
+    ("right", {"subs": "movewindoworgroup, r", "select": true}),
+    ("down", {"subs": "movewindoworgroup, d", "select": true}),
+
+    ("terminal", "execr, wezterm"),
+    ("terminal_topmost", ["moveoutofgroup", "execr, wezterm"]),
+
+    ("screenshot_clipboard", "execr, grim -g \"$(slurp -d)\" - | wl-copy"),
+    (
+        "screenshot_file",
+        "execr, grim -g \"$(slurp -d)\" \"{}/{}/shot-$(date +%s).png\"".format(
+            users.user.home, users.user.xdg.pictures
+        ),
+    ),
+
+    ("fullscreen", "fullscreen, 1"),
+    ("layout", "layoutmsg, orientationnext"),
+    ("layout_alt", "layoutmsg, rollnext"),
+    ("floating", "togglefloating"),
+    ("group", "togglegroup"),
+    ("layout_group", "moveoutofgroup"),
+    ("scratch", "togglespecialworkspace, {}".format(wms.scratch)),
+    ("layout_master", "layoutmsg, swapwithmaster"),
+    ("layout_v", "layoutmsg, swapnext"),
+    ("layout_h", "layoutmsg, swapprev"),
+
+    ("focus_urgent", "focusurgentorlast"),
+
+    ("output_next", "focusmonitor, +1"),
+    ("output_prev", "focusmonitor, -1"),
+    ("workspace_next", _workspace_cycle_keybind("next") | relative_indent),
+    ("workspace_prev", _workspace_cycle_keybind("prev") | relative_indent),
+    ("group_next", "cyclenext, next tiled"),
+    ("group_prev", "cyclenext, prev tiled"),
+    ("tab_next", "changegroupactive, f"),
+    ("tab_prev", "changegroupactive, b"),
+] + ["graphics-rofi", "graphics-app-launcher"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+    [("run", "execr, rofi -show drun"), ("windows", "execr, rofi -show window")], [],
+) + ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+    [(
+        "netns",
+        "execr, rofi -show drun -display-drun 'drun (network namespaced)' -run-command 'vopono exec -- {cmd}'"
+    )],
+    [],
+) + ["graphics-notifications", "graphics-x11-dunst"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+    [("notifications", "execr, makoctl restore")], [],
+) -%}
+
+{%- macro _keybinds_render() -%}
+    {% for _bind in keys
+        | parse_binds(actions_map=_keybinds, **_parse_kwargs)
+        | selectattr("mode_name", "eq", "wm")
+    %}
+        {% set _action = _bind.action.subs %}
+        {% for _line in (_action is string | ternary([_action], _action)) %}
+            bind = {{ _bind.line }}, {{ _line }}
+        {% endfor %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- set _special_keybindings = [
+    ("move", "bindm = {}, movewindow"),
+    ("resize", "bindm = {}, resizewindow"),
+    ("audio_play", "bind = , {}, execr, playerctl play-pause"),
+    ("audio_stop", "bind = , {}, execr, playerctl stop"),
+    ("audio_next", "bind = , {}, execr, playerctl next"),
+    ("audio_prev", "bind = , {}, execr, playerctl previous"),
 ] -%}
+
+{%- macro _special_keybinds_render() -%}
+    {% for _bind in keys
+        | parse_binds(actions_map=_special_keybindings, **_parse_kwargs)
+        | selectattr("mode_name", "in", ["wm", "bare"])
+    %}
+        {{ _bind.action.subs.format(_bind.line) }}
+    {% endfor %}
+{%- endmacro -%}
+
 
 #
 # Monitors configuration.
 #
 monitor = Unknown-1, disabled
-{{- "\n" -}}
-{%- for mon in env_monitors -%}
-    {%- set orientation = "down" if env_monitors_stack == "vertical" else "auto-right" -%}
-    monitor = {{ mon.wayland }}, {{ mon.width }}x{{ mon.height }}@{{ mon.refresh }}, {{ orientation }}, 1{{ "\n" }}
-{%- endfor -%}
-{{- "\n\n" -}}
+
+{{ _monitors_render() | relative_indent }}
+
+#
+# Workspaces configuration.
+#
+{{ _workspaces_render() | relative_indent }}
 
 #
 # Enviromental variables.
@@ -51,11 +238,16 @@ env = KITTY_ENABLE_WAYLAND, 1
 env = ELECTRON_OZONE_PLATFORM_HINT, wayland
 env = _JAVA_AWT_WM_NONREPARENTING, 1
 
+
 #
 # Autostart before scaling is set.
 #
-exec-once = waybar
+{% if ["graphics-bar", "graphics-wayland-waybar"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+exec-once = waybar --log-level off
+{% endif %}
+{% if ["graphics-notifications", "graphics-wayland-mako"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
 exec-once = mako
+{% endif %}
 
 
 #
@@ -65,24 +257,24 @@ exec-once = mako
 #
 # QT_SCALE_FACTOR with fractions such as 0.9, 1.5 results in blurry icons
 #
-env = QT_FONT_DPI, {{ (env_ethalon * env_scale) | round | int }}
-env = GDK_DPI_SCALE, {{ env_scale }}
-env = ELM_SCALE, {{ env_scale }}
+env = QT_FONT_DPI, {{ _dpi }}
+env = GDK_DPI_SCALE, {{ scaling.real }}
+env = ELM_SCALE, {{ scaling.real }}
 
 
 #
 # General settings
 #
 general {
-    border_size = {{ space_normal }}
-    gaps_in = {{ space_big }}
-    gaps_out = {{ gaps }}
+    border_size = {{ _spacing_medium }}
+    gaps_in = {{ _spacing_big }}
+    gaps_out = {{ _gap }}
     # gaps_workspaces =
 
-    col.active_border = {{ active }}
-    col.nogroup_border_active = {{ active }}
-    col.inactive_border = {{ inactive }}
-    col.nogroup_border = {{ inactive }}
+    col.active_border = {{ _preset_active }}
+    col.nogroup_border_active = {{ _preset_active }}
+    col.inactive_border = {{ _preset_inactive }}
+    col.nogroup_border = {{ _preset_inactive }}
 
     layout = master
 
@@ -152,26 +344,12 @@ animations {
 #
 # Input configuration.
 #
-{{- "\n" -}}
-{%- for dev in [
-    "usb-optical-mouse--keyboard",
-    "usb-optical-mouse--keyboard-1",
-    "sem-usb-keyboard-system-control",
-    "sem-usb-keyboard-consumer-control-1",
-    "power-button",
-    "power-button-1",
-] %}
-device {
-    name = {{ dev }}
-    enabled = false
-}
-{% endfor -%}
-{{- "\n" -}}
+{{ _wrong_devices_render() | relative_indent }}
 
 input {
-    kb_model = pc104
-    kb_layout = us,ru,ua
-    kb_options = grp:menu_toggle,compose:rctrl,terminate:ctrl_alt_bksp
+    kb_model = {{ inputs.keyboard.model }}
+    kb_layout = {{ inputs.keyboard.layout }}
+    kb_options = {{ inputs.keyboard.options }}
     # kb_variant =
     # kb_rules =
     # kb_file =
@@ -181,8 +359,8 @@ input {
     repeat_rate = 25
     repeat_delay = 600
 
-    accel_profile = flat
-    sensitivity = -0.5
+    accel_profile = {{ inputs.mouse.accel }}
+    sensitivity = {{ inputs.mouse.speed }}
     force_no_accel = false
     left_handed = false
 
@@ -209,25 +387,25 @@ group {
     insert_after_current = true
     focus_removed_window = true
 
-    col.border_active = {{ active }}
-    col.border_locked_active = {{ active}}
-    col.border_inactive = {{ inactive }}
-    col.border_locked_inactive = {{ inactive }}
+    col.border_active = {{ _preset_active }}
+    col.border_locked_active = {{ _preset_active}}
+    col.border_inactive = {{ _preset_inactive }}
+    col.border_locked_inactive = {{ _preset_inactive }}
 
     groupbar {
         enabled = true
 
         gradients = true
-        height = {{ font_size + space_normal * 2 }}
+        height = {{ _groupbar_size }}
 
-        font_family = {{ font }}
-        font_size = {{ font_size }}
+        font_family = {{ _font_pango }}
+        font_size = {{ _font_size_pt }}
 
-        text_color = {{ foreground }}
-        col.active = {{ active }}
-        col.locked_active = {{ active }}
-        col.inactive = {{ inactive }}
-        col.locked_inactive = {{ inactive }}
+        text_color = {{ _preset_foreground }}
+        col.active = {{ _preset_active }}
+        col.locked_active = {{ _preset_active }}
+        col.inactive = {{ _preset_inactive }}
+        col.locked_inactive = {{ _preset_inactive }}
 
         render_titles = true
         stacked = false
@@ -246,8 +424,8 @@ misc {
     # splash_font_family =
     # force_default_wallpaper =
 
-    font_family = {{ font }}
-    background_color = {{ background }}
+    font_family = {{ _font_pango }}
+    background_color = {{ _preset_background }}
     animate_manual_resizes = false
     animate_mouse_windowdragging = false
 
@@ -264,7 +442,7 @@ misc {
     initial_workspace_tracking = 1
     middle_click_paste = true
 
-    enable_swallow = true
+    enable_swallow = false
     #? swallow_regex = .*
     # swallow_exception_regex
 
@@ -303,7 +481,7 @@ opengl {
 }
 
 cursor {
-    default_monitor = {{ (env_monitors | first).wayland }}
+    default_monitor = {{ _monitor.wayland }}
 
     no_hardware_cursors = false
     enable_hyprcursor = false
@@ -360,146 +538,22 @@ master {
 #
 # Keybinds.
 #
-bind = {{ alt }}, BackSpace, exit
+{{ _workspaces_keybinds_render() | relative_indent }}
 
-bind = {{ mod }}, Q, closewindow, activewindow
-bind = {{ alt }}, Q, killactive
-bind = {{ mod }}, W, execr, kitty
-bind = {{ mod }}, E, execr, rofi -show drun
-bind = {{ alt }}, E, execr, rofi, -show windows
-bind = {{ mod }}, R, togglespecialworkspace, scratch
+{{ _keybinds_render() | relative_indent }}
 
-bind = {{ mod }}, A, fullscreen, 1
-bind = {{ mod }}, S, layoutmsg, orientationnext
-bind = {{ alt }}, S, layoutmsg, rollnext
-bind = {{ mod }}, D, togglefloating
-bind = {{ alt }}, D, moveoutofgroup
-bind = {{ mod }}, F, togglegroup
-
-bind = {{ mod }}, Z, layoutmsg, swapwithmaster
-#
-# Master layout does not have:
-#  X - tag window
-#  V - move tagged window 
-#  C - vertical split/swap
-#  N - horizontal split/swap
-#
-bind = {{ alt }}, C, layoutmsg, swapnext
-bind = {{ alt }}, N, layoutmsg, swapprev
-
-bind = {{ mod }}, U, focusurgentorlast
-bind = {{ alt }}, U, execr, makoctl restore
-bind = {{ alt }}, O, exec, grim -g "$(slurp -d)" - | wl-copy
-bind = {{ alt }}, O, exec, grim -g "$(slurp -d)" $(xdg-user-dir PICTURES)/shot-$(date +%s).png
-bind = {{ mod }}, Y, execr, {{
-    [
-        "rofi"
-            "-show", "drun",
-            "-display-drun", "'drun (network namespaced)'",
-            "-run-command", "'vopono exec -- {cmd}'",
-    ] | join(" ")
-}}
-#
-# Hyprland lacks:
-#  P - pseudotitle in master layout
-#  M - window minimizing/bringing
-#
-
-{{- "\n" -}}
-{%- for direction, binds in {
-    "l": ["Left", "H"],
-    "d": ["Down", "J"],
-    "u": ["Up", "K"],
-    "r": ["Right", "L"],
-}.items() -%}
-    {%- for bind in binds -%}
-        bind = {{ mod }}, {{ bind }}, movefocus, {{ direction }}{{- "\n" -}}
-        bind = {{ alt }}, {{ bind }}, movewindoworgroup, {{ direction }}{{- "\n" -}}
-    {%- endfor -%}
-{%- endfor -%}
-{{- "\n" -}}
-
-bind = {{ mod }}, Escape, focusmonitor, +1
-bind = {{ alt }}, Escape, focusmonitor, -1
-bind = {{ mod }}, Tab, cyclenext, next tiled
-bind = {{ alt }}, Tab, cyclenext, prev tiled
-bind = {{ mod }}, Caps_Lock, changegroupactive, f
-bind = {{ alt }}, Caps_Lock, changegroupactive, b
-
-{{- "\n\n" -}}
-{%- for direction in ["forward", "backwards"] -%}
-    {%- set awk_total_ws = {"v": (env_monitors | first).workspaces} -%}
-    {%- for mon in env_monitors | reverse -%}
-        {%- if not loop.last -%}
-            {%- set _ = awk_total_ws.update({
-                "v": "f == \"{}\" ? {} : ({})".format(
-                    mon.name[0].upper(), mon.workspaces, awk_total_ws.v,
-                )
-            }) -%}
-        {%- endif -%}
-    {%- endfor -%}
-
-    {#
-        next = (v - min + 1) % (max - min + 1) + min
-        prev = (v - min - 1) % (max - min + 1) + min
-        where non-negative modulo = (a % m + m) % m
-    #}
-    {%- set workspace_cmd = [
-        "hyprctl dispatch workspace name:$(",
-            "hyprctl activeworkspace -j | ",
-            "jq --raw-output '.name' | ",
-            "awk '{",
-                "f = substr($0, 1, 1); ",
-                "n = substr($0, (f ~ /^[0-9]+$/ ? 1 : 2)); ",
-                "t = {}; ".format(awk_total_ws.v),
-                "print {} {}".format(
-                    "(f ~ /^[0-9]+$/ ? \"\" : f)",
-                    "(n % t + 1)" if direction == "forward" else "(((n - 1 - 1) % t + t) % t + 1)",
-                ),
-            "}'",
-        ")",
-    ] | join -%}
-    bind = {{ mod if direction == "forward" else alt }}, Grave, exec, {{ workspace_cmd }}{{- "\n" -}}
-{%- endfor -%}
-{{- "\n" -}}
-
-{%- for i in range(5) -%}
-    bind = {{ mod }}, {{ loop.index }}, changegroupactive, {{ loop.index }}{{- "\n" -}}
-{%- endfor -%}
-{{- "\n" -}}
-
-{%- for mon in env_monitors -%}
-    {%- set mon_index = loop.index0 -%}
-    {%- for _ in range(mon.workspaces) -%}
-        {%- set key = "F{}".format(monitors_keybind[mon_index][loop.index0]) -%}
-        {%- set ws_name = "name:{}{}".format(
-            "" if mon_index == 0 else mon.name[0].upper(),
-            loop.index,
-        ) -%}
-
-        workspace = {{ ws_name }}, monitor:{{ mon.wayland }}, default:true{{- "\n" -}}
-        bind = {{ mod }}, {{ key }}, workspace, {{ ws_name }}{{- "\n" -}}
-        bind = {{ alt }}, {{ key }}, movetoworkspacesilent, {{ ws_name }}{{- "\n" -}}
-    {%- endfor -%}
-{%- endfor -%}
-{{- "\n" -}}
-
-bindm = {{ mod }}, mouse:272, movewindow
-bindm = {{ mod }}, mouse:273, resizewindow
-bind = {{ mod }}, mouse:275, changegroupactive, f
-bind = {{ mod }}, mouse:276, changegroupactive, b
-
-bind = , XF86AudioPlay, exec, playerctl play-pause
-bind = , XF86AudioStop, exec, playerctl stop
-bind = , XF86AudioPrev, exec, playerctl previous
-bind = , XF86AudioNext, exec, playerctl next
+{{ _special_keybinds_render() | relative_indent }}
 
 
 #
 # Rules.
 #
 windowrulev2 = suppressevent maximize, class:.*
+
 windowrulev2 = float, title:^.*([Ii]nsert)|([Cc]opy)|([Ss]elect)|([Cc]onfirm)|([Pp]rogress)|([Aa]dd).*$
 windowrulev2 = center, title:^.*([Ii]nsert)|([Cc]opy)|([Ss]elect)|([Cc]onfirm)|([Pp]rogress)|([Aa]dd).*$
+
+windowrulev2 = float, initialClass:hyprland-share-picker
+windowrulev2 = center, initialClass:hyprland-share-picker
 
 windowrulev2 = immediate, fullscreen:1
