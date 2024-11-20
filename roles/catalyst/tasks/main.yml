@@ -1,0 +1,61 @@
+---
+- name: Configure network
+  tags:
+    - catalyst-systemd-networkd
+    - catalyst-network
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      defaults:
+        become: true
+        base: /etc/systemd
+      targets:
+        network/20-ethernet.network:
+          file: network/20-ethernet.network
+        network/20-cloudfare-dns-over-tls.conf:
+          file: network/20-cloudfare-dns-over-tls.conf.j2
+
+    _common_services:
+      systemd-networkd:
+        enable: true
+
+- name: Configure DNS resolver and cache
+  tags:
+    - catalyst-systemd-resolved
+    - catalyst-dns
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      targets:
+        /etc/resolv.conf:
+          become: true
+          link: /run/systemd/resolve/stub-resolv.conf
+
+    _common_services:
+      systemd-resolved:
+        enable: true
+
+- name: Configure sudo
+  tags:
+    - catalyst-sudo
+  ansible.builtin.import_role:
+      name: common
+    vars:
+      _common_install:
+        targets:
+          /etc/sudoers.d/70-overrides:
+            become: true
+            file: sudo/70-overrides
+
+- name: Create user skeleton
+  tags:
+    - catalyst-user
+  ansible.builtin.user:
+    name: "{{ users.user.name }}"
+    groups: "{{ users.user.groups }}"
+    comment: "{{ users.user.full }}"
+    expires: -1
+    create_home: true
+    password: "{{ users.user.password }}"

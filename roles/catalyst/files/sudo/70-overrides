@@ -7,6 +7,8 @@ Defaults !mail_no_user
 Defaults !use_pty
 Defaults !syslog
 
+Defaults !sudoedit_checkdir
+
 Defaults fast_glob
 Defaults insults
 Defaults visiblepw
@@ -16,4 +18,4 @@ Defaults passwd_timeout = 0
 Defaults lecture = "never"
 Defaults timestamp_type = "global"
 
-%wheel,%sudo ALL=(ALL:ALL) ALL
+%wheel ALL=(ALL:ALL) ALL
