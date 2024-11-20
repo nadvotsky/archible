@@ -106,6 +106,13 @@
     file: x11.yml
   tags:
     - graphics-x11
+
+- name: Import wayland related tasks
+  ansible.builtin.import_tasks:
+    file: wayland.yml
+  tags:
+    - graphics-wayland
+
 - name: Configure rofi app launcher
   ansible.builtin.import_role:
     name: common

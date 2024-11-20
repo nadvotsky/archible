@@ -1,0 +1,101 @@
+---
+- name: Configure hyprland compositor
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-wayland-hyprland
+    - graphics-wm
+  vars:
+    _common_packages:
+      install:
+        - hyprland
+        - xdg-desktop-portal-hyprland
+        - wl-clipboard
+        - grim
+        - slurp
+        - awk
+        - sed
+        - jq
+        - playerctl
+
+    _common_environment:
+      - key: LIBSEAT_BACKEND
+        value: logind
+
+    _common_install:
+      targets:
+        hypr/hyprland.conf:
+          wipe: true
+          template: hyprland/hyprland.conf.j2
+        xdg-desktop-portal/hyprland-portals.conf:
+          content: |
+            [preferred]
+            default=gtk
+            org.freedesktop.impl.portal.Screenshot=hyprland
+            org.freedesktop.impl.portal.ScreenCast=hyprland
+            org.freedesktop.impl.portal.GlobalShortcuts=hyprland
+
+    _common_services:
+      seatd:
+        enable: true
+
+    _common_groups:
+      - seat
+
+- name: Configure hyprland no-X launch
+  tags:
+    - graphics-wayland-hyprland-nox
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      defaults:
+        become: true
+      targets:
+        /usr/local/stubs/Xwayland:
+          content: |
+            #!/bin/sh
+            exit 1
+        /usr/share/wayland-sessions/hyprland-nox.desktop:
+          content: |
+            [Desktop Entry]
+            Name=Hyprland (no X)
+            Comment=An intelligent dynamic tiling Wayland compositor
+            Exec=/bin/sh -c "PATH=/usr/local/stubs:$PATH Hyprland"
+            Type=Application
+
+- name: Configure waybar bar
+  tags:
+    - graphics-wayland-waybar
+    - graphics-bar
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install:
+        - waybar
+
+    _common_install:
+      defaults:
+        wipe: true
+      targets:
+        waybar/config.jsonc:
+          template: waybar/config.jsonc.j2
+        waybar/style.css:
+          template: waybar/style.css.j2
+
+- name: Configure mako notification daemon
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-wayland-mako
+    - graphics-notifications
+  vars:
+    _common_packages:
+      install:
+        - mako
+
+    _common_install:
+      targets:
+        mako/config:
+          template: mako/config.j2
