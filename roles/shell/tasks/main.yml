@@ -32,3 +32,32 @@
           wipe: true
           file: atuin/config.toml
 
+- name: Configure nushell
+  tags:
+    - shell-nushell
+  block:
+    - name: Retrieve default nushell config
+      ansible.builtin.uri:
+        url:
+          "https://raw.githubusercontent.com/nushell/nushell/refs/heads/main/\
+          crates/nu-utils/src/sample_config/default_config.nu"
+        method: GET
+        return_content: true
+      register: __default_config
+
+    - name: Configure nushell
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          install:
+            - nushell
+
+        _common_install:
+          defaults:
+            wipe: true
+          targets:
+            nushell/env.nu:
+              template: nushell/env.nu.j2
+            nushell/config.nu:
+              template: nushell/config.nu.j2

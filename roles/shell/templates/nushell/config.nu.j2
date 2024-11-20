@@ -1,0 +1,688 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- set _preset = preset | parse_ansi_presets(ansi, mod="light", sep="_") -%}
+{%- set _preset_fix = {
+    "light_white": "light_gray",
+    "light_black": "dark_gray",
+} -%}
+
+{%- set _preset_accent = _preset_fix.get(_preset.accent.line, _preset.accent.line) -%}
+{%- set _preset_emphasis = _preset_fix.get(_preset.emphasis.line, _preset.emphasis.line) -%}
+{%- set _preset_alternative = _preset_fix.get(_preset.alternative.line, _preset.alternative.line) -%}
+{%- set _preset_complement = _preset_fix.get(_preset.complement.line, _preset.complement.line) -%}
+
+{%- set _preset_foreground = _preset_fix.get(_preset.foreground.line, _preset.foreground.line) -%}
+
+{%- set _preset_important = _preset_fix.get(_preset.important.line, _preset.important.line) -%}
+{%- set _preset_unimportant = _preset_fix.get(_preset.unimportant.line, _preset.unimportant.line) -%}
+
+{%- set _preset_active = _preset_fix.get(_preset.active.line, _preset.active.line) -%}
+{%- set _preset_inactive = _preset_fix.get(_preset.inactive.line, _preset.inactive.line) -%}
+
+{%- set _preset_positive = _preset_fix.get(_preset.positive.line, _preset.positive.line) -%}
+{%- set _preset_neutral = _preset_fix.get(_preset.neutral.line, _preset.neutral.line) -%}
+{%- set _preset_negative = _preset_fix.get(_preset.negative.line, _preset.negative.line) -%}
+
+{%- macro _theme_render() -%}
+    separator: {{ _preset_unimportant }},
+    leading_trailing_space_bg: { bg: {{ _preset_unimportant }} },
+    search_result: { bg: {{ _preset_inactive }} fg: {{ _preset_alternative }} attr: b },
+
+    header: {{ _preset_accent }}_bold,
+    row_index: {{ _preset_unimportant }},
+    hints: {{ _preset_unimportant }},
+
+    # [{}, [], {?}, $.one.two]
+    record: {{ _preset_neutral }},
+    list: {{ _preset_neutral }},
+    block: {{ _preset_neutral }},
+    cell-path: {{ _preset_neutral }},
+
+    bool: {{ _preset_important }}_bold,
+    int: {{ _preset_important }}_bold,
+    float: {{ _preset_important }}_bold,
+    range: {{ _preset_important }}_bold,
+    binary: {{ _preset_important }}_bold,
+
+    filesize: {{ _preset_positive }}_bold,
+    duration: {{ _preset_positive }}_bold,
+    date: {{ _preset_positive }}_bold,
+
+    string: {{ _preset_alternative }},
+
+    nothing: {{ _preset_foreground }},
+    empty: {{ _preset_foreground }},
+
+    shape_and: {{ _preset_emphasis }}_bold,
+    shape_or: {{ _preset_emphasis }}_bold,
+    shape_operator: {{ _preset_emphasis }}_bold,
+    shape_keyword: {{ _preset_emphasis }}_bold,
+    shape_internalcall: {{ _preset_emphasis }}_bold,
+    shape_nothing: {{ _preset_emphasis }}_bold,
+
+    shape_pipe: {{ _preset_unimportant }}_bold,
+    shape_signature: {{ _preset_complement }}_bold,
+    shape_redirection: {{ _preset_neutral }}_bold,
+
+    shape_int: {{ _preset_important }}_bold,
+    shape_bool: {{ _preset_important }}_bold,
+    shape_binary: {{ _preset_important }}_bold,
+    shape_range: {{ _preset_important }}_bold,
+    shape_float: {{ _preset_important }}_bold,
+
+    shape_record: {{ _preset_unimportant }}_bold,
+    shape_block: {{ _preset_unimportant }}_bold,
+    shape_closure: {{ _preset_unimportant }}_bold,
+    shape_custom: {{ _preset_unimportant }}_bold,
+    shape_table: {{ _preset_unimportant }}_bold,
+    shape_list: {{ _preset_unimportant }}_bold,
+    shape_matching_brackets: {{ _preset_unimportant }}_bold,
+
+    shape_datetime: {{ _preset_positive }}_bold,
+    shape_garbage: {{ _preset_negative }}_bold,
+
+    shape_vardecl: {{ _preset_foreground }},
+    shape_variable: {{ _preset_foreground }}_bold,
+    shape_match_pattern: {{ _preset_foreground }},
+
+    shape_directory: {{ _preset_complement }},
+    shape_filepath: {{ _preset_complement }},
+    shape_globpattern: {{ _preset_complement }},
+
+    shape_string: {{ _preset_alternative }},
+    shape_string_interpolation: {{ _preset_alternative }},
+
+    shape_raw_string: {{ _preset_neutral }},
+    shape_literal: {{ _preset_neutral }}_bold,
+
+    shape_flag: {{ _preset_positive }},
+
+    shape_external: {{ _preset_negative }},
+    shape_external_resolved: {{ _preset_accent }}_bold,
+    shape_externalarg: {{ _preset_alternative }},
+{%- endmacro -%}
+
+{%- macro _explore_render() -%}
+    status_bar_background: { bg: {{ _preset_inactive }}, fg: {{ _preset_complement }} },
+    command_bar_text: {{ _preset_foreground }},
+    highlight: {{ _preset_neutral }}_bold,
+    status: {
+        error: {{ _preset_negative }}_bold,
+        warn: {{ _preset_neutral }}_bold,
+        info: {{ _preset_accent }}_bold,
+    },
+    table: {
+        split_line: {{ _preset_inactive }},
+        selected_cell: { bg: {{ _preset_inactive }} },
+        selected_row: {},
+        selected_column: {},
+    },
+{%- endmacro -%}
+
+{%- macro _completition_menu_render() -%}
+    name: completion_menu,
+    only_buffer_difference: false,
+    marker: $" (ansi reset)\u{f0d0}  ",
+    type: {
+        layout: columnar,
+        columns: 4,
+        col_padding: 2,
+    },
+    style: {
+        text: {{ _preset_emphasis }}_bold,
+        description_text: {{ _preset_alternative }},
+        match_text: {{ _preset_complement }},
+        selected_text: { bg: {{ _preset_complement }}, fg: {{ _preset_inactive }}, attr: b },
+        selected_match_text: { bg: {{ _preset_complement }}, fg: {{ _preset_inactive }}, attr: b },
+    },
+{%- endmacro -%}
+
+{%- macro _binds_modifiers(_modifiers) -%}
+    {{ _modifiers or "none" }}
+{%- endmacro -%}
+
+{%- macro _binds_key(_key) -%}
+    {{ ("char_{}".format(_key) if _key | length == 1 else _key) | lower }}
+{%- endmacro -%}
+
+{%- macro _binds_id(_modifiers, _key) -%}
+    {{ _binds_modifiers(_modifiers) }}-{{ _binds_key(_key) }}
+{%- endmacro -%}
+
+{%- set _binds_mode_all = "[emacs, vi_insert, vi_normal]" -%}
+{%- set _binds = {} -%}
+
+{%- macro _binds_atuin() -%}
+    {
+        send: executehostcommand,
+        cmd: "# nushell-ignore-history\ncommandline edit (^atuin search --interactive e>| str trim)",
+    }
+{%- endmacro -%}
+
+{#
+    Nushell 0.98 removed support for system-clipboard feature except for custom builds.
+    Since wezterm has a configured copy-mode, these binds are no longer used:
+
+    ("left", {"subs": "edit: MoveLeft, select: true", "select": true}),
+    ("right", {"subs": "edit: MoveRight, select: true", "select": true}),
+
+    ("left", {"subs": ["edit: MoveLeft, select: true"] * 3, "many": true, "select": true}),
+    ("right", {"subs": ["edit: MoveRight, select: true"] * 3, "many": true, "select": true}),
+
+    ("left", {"subs": "edit: MoveWordLeft, select: true", "word": true, "select": true}),
+    ("right", {"subs": "edit: MoveWordRight, select: true", "word": true, "select": true}),
+
+    ("up", {"subs": "edit: MoveToLineEnd, select: true", "select": true}),
+    ("up", {"subs": "edit: MoveToLineEnd, select: true", "many": true, "select": true}),
+    ("up", {"subs": "edit: MoveToLineEnd, select: true", "word": true, "select": true}),
+    ("down", {"subs": "edit: MoveToLineStart, select: true", "select": true}),
+    ("down", {"subs": "edit: MoveToLineStart, select: true", "many": true, "select": true}),
+    ("down", {"subs": "edit: MoveToLineStart, select: true", "word": true, "select": true}),
+
+    ("word_prev", {"subs": "edit: MoveWordLeft, select: true", "select": true}),
+    ("word_next", {"subs": "edit: MoveWordRight, select: true", "select": true}),
+    ("line_begin", {"subs": "edit: MoveToStart, select: true", "select": true}),
+    ("line_end", {"subs": "edit: MoveToEnd, select: true", "select": true}),
+    ("file_begin", {"subs": "edit: MoveToStart, select: true", "select": true}),
+    ("file_end", {"subs": "edit: MoveToEnd, select: true", "select": true}),
+#}
+{%- set _binds_until = "UNTIL" -%}
+{%- set _binds_actions_map = [
+    ("left", [_binds_until, "send: MenuLeft", "send: Left"]),
+    ("up", [_binds_until, "send: MenuUp", "send: Up"]),
+    ("right", [_binds_until, "send: HistoryHintComplete", "send: MenuRight", "send: Right"]),
+    ("down", [_binds_until, "send: MenuDown", "send: Down"]),
+
+    ("left", {"subs": ["edit: MoveLeft"] * 3, "many": true}),
+    ("up", {"subs": ["send: Up"] * 3, "many": true}),
+    ("right", {"subs": ["edit: MoveRight"] * 3, "many": true}),
+    ("down", {"subs": ["send: Down"] * 3, "many": true}),
+
+    ("left", {"subs": "edit: MoveWordLeft", "word": true}),
+    ("up", {"subs": "send: Up", "word": true}),
+    ("right", {"subs": "edit: MoveWordRight", "word": true}),
+    ("down", {"subs": "send: Down", "word": true}),
+
+    ("word_next", "edit: MoveWordRight"),
+    ("word_prev", "edit: MoveWordLeft"),
+
+    ("line_begin", "edit: MoveToStart"),
+    ("line_end", "edit: MoveToEnd"),
+
+    ("file_begin", "edit: MoveToStart"),
+    ("file_end", "edit: MoveToEnd"),
+
+    ("word_delete", "edit: BackspaceWord"),
+    ("line_clear", "edit: ClearToLineEnd"),
+    ("line_delete", ["edit: MoveToLineStart", "edit: ClearToLineEnd"]),
+
+    ("cycle_next", [_binds_until, "send: menu, name: completion_menu", "send: menunext", "edit: complete"]),
+    ("cycle_prev", "send: menuprevious"),
+
+    ("undo", "edit: Undo"),
+    ("redo", "edit: Redo"),
+
+    ("open", "send: OpenEditor"),
+    ("clear_all", "send: ClearScreen"),
+    ("select_all", "edit: SelectAll"),
+
+    ("delete", "edit: Backspace"),
+    ("delete", {"subs": ["edit: Backspace"] * 3, "many": true}),
+    ("delete", {"subs": "edit: BackspaceWord", "word": true}),
+] -%}
+
+{%- if ["shell-atuin", "shell-history"] | is_tagged(ansible_run_tags, ansible_skip_tags) -%}
+    {%- set _ = _binds_actions_map.append(("search", _binds_atuin)) -%}
+{%- endif -%}
+
+{#
+    Built-in vim-like (Reedline) keybindings:
+     F -> (?) Left until char
+     T -> (?) Left before char
+     d -> Delete
+     p -> Paste after
+     P -> Paste before
+     h -> Move left
+     l -> Move right
+     j -> Move down
+     k -> Move up
+     w -> Move word right
+     b -> Move word left
+     i -> Enter Vi insert at current char
+     a -> Enter Vi insert after char
+     0 -> Move to start of line
+     ^ -> Move to start of line
+     $ -> Move to end of line
+     u -> Undo
+     c -> Change
+     x -> Delete char
+     s -> History search (Delete char + enter insert mode)
+     D -> Delete to end
+     A -> Append to end
+#}
+{%- set _binds_builtins = [
+    ("none", "0"), ("none", "$"), ("none", "f"), ("none", "t"), ("shift", "f"), ("shift", "t"),
+    ("none", "d"), ("none", "p"), ("shift", "p"), ("none", "h"), ("none", "l"), ("none", "j"),
+    ("none", "k"), ("none", "w"), ("none", "b"), ("none", "i"), ("none", "a"), ("none", "^"),
+    ("none", "u"), ("none", "c"), ("none", "x"), ("none", "s"), ("shift", "d"), ("shift", "a"),
+] -%}
+
+{%- macro _binds_construct() -%}
+    {#
+        Parse default nu config bindings to unbind them later.
+
+        Until some particular keybinding's `event` is explicitly set to `null`
+         (not commented out or set to empty array),
+         it is going to be picked from the `keybindings default`.
+    #}
+    {% for _bind in __default_config.content | regex_findall(
+        "modifier: (?P<mod>\\w*)\\s*keycode: (?P<key>\\w*)"
+    ) %}
+        {% set _ = _binds.__setitem__(
+            _binds_id(_bind[0], _bind[1]),
+            {
+                "mode": _binds_mode_all, "mods": _bind[0], "key": _bind[1], "env": None,
+            },
+        ) %}
+    {% endfor %}
+    {#
+        Overlay main binds.
+    #}
+    {% for _bind in keys
+        | parse_binds(actions_map=_binds_actions_map, modifiers_map={"ctrl": "control"}, sep=("_", "-"))
+        | selectattr("mode_name", "in", ["bare", "common", "vim", "emacs"])
+    %}
+        {% set _ = _binds.__setitem__(
+            _binds_id(_bind.modifiers, _bind.key),
+            {
+                "mode": "[vi_normal]" if _bind.mode_name == "vim" else _binds_mode_all,
+                "mods": _binds_modifiers(_bind.modifiers),
+                "key": _binds_key(_bind.key),
+                "evn": _bind.action.subs,
+            }
+        ) %}
+    {% endfor %}
+    {#
+        Overlay all Reedline builtins.
+    #}
+    {% for _bind in _binds_builtins %}
+        {% set _ = _binds.__setitem__(
+            _binds_id(_bind[0], _bind[1]),
+            {
+                "mode": _binds_mode_all,
+                "mods": _binds_modifiers(_bind[0]),
+                "key": _binds_key(_bind[1]),
+                "env": None,
+            },
+        ) %}
+    {% endfor %}
+    {#
+        Overlay special binds.
+
+        They are either:
+            conventional (control-c)
+            or special/bugged (e.g. nushell does use kitty protocol flag for `delete`, thus it is reported as Ctrl-h)
+    #}
+    {% set _ = _binds.update({
+        "control_c": {
+            "mods": "control",
+            "key": "char_c",
+            "mode": _binds_mode_all,
+            "evn": "send: CtrlC",
+        },
+        "control-char_h": {
+            "mods": "control",
+            "key": "char_h",
+            "mode": _binds_mode_all,
+            "evn": "edit: Delete",
+        },
+    }) %}
+{%- endmacro -%}
+
+{%- macro _binds_render() -%}
+    {% set _ = _binds_construct() %}
+    {##}
+    {% for _bind in _binds.values() %}
+        {% set _oneliner = "modifier: {}, keycode: \"{}\", mode: {}".format(_bind.mods, _bind.key, _bind.mode) %}
+        {##}
+        {% if _bind.env is none %}
+            { {{ _oneliner }}, event: null },
+        {% elif _bind.evn is string %}
+            { {{ _oneliner }}, event: { {{ _bind.evn }} } },
+        {% else %}
+            {
+                {{ _oneliner }},
+            {% if _bind.evn is iterable and _bind.evn[0] == _binds_until %}
+                event: {
+                    until: [
+                    {% for _line in _bind.evn[1:] %}
+                        { {{ _line }} },
+                    {% endfor %}
+                    ]
+                },
+            {% elif _bind.evn is iterable %}
+                event: [
+                {% for _line in _bind.evn %}
+                    { {{ _line }} },
+                {% endfor %}
+                ],
+            {% else %}
+                event: {{ _bind.evn() | relative_indent(times=3, **_indent) }},
+            {% endif %}
+            },
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+
+#
+# Nushell Config File.
+#
+# (based on the default config from 0.94.2)
+#
+
+{% if ["shell-carapace", "shell-completion"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+#
+# Carapace completer.
+#
+$env.CARAPACE_BRIDGES = "zsh"
+$env.CARAPACE_HIDDEN = 1
+$env.CARAPACE_LENIENT = 1
+$env.CARAPACE_MATCH = 1
+$env.CARAPACE_LOG = 0
+
+#Get an environment variable.
+def --env get-env [name] {
+    $env | get $name 
+}
+
+#Set an environment variable.
+def --env set-env [name, value] {
+    load-env { $name: $value }
+}
+
+#Hide an environment variable.
+def --env unset-env [name] {
+    hide-env $name
+}
+
+
+{% endif %}
+{% if ["shell-zoxide", "shell-navigation"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+#
+# Zoxide completer.
+#
+
+#Zoxide, a smarter cd command.
+def --env z [...rest:string] {
+    cd (^zoxide query --exclude $env.PWD -- ...$rest | str trim -r -c "\n")
+}
+
+#Zoxide, a smarter cd command (interactive selection).
+def --env zi [...rest:string] {
+    cd (^zoxide query --exclude $env.PWD --interactive -- ...$rest | str trim -r -c "\n")
+}
+
+
+{% endif %}
+{% if ["shell-atuin", "shell-history"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+#
+# Atuin history manager.
+#
+$env.ATUIN_SESSION = (atuin uuid)
+$env.ATUIN_LOG = "error"
+hide-env -i ATUIN_HISTORY_ID
+
+
+{% endif %}
+{% if ["shell-mise", "shell-version-manager"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+#
+# Mise version manager.
+#
+$env.MISE_SHELL = "nu"
+
+#A tool for managing runtime versions.
+def --wrapped --env mise [...rest: string] {
+    if (($rest | is-empty) or ("-h" in $rest) or ("--help" in $rest)) {
+        return (^/usr/bin/mise ...$rest)
+    }
+
+    match $rest.0 {
+        "activate" => {
+           $env.MISE_SHELL = "nu"
+        },
+        "hook-env" | "deactivate" | "shell" => {
+            let parsed = (^/usr/bin/mise ...$rest) | from csv --noheaders;
+
+            $parsed
+                | where column1 == set
+                | reduce -f {} {|it, acc|
+                    let val = if ($it.column2 == "PATH") {
+                        ($it.column3 | split row (char esep))
+                    } else {
+                        $it.column3
+                    }
+
+                    $acc | upsert $it.column2 $val
+                }
+                | load-env
+            hide-env ...($parsed | where column1 == hide | each {|it| $it.column2 })
+
+            if ($rest.0 == "deactivate") {
+                hide-env ...($env | columns | filter {|$k| $k | str contains "MISE" })
+            }
+        },
+        _ => {
+            ^/usr/bin/mise ...$rest
+        },
+    }
+}
+
+
+{% endif %}
+$env.config = {
+    ls: {
+        use_ls_colors: true,
+        clickable_links: true,
+    },
+
+    rm: {
+        always_trash: false,
+    }
+
+    table: {
+        mode: compact,
+        index_mode: always,
+        show_empty: true,
+        padding: { left: 1, right: 1 },
+        trim: {
+            methodology: wrapping,
+            truncating_suffix: "...",
+        }
+        header_on_separator: false,
+    },
+
+    datetime_format: {
+        normal: '%d-%b-%Y %r %:z',
+        table: '%d-%b-%Y %r',
+    },
+
+    explore: {
+        {{ _explore_render() | relative_indent(times=2, **_indent) }}
+    },
+
+    history: {
+        max_size: 100_000,
+        sync_on_enter: false,
+        file_format: sqlite,
+        isolation: true,
+    },
+
+    completions: {
+        case_sensitive: false,
+        quick: true,
+        partial: true,
+        algorithm: prefix,
+        external: {
+            enable: true,
+            max_results: 100,
+            completer: {|spans|
+                let ctx = $spans | first
+                let rest = $spans | skip
+
+                match $ctx {
+                    {% if ["shell-zoxide", "shell-navigation"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+                    "z" | "zi" => (zoxide query --exclude $env.PWD --list ...$rest | lines),
+
+                    {% endif %}
+                    {% if ["shell-carapace", "shell-completion"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+                    _ => (carapace $ctx nushell ...$spans  | from json)
+                    #
+                    # If aliases to non-builtin commands (such as ls) is expected to be used:
+                    #
+                    # _ => {
+                    #     let subs = (
+                    #         scope aliases
+                    #             | where name == $ctx
+                    #             | get -i $.0.expansion
+                    #             | default $ctx
+                    #             | split row " "
+                    #     )
+                    #     (carapace ($subs | first) nushell ...($subs | skip) ...$rest  | from json)
+                    # },
+                    {% endif %}
+                }
+            },
+        }
+        use_ls_colors: true,
+    },
+
+    filesize: {
+        metric: true,
+        format: auto,
+    },
+
+    cursor_shape: { 
+        vi_insert: line,
+        vi_normal: underscore,
+    },
+
+    shell_integration: {
+        osc2: true,
+        osc7: true,
+        osc8: true,
+        osc9_9: true,
+        osc133: true,
+        osc633: true,
+        reset_application_mode: true,
+    },
+
+    color_config: {
+        {{ _theme_render() | relative_indent(times=2, **_indent) }}
+    },
+
+    show_banner: false,
+    error_style: fancy,
+    footer_mode: never,
+    float_precision: 3,
+    use_ansi_coloring: true,
+    bracketed_paste: true,
+    edit_mode: vi,
+    render_right_prompt_on_last_line: false,
+    use_kitty_protocol: true,
+    highlight_resolved_externals: true,
+    recursion_limit: 50,
+
+    plugin_gc: {
+        default: {
+            enabled: true,
+            stop_after: 10sec,
+        },
+    },
+
+    hooks: {
+        pre_prompt: [
+            {% if ["shell-atuin", "shell-history"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+            {
+                condition: { 'ATUIN_HISTORY_ID' in $env },
+                code: {
+                    ^atuin history end $"--exit=($env.LAST_EXIT_CODE | default 1)" -- $env.ATUIN_HISTORY_ID
+
+                    hide-env ATUIN_HISTORY_ID
+                },
+            },
+            {% endif %}
+            {% if ["shell-mise", "shell-version-manager"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+            {
+                condition: { "MISE_SHELL" in $env },
+                code: { mise hook-env --shell=nu },
+            },
+            {% endif %}
+        ],
+        pre_execution: [
+            {% if ["shell-atuin", "shell-history"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+            {
+                condition: { 
+                    let cmd = (commandline)
+
+                    not ($cmd | is-empty) and not ($cmd | str starts-with "# nushell-ignore-history")
+                },
+                code: { $env.ATUIN_HISTORY_ID = (atuin history start -- (commandline)) },
+            },
+            {% endif %}
+        ],
+        env_change: {
+            {% if ["shell-zoxide", "shell-navigation"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+            PWD: [{|_, dir| ^zoxide add -- $dir }],
+            {% endif %}
+        },
+        display_output: "if (term size).columns >= 100 { table -e } else { table }",
+        command_not_found: { null },
+    },
+
+    menus: [
+        {
+            {{ _completition_menu_render() | relative_indent(times=3, **_indent) }}
+        },
+    ],
+
+    keybindings: [
+        {{ _binds_render() | relative_indent(times=2, **_indent) }}
+    ],
+}
+
+
+{% if ["shell-fastfetch", "shell-fetch"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+^fastfetch
+
+
+{% endif %}
+{% if ["shell-starship", "shell-prompt"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+#
+# Trick that allows to bypass race condition when
+#  the prompt is being rendered when reported terminal width has a default value (wezterm's config.initial_cols = 80)
+#  because WM has not properly resized window yet.
+#
+# This does add small overhead (50-80ms), but only for the first wezterm window.
+#
+# For any next consecutive windows (i.e. multiplexer is already set up),
+#  race condition still occurs, but at this point of time (when env.nu + $env.config are processed),
+#  terminal width is almost certainly updated.
+#
+# Hence is it generally recommended to put this at the very end of the loading stage, because otherwise this
+# would create an unnecessary blocking barrier.
+#
+# In case when more safer version with timeout is required:
+# do {
+#     let start = date now
+#     while (((term size).columns == 80) or ((date now) - $start > 1sec)) {
+#         sleep 5ms
+#     }
+# }
+#
+if ("PROMPT_COMMAND" in $env) {
+    while ((term size).columns == 80) {
+        sleep 5ms
+    }
+}
+{% endif %}
