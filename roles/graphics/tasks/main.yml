@@ -101,6 +101,11 @@
         state: directory
         mode: "0755"
 
+- name: Import x11 related tasks
+  ansible.builtin.import_tasks:
+    file: x11.yml
+  tags:
+    - graphics-x11
 - name: Configure rofi app launcher
   ansible.builtin.import_role:
     name: common

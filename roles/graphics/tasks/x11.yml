@@ -1,0 +1,126 @@
+---
+- name: Configure Xorg server
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-x11-xorg
+  vars:
+    _common_packages:
+      install:
+        - xorg-server
+        - xf86-input-libinput
+        - xorg-xrdb
+        - xorg-xsetroot
+        - xorg-xeyes
+        - numlockx
+        - hsetroot
+        - xclip
+        - shotgun
+        - hacksaw
+
+    _common_install:
+      defaults:
+        become: true
+        wipe: true
+        base: /etc/X11
+      targets:
+        xorg.conf.d/10-keyboard.conf:
+          template: xorg/10-keyboard.conf.j2
+        xorg.conf.d/10-mouse.conf:
+          template: xorg/10-mouse.conf.j2
+        xorg.conf.d/10-wrong-devices.conf:
+          template: xorg/10-wrong-devices.conf.j2
+        xorg.conf.d/20-nvidia.conf:
+          template: xorg/20-nvidia.conf.j2
+
+- name: Configure XDG portals
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-x11-portals
+    - graphics-portals
+  vars:
+    _common_install:
+      targets:
+        xdg-desktop-portal/herbstluftwm-portals.conf:
+          content: |
+            [preferred]
+            default=gtk
+
+- name: Configure polybar bar
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-x11-polybar
+    - graphics-bar
+  vars:
+    _common_packages:
+      install:
+        - polybar
+
+    _common_install:
+      targets:
+        polybar/config.ini:
+          wipe: true
+          template: polybar/config.ini.j2
+
+- name: Configure dunst notification daemon
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-x11-dunst
+    - graphics-notifications
+  vars:
+    _common_packages:
+      install:
+        - dunst
+    _common_install:
+      targets:
+        dunst/dunstrc:
+          wipe: true
+          template: dunst/dunstrc.j2
+
+- name: Configure picom compositor
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-x11-picom
+    - graphics-x11-compositor
+  vars:
+    _common_packages:
+      install:
+        - picom
+
+    _common_install:
+      targets:
+        picom/picom.conf:
+          wipe: true
+          file: picom/picom.conf
+
+- name: Configure herbstluftwm window manager
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - graphics-x11-herbstluftwm
+    - graphics-wm
+  vars:
+    #
+    # Only git version introduces --binary-pipe
+    #
+    _common_packages:
+      install:
+        - herbstluftwm-git
+        - luajit
+        - awk
+        - sed
+        - jq
+        - playerctl
+      remove:
+        - herbstluftwm
+
+    _common_install:
+      targets:
+        herbstluftwm/autostart:
+          wipe: true
+          template: herbstluftwm/autostart.j2
+          filemode: "0755"
