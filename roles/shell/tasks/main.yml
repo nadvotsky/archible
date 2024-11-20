@@ -12,3 +12,23 @@
         wezterm/wezterm.lua:
           wipe: true
           template: wezterm/wezterm.lua.j2
+
+- name: Configure atuin history manager
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - shell-atuin
+    - shell-history
+  vars:
+    _common_packages:
+      install:
+        - atuin
+
+    _common_install:
+      wipes:
+        - "{{ users.user.share }}/atuin"
+      targets:
+        atuin/config.toml:
+          wipe: true
+          file: atuin/config.toml
+

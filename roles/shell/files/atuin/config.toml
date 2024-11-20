@@ -3,9 +3,12 @@ auto_sync = false
 
 history_filter = [
     "^exit",
+    "^clear",
+    "^reset",
     "^nu",
     "^fish",
-    "^bash"
+    "^bash",
+    "^sh"
 ]
 
 keymap_mode = "vim-insert"
