@@ -1,1 +1,14 @@
 ---
+- name: Configure wezterm terminal
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install:
+        - wezterm
+
+    _common_install:
+      targets:
+        wezterm/wezterm.lua:
+          wipe: true
+          template: wezterm/wezterm.lua.j2
