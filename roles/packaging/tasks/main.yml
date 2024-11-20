@@ -1,0 +1,108 @@
+---
+- name: Install chaotic-aur mirrorlist
+  community.general.pacman:
+    name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst
+    state: present
+  become: true
+
+- name: Utilize reflector
+  tags:
+    - packaging-reflector
+  block:
+    - name: Install reflector
+      community.general.pacman:
+        name: https://archlinux.org/packages/extra/any/reflector/download
+        state: present
+      become: true
+
+    - name: Populate mirrorlist with reflector
+      tags:
+        - packaging-reflector-refresh
+      ansible.builtin.command:
+        argv:
+          - reflector
+          - --connection-timeout=2
+          - --download-timeout=2
+          - --save=/etc/pacman.d/mirrorlist
+          - --sort=rate
+          - --score=10
+      register: __reflector_invocation
+      changed_when: __reflector_invocation.rc == 0
+      become: true
+
+- name: Render pacman configuration
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      targets:
+        /etc/pacman.conf:
+          become: true
+          template: pacman/pacman.conf.j2
+
+- name: Refuse to use GnuPG with pacman
+  tags:
+    - packaging-nogpg
+  block:
+    - name: Mask pacman systemd GnuPG services
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_services:
+          dirmngr@etc-pacman.d-gnupg.socket:
+            mask: true
+          gpg-agent-browser@etc-pacman.d-gnupg.socket:
+            mask: true
+          gpg-agent-extra@etc-pacman.d-gnupg.socket:
+            mask: true
+          gpg-agent-ssh@etc-pacman.d-gnupg.socket:
+            mask: true
+          gpg-agent@etc-pacman.d-gnupg.socket:
+            mask: true
+          keyboxd@etc-pacman.d-gnupg.socket:
+            mask: true
+
+    - name: Reset pacman keyring
+      when: policy.destructive is true
+      ansible.builtin.file:
+        state: absent
+        path: /etc/pacman.d/gnupg/
+      become: true
+
+- name: Sync pacman database
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      sync: true
+
+- name: Add makepkg enchancements
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - packaging-makepkg
+  vars:
+    _common_packages:
+      install:
+        - base-devel
+        - aria2
+
+    _common_install:
+      targets:
+        /etc/makepkg.conf.d/makepkg.conf:
+          become: true
+          file: makepkg/makepkg.conf
+
+- name: Configure paru AUR helper
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install:
+        - paru
+
+    _common_install:
+      targets:
+        /etc/paru.conf:
+          become: true
+          file: paru/paru.conf
