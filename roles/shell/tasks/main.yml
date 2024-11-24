@@ -13,6 +13,22 @@
           wipe: true
           template: wezterm/wezterm.lua.j2
 
+- name: Configure starship prompt
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - shell-starship
+    - shell-prompt
+  vars:
+    _common_packages:
+      install:
+        - starship
+
+    _common_install:
+      targets:
+        starship.toml:
+          template: starship/starship.toml.j2
+
 - name: Configure atuin history manager
   ansible.builtin.import_role:
     name: common
