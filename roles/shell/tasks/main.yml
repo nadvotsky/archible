@@ -32,6 +32,28 @@
           wipe: true
           file: atuin/config.toml
 
+- name: Configure mise version manager
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - shell-mise
+    - shell-version-manager
+  vars:
+    _common_packages:
+      install:
+        - mise-bin
+
+    _common_install:
+      wipes:
+        - "{{ users.user.share }}/mise"
+        - "{{ users.user.config }}/mise"
+      targets:
+        mise/config.toml:
+          wipe: true
+          file: mise/config.toml
+        carapace/specs/mise.yaml:
+          file: mise/mise.yaml
+
 - name: Configure nushell
   tags:
     - shell-nushell
