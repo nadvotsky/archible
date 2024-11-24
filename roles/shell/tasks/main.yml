@@ -29,6 +29,23 @@
         starship.toml:
           template: starship/starship.toml.j2
 
+- name: Configure fastfetch information tool
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - shell-fastfetch
+    - shell-fetch
+  vars:
+    _common_packages:
+      install:
+        - fastfetch
+
+    _common_install:
+      targets:
+        fastfetch/config.jsonc:
+          wipe: true
+          template: fastfetch/config.jsonc.j2
+
 - name: Configure atuin history manager
   ansible.builtin.import_role:
     name: common
