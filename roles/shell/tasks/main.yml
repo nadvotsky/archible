@@ -46,6 +46,34 @@
           wipe: true
           template: fastfetch/config.jsonc.j2
 
+- name: Configure helix editor
+  tags:
+    - shell-helix
+    - shell-editor
+  block:
+    - name: Retrieve default helix config
+      ansible.builtin.uri:
+        url:
+          "https://raw.githubusercontent.com/helix-editor/helix/refs/heads/master/\
+          helix-term/src/keymap/default.rs"
+        method: GET
+        return_content: true
+      register: __default_config
+
+    - name: Configure helix editor
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          install:
+            - helix
+
+        _common_install:
+          targets:
+            helix/config.toml:
+              wipe: true
+              template: helix/config.toml.j2
+
 - name: Configure atuin history manager
   ansible.builtin.import_role:
     name: common
