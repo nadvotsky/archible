@@ -93,6 +93,37 @@
           wipe: true
           file: atuin/config.toml
 
+- name: Configure carapace autocompletition
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - shell-carapace
+    - shell-completion
+  vars:
+    _common_packages:
+      install:
+        - carapace-bin
+        - zsh
+
+    _common_install:
+      wipes:
+        - "{{ users.user.cache }}/carapace"
+
+- name: Configure zoxide directory navigator
+  ansible.builtin.import_role:
+    name: common
+  tags:
+    - shell-zoxide
+    - shell-navigation
+  vars:
+    _common_packages:
+      install:
+        - zoxide
+
+    _common_install:
+      wipes:
+        - "{{ users.user.share }}/zoxide"
+
 - name: Configure mise version manager
   ansible.builtin.import_role:
     name: common
@@ -114,6 +145,17 @@
           file: mise/config.toml
         carapace/specs/mise.yaml:
           file: mise/mise.yaml
+
+- name: Configure additional tools for theming, paging, and fuzzy-finding
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install:
+        - vivid
+        - bat
+        - fzf
+
 
 - name: Configure nushell
   tags:
