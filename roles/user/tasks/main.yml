@@ -1,4 +1,31 @@
 ---
+- name: Configure user profile
+  tags:
+    - user-profile
+  block:
+    - name: Remove bash user profile files
+      when: policy.destructive is true
+      ansible.builtin.file:
+        path: "{{ users.user.home }}/{{ item }}"
+        state: absent
+      loop:
+        - profile
+        - bash_profile
+        - bashrc
+        - bash_logout
+        - bash_history
+        - inputrc
+
+    - name: Render user login profile configuration file
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          defaults:
+            base: "{{ users.user.home }}"
+          targets:
+            .profile:
+              template: user-profile/login.j2
 
 - name: Configure pam and faillock to use no delay
   when: security.pam.nodelay is true
