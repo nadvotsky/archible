@@ -1,0 +1,37 @@
+{%- set _fzf = preset | parse_ansi_presets(ansi, replacements={5: "magenta"}) -%}
+{%- set _fzf_opts = [
+    "--color=fg:-1,bg:-1,hl:{}".format(_fzf.accent.line),
+    "--color=fg+:-1,bg+:{},hl+:{}".format(_fzf.inactive.line, _fzf.accent.line),
+    "--color=info:{},prompt:{},pointer:{}".format(_fzf.complement.line, _fzf.negative.line, _fzf.important.line),
+    "--color=marker:{},spinner:{},header:{}".format(_fzf.important.line, _fzf.neutral.line, _fzf.positive.line),
+    "--color=border:{},label:{}".format(_fzf.active.line, _fzf.complement.line),
+] | join(" ") -%}
+
+
+{% if ["shell-helix", "shell-editor"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+#
+# helix editor configuration.
+#
+export VISUAL=helix
+export EDITOR=helix
+
+
+{% endif %}
+#
+# bat pager configuration.
+#
+export BAT_THEME=Nord
+export PAGER=bat
+export MANPAGER='bat --style=grid'
+
+
+#
+# LS_COLORS theming.
+#
+export LS_COLORS=$(vivid generate nord)
+
+
+#
+# fzf theming.
+#
+export FZF_DEFAULT_OPTS='{{ _fzf_opts }}'

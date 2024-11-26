@@ -156,6 +156,15 @@
         - bat
         - fzf
 
+- name: Render system-wide shell profile with tools variables
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      targets:
+        /etc/profile.d/shell-env.sh:
+          become: true
+          template: profile/shell-tools.sh.j2
 
 - name: Configure nushell
   tags:
