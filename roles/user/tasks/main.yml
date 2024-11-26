@@ -1,5 +1,31 @@
 ---
 
+- name: Configure pam and faillock to use no delay
+  when: security.pam.nodelay is true
+  tags:
+    - user-pam
+  block:
+    - name: Render faillock configuration
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          targets:
+            /etc/security/faillock.conf:
+              become: true
+              file: files/faillock/faillock.conf
+
+    - name: Add nodelay to pam_unix in system-auth
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/system-auth
+        regexp: ^(?P<prep>auth\s+.*\s+pam_unix\.so\s+)(?P<flags>[\w ]+)(?<!nodelay)$
+        line: \g<prep>\g<flags> nodelay
+        backrefs: true
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
 - name: Configure GnuPG
   tags:
     - user-gpg
