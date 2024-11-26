@@ -1,0 +1,61 @@
+---
+# cli file-manager, lazydocker, strings, etc...
+# - name: Install additonal tools
+#   community.general.pacman:
+#     name:
+#       - lazydocker
+#     state: present
+#   become: true
+
+# ..., configuration
+
+# browser-launcher
+
+- name: Configure vopono network namespace launcher
+  tags:
+    - apps-nets
+  block:
+    - name: Install vopono via AUR
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_aur: vopono-bin
+
+    - name: Install additional vopono dependencies
+      community.general.pacman:
+        name:
+          - nftables
+          - wireguard-tools
+          - openvpn
+        state: present
+      become: true
+
+    - name: Configure sudo to allow running vopono
+      tags: ssudo
+      ansible.builtin.copy:
+        content: |
+          %wheel,%sudo ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/bin/vopono
+        dest: /etc/sudoers.d/10-vopono
+        mode: "0640"
+        owner: 0
+        group: 0
+      become: true
+
+    - name: Clean vopono configuration
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/vopono"
+        mode: "0755"
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    - name: Configure vopono
+      ansible.builtin.copy:
+        content: |
+          firewall = "NfTables"
+          provider = "Custom"
+          protocol = "openvpn"
+          config = "{{ users.user.config }}/vopono/custom-config"
+        dest: "{{ users.user.config }}/vopono/config.toml"
+        mode: "0644"
