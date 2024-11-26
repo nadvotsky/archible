@@ -6,4 +6,4 @@ disable-scdaemon
 disable-check-own-socket
 extra-socket none
 enable-ssh-support
-ssh-fingerprint-digest SHA512
+ssh-fingerprint-digest {{ security.gpg.hash | first }}

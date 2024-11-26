@@ -1,0 +1,137 @@
+---
+- name: Generate GnuPG keys
+  vars:
+    __regex_fingerprint: .*KEY_CREATED.*([0-9-A-Z]{40})
+    __regex_keygrip: fpr:+{}:+\sgrp:+(\w+)
+    __subkeys: "{{ gpg | dict2items | map(attribute='value.subkeys') | map('dict2items') | flatten }}"
+    __subkey_to_master: >-
+      {%- set _assoc = {} -%}
+      {%- for _master, _subdicts in gpg.items() -%}
+        {%- for _subkey in _subdicts.subkeys.keys() -%}
+          {%- set _ = _assoc.update({_subkey: _master}) -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      {{ _assoc }}
+  block:
+    - name: Generate master keys
+      ansible.builtin.command:
+        cmd: >-
+          gpg
+          --batch
+          --status-fd 1
+          --generate-key
+        stdin: |-
+          Key-Type: {{ item.algo }}
+          Key-{{ 'Curve' if item.algo.startswith(('ec', 'ed')) else 'Length' }}: {{ item.hint }}
+          Key-Usage: cert
+          Name-Real: {{ item.name }}
+          Name-Comment: {{ item.comment }}
+          Name-Email: {{ item.email }}
+          Expire-Date: {{ item.expire }}
+          Creation-Date: {{ now(utc=true, fmt='%Y') }}-01-01
+          Passphrase: {{ item.password }}
+          Keyserver: {{ security.gpg.keyserver }}
+          Preferences: {{
+            (
+              ['OCB'] + security.gpg.hash + security.gpg.cipher + security.gpg.compression
+            ) | join(' ')
+          }}
+      register: __gpg_master_invocation
+      changed_when: __gpg_master_invocation.rc == 0
+      loop: "{{ gpg | dict2items | map(attribute='value.master') }}"
+
+    - name: Extract fingerprints of the master keys
+      ansible.builtin.set_fact:
+        __keys: >-
+          {%- set _acc = {} -%}
+          {%- for _master, _invocation in gpg.keys() | zip(__gpg_master_invocation.results) -%}
+            {% set _ = _acc.update({
+                _master: {
+                  'fingerprint': _invocation.stdout | regex_search(__regex_fingerprint, '\\1') | first,
+                },
+            }) %}
+          {%- endfor -%}
+          {{ _acc }}
+
+    - name: Generate subkeys
+      ansible.builtin.command:
+        cmd: >-
+          gpg
+          --batch
+          --status-fd 1
+          --pinentry-mode loopback
+          --passphrase-fd 0
+          --faked-system-time {{ '{}0101T000000Z!'.format(now(utc=true, fmt='%Y')) }}
+          --quick-add-key {{ __keys[__subkey_to_master[item.key]].fingerprint }}
+          {{
+            [item.value.hint, item.value.algo] | reject("none") | join("/")
+            if item.value.algo.startswith(("ec", "ed")) else
+            [item.value.algo, item.value.hint] | join("")
+          }}
+          {{ item.value.type }}
+          {{ gpg[__subkey_to_master[item.key]].master.expire }}
+        stdin: "{{ gpg[__subkey_to_master[item.key]].master.password }}"
+      register: __gpg_subkeys_invocation
+      changed_when: __gpg_subkeys_invocation.rc == 0
+      loop: "{{ __subkeys }}"
+
+    - name: Get keyring information
+      ansible.builtin.command:
+        argv:
+          - gpg
+          - --with-colons
+          - --with-keygrip
+          - --list-keys
+      register: __gpg_keyring_invocation
+      changed_when: __gpg_keyring_invocation.rc == 0
+
+    - name: Extract keygrip and fingerprint for each created key and subkey
+      ansible.builtin.set_fact:
+        __keys: >-
+          {%- for _master in gpg.keys() -%}
+            {%- set _ = __keys[_master].__setitem__(
+              'keygrip',
+              __gpg_keyring_invocation.stdout
+                | regex_search(__regex_keygrip.format(__keys[_master].fingerprint), '\\1')
+                | first,
+            ) -%}
+          {%- endfor -%}
+          {#--#}
+          {%- for _subkey, _invocation in __subkeys | map(attribute='key') | zip(__gpg_subkeys_invocation.results) -%}
+            {%- set _subkey_fingerprint = _invocation.stdout | regex_search(__regex_fingerprint, '\\1') | first -%}
+            {%- set _ = __keys.update({
+              _subkey: {
+                'fingerprint': _subkey_fingerprint,
+                'keygrip': __gpg_keyring_invocation.stdout
+                  | regex_search(__regex_keygrip.format(_subkey_fingerprint), '\\1')
+                  | first,
+              },
+            }) -%}
+          {%- endfor -%}
+          {{ __keys }}
+
+    - name: Apply ssh priority to subkeys
+      ansible.builtin.command:
+        argv:
+          - gpg-connect-agent
+          - --unbuffered
+          - "KEYATTR {{ __keys[item.key].keygrip }} Use-for-ssh: {{ item.value.priority }}"
+          - /bye
+      loop: "{{ __subkeys | selectattr('value.priority', 'defined') }}"
+
+    - name: Render keys metadata into the file
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          defaults:
+            base: "{{ users.user.home }}"
+          targets: >-
+            {{
+              {
+                '.gnupg/{}'.format(security.gpg.metadata): {
+                  'content': __keys,
+                  'filemode': '0600',
+                },
+              }
+            }}
