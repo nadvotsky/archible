@@ -1,0 +1,17 @@
+{%- set _home_prefix = users.user.home + "/" -%}
+{%- macro _pam_home_dir(_dir) -%}
+    @{HOME}/{{ _dir.removeprefix(_home_prefix) }}
+{%- endmacro -%}
+
+
+#
+# This is the configuration file for pam_env, a PAM module to load in
+# a configurable list of environment variables.
+#
+
+PATH                OVERRIDE={{ _pam_home_dir(users.user.bin) }}:/usr/local/sbin:/usr/local/bin:/usr/bin
+
+XDG_CONFIG_HOME     DEFAULT={{ _pam_home_dir(users.user.config) }}
+XDG_CACHE_HOME      DEFAULT={{ _pam_home_dir(users.user.cache) }}
+XDG_DATA_HOME       DEFAULT={{ _pam_home_dir(users.user.share) }}
+XDG_STATE_HOME      DEFAULT={{ _pam_home_dir(users.user.state) }}

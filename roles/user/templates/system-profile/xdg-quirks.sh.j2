@@ -1,0 +1,12 @@
+if
+    [ -z "$XDG_CONFIG_HOME" ] ||
+    [ -z "$XDG_CACHE_HOME" ] ||
+    [ -z "$XDG_DATA_HOME" ] ||
+    [ -z "$XDG_STATE_HOME" ];
+then
+    return 0
+fi
+
+{% for _variable, _value in users.user.xdg_quirks.items() %}
+export {{ _variable }}="{{ _value }}"
+{% endfor %}
