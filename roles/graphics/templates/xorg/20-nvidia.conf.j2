@@ -1,3 +1,30 @@
+{%- set _monitors = monitors.outputs.values() | map(attribute="x11") | join(", ") -%}
+{%- set _dpi = scaling.ethalon | scale(scaling.real) -%}
+
+{%- macro _metamodes_render() %}
+    {%- set _is_hor = monitors.stack == "horizontal" -%}
+    {%- set _panning_dim = "height" if _is_hor else "width" -%}
+    {%- set _panning_val = monitors.outputs.values() | map(attribute=_panning_dim) | max -%}
+
+    {%- for _mon in monitors.outputs.values() -%}
+        {{ _mon.x11 }}: {{ _mon.width }}x{{ _mon.height }}_{{ _mon.refresh }}
+        {%- if _mon[_panning_dim] < _panning_val -%}
+            {{ " " }}@{{ _mon.width if _is_hor else _panning_val }}x{{ _panning_val if _is_hor else _mon.height }}
+        {%- endif -%}
+        {% if not loop.last %}, {% endif %}
+    {%- endfor -%}
+{%- endmacro -%}
+
+{%- macro _metamode_orientation_render() -%}
+   {%- for mon in monitors.outputs.values() -%}
+        {{ mon.x11 }}
+        {%- if not loop.last -%}
+            {{ " LeftOf " if monitors.stack == "horizontal" else " Bottom " }}
+        {%- endif %}
+    {%- endfor -%}
+{%- endmacro -%}
+
+
 Section "Device"
     Identifier "nvidia"
 
@@ -22,36 +49,13 @@ Section "Device"
     # Option "HorizSync" "DFP-1: 67.500; DFP-5: 79.976"
     # Option "VertRefresh" "DFP-1: 60; DFP-5: 75.024675"
 
-    Option "ConnectedMonitor" "{{ env_monitors | map(attribute="x11") | join(", ") }}"
-    Option "nvidiaXineramaInfoOrder" "{{ env_monitors | map(attribute="x11") | join(", ") }}"
-    Option "MetaModes" "
-    {%- set hor = env_monitors_stack == "horizontal" -%}
-    {%- set panning_idx = 1 if hor else 0 -%}
-    {%- set panning =
-        (env_monitors | map(attribute="height") | max)
-        if hor else
-        (env_monitors | map(attribute="width") | max)
-    -%}
-    {%- for mon in env_monitors -%}
-        {{- "{}: ".format(mon.x11) -}}
-        {{- "{}x{}_{}".format(mon.width, mon.height, mon.refresh) -}}
-        {%- if [mon.width, mon.height][panning_idx] != panning -%}
-            {{- " @{}x{}".format(mon.width if hor else panning, panning if hor else mon.height) -}}
-        {%- endif -%}
-        {%- if not loop.last -%}
-            {{- ", " -}}
-        {%- endif -%}
-    {%- endfor -%}"
-    Option "MetaModeOrientation" "
-    {%- for mon in env_monitors -%}
-        {{- "{}".format(mon.x11) -}}
-        {%- if not loop.last -%}
-            {{- " LeftOf " if env_monitors_stack == "horizontal" else " Bottom " -}}
-        {%- endif -%}
-    {%- endfor -%}"
+    Option "ConnectedMonitor" "{{ _monitors }}"
+    Option "nvidiaXineramaInfoOrder" "{{ _monitors }}"
+    Option "MetaModes" "{{ _metamodes_render() }}"
+    Option "MetaModeOrientation" "{{ _metamode_orientation_render() }}"
     Option "PanAllDisplays" "false"
 
-    Option "DPI" "{{ (env_ethalon * env_scale) | round | int }} x {{ (env_ethalon * env_scale) | round | int }}"
+    Option "DPI" "{{ _dpi }} x {{ _dpi }}"
 
     Option "IncludeImplicitMetaModes" "false"
 
