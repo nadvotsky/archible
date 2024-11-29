@@ -1,0 +1,44 @@
+---
+- name: Configure JetBrains Toolbox
+  tags:
+    - dev-cpp
+  block: []
+
+- name: Configure C++ developer suite
+  tags:
+    - dev-cpp
+  block: []
+
+- name: Configure Rust developer suite
+  tags:
+    - dev-rust
+  block: []
+
+- name: Configure Go developer suite
+  tags:
+    - dev-go
+  block: []
+
+- name: Configure Java developer suite
+  tags:
+    - dev-java
+  block: []
+
+- name: Configure C# developer suite
+  tags:
+    - dev-csharp
+    - dev-dotnet
+  block: []
+
+- name: Configure Python developer suite
+  tags:
+    - dev-python
+  block: []
+
+- name: Configure JavaScript developer suite
+  tags:
+    - dev-js
+    - dev-js-bun
+    - dev-js-deno
+    - dev-js-node
+    - dev-js-ts
