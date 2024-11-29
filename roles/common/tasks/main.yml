@@ -182,6 +182,18 @@
   become: "{{ item.value.user is true | ternary(omit, true) }}"
   loop: "{{ _common_services | dict2items }}"
 
+- name: Get GnuPG key metadata
+  when: _common_gpg is defined
+  block:
+    - name: Read metadata file
+      ansible.builtin.slurp:
+        src: "{{ users.user.home }}/.gnupg/{{ security.gpg.metadata }}"
+      register: __metadata_file
+
+    - name: Process metadata file as JSON
+      ansible.builtin.set_fact:
+        _common_gpg_invocation: "{{ (__metadata_file.content | b64decode | from_json)[_common_gpg] }}"
+
 - name: Add user to groups
   when: _common_groups is defined
   ansible.builtin.user:
