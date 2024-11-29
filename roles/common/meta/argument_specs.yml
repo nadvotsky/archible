@@ -1,0 +1,118 @@
+---
+argument_specs:
+  main:
+    short_description: Common tasks role
+    options:
+      _common_packages:
+        type: dict
+        required: false
+        description:
+          - Packaging tasks
+        options:
+          remove:
+            type: list
+            elements: str
+            required: false
+            description:
+              - List of the packages to remove.
+          sync:
+            type: bool
+            required: false
+            description:
+              - Whenever to sync package manager database.
+          upgrade:
+            type: bool
+            required: false
+            description:
+              - Whenever to upgrade packages to their last version.
+          install:
+            type: list
+            elements: str
+            required: false
+            description:
+              - List of the packages to install. It also supports AURs.
+
+      _common_install:
+        type: dict
+        required: false
+        description:
+          - Installation tasks (wiping, creating required directories, rendering files, etc).
+        options:
+          defaults:
+            type: dict
+            description:
+              - Sets default flags for all targets that did not specify it explicitly.
+            options:
+              become:
+                type: bool
+                required: false
+                default: false
+                description:
+                  - Whenever use the ansible 'become' mechanism.
+              wipe:
+                type: bool
+                required: false
+                default: false
+                description:
+                  - Whenever wipe the directory the target belongs to.
+              filemode:
+                type: str
+                required: false
+                default: '0644'
+                description:
+                  - Permissions of the target file.
+              dirmode:
+                type: str
+                required: false
+                default: '0755'
+                description:
+                  - Permissions of the directory the target file belongs to.
+                  - It may also create some intermediate directories.
+              base:
+                type: str
+                required: false
+                default: "{{ users.user.config }}"
+                description:
+                  - The base path for all targets that are not absolute.
+          wipes:
+            type: list
+            elements: str
+            required: false
+            description:
+              - An additional list of directories to wipe.
+          targets:
+            type: dict
+            description:
+              - A mapping of the target to its options.
+              - >-
+                Each key must either be relative or absolute, consisting of the following items:
+                `become`, `wipe`, `filemode`, `dirmode`, and `base`, which have the same meaning as `defaults`,
+                along with `content`, `template`, and `file` for specifying the source for the target, respectively.
+
+      _common_services:
+        type: dict
+        required: false
+        description:
+          - Service manager
+          - >-
+              Each key must be the name of a service to stop, and the item must be a mapping that includes
+              any of the following flags: `enable`, `disable`, `mask`, `stop`, or `start`.
+
+      _common_gpg:
+        type: str
+        required: false
+        description:
+          - Retrieves previously generated GnuPG key metadata.
+
+      _common_groups:
+        type: list
+        elements: str
+        required: false
+        description:
+          - Adds the user to the specified list of groups.
+
+      _common_environment:
+        type: dict
+        required: false
+        description:
+          - Modifies global system-wide /etc/environment file with the provided key-value pairs.
