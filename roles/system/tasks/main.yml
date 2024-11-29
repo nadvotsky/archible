@@ -1,0 +1,6 @@
+---
+# TODO: Disable unnecessary systemd units
+# TODO: vconsole.font=ter-u18n
+# TODO: terminus-font
+# TODO: udev
+# TODO: journald
