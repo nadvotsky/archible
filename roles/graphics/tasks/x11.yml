@@ -1,9 +1,9 @@
 ---
 - name: Configure Xorg server
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-x11-xorg
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -34,11 +34,11 @@
           template: xorg/20-nvidia.conf.j2
 
 - name: Configure XDG portals
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-x11-portals
     - graphics-portals
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_install:
       targets:
@@ -48,11 +48,11 @@
             default=gtk
 
 - name: Configure polybar bar
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-x11-polybar
     - graphics-bar
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -65,11 +65,11 @@
           template: polybar/config.ini.j2
 
 - name: Configure dunst notification daemon
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-x11-dunst
     - graphics-notifications
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -81,11 +81,11 @@
           template: dunst/dunstrc.j2
 
 - name: Configure picom compositor
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-x11-picom
     - graphics-x11-compositor
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -98,11 +98,11 @@
           file: picom/picom.conf
 
 - name: Configure herbstluftwm window manager
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-x11-herbstluftwm
     - graphics-wm
+  ansible.builtin.import_role:
+    name: common
   vars:
     #
     # Only git version introduces --binary-pipe

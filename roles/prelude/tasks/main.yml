@@ -1,9 +1,9 @@
 ---
 - name: Import partition tasks
-  ansible.builtin.import_tasks:
-    file: partition.yml
   tags:
     - predule-partition
+  ansible.builtin.import_tasks:
+    file: partition.yml
   vars:
     __disk_path: "/dev/disk/by-id/{{ machine.disk_identifier }}"
 

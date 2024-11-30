@@ -1,10 +1,10 @@
 ---
 - name: Install proprietary nvidia graphics drivers
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-driver
     - graphics-nvidia
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -41,7 +41,7 @@
       targets:
         ly/config.ini:
           file: ly/config.ini
-        ly/xsetup.sh: 
+        ly/xsetup.sh:
           content: &minwm |
             #!/bin/sh
             [ -f /etc/profile ] && . /etc/profile
@@ -77,10 +77,10 @@
         reload: true
 
 - name: Include look tasks
-  ansible.builtin.import_tasks:
-    file: look.yml
   tags:
     - graphics-look
+  ansible.builtin.import_tasks:
+    file: look.yml
 
 - name: Configure XDG desktop portals
   tags:
@@ -102,18 +102,21 @@
         mode: "0755"
 
 - name: Import x11 related tasks
-  ansible.builtin.import_tasks:
-    file: x11.yml
   tags:
     - graphics-x11
+  ansible.builtin.import_tasks:
+    file: x11.yml
 
 - name: Import wayland related tasks
-  ansible.builtin.import_tasks:
-    file: wayland.yml
   tags:
     - graphics-wayland
+  ansible.builtin.import_tasks:
+    file: wayland.yml
 
 - name: Configure rofi app launcher
+  tags:
+    - graphics-app-launcher
+    - graphics-rofi
   ansible.builtin.import_role:
     name: common
   vars:
@@ -128,6 +131,3 @@
         rofi/config.rasi:
           wipe: true
           template: rofi/config.rasi.j2
-  tags:
-    - graphics-app-launcher
-    - graphics-rofi

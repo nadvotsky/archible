@@ -14,11 +14,11 @@
           template: wezterm/wezterm.lua.j2
 
 - name: Configure starship prompt
-  ansible.builtin.import_role:
-    name: common
   tags:
     - shell-starship
     - shell-prompt
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -30,11 +30,11 @@
           template: starship/starship.toml.j2
 
 - name: Configure fastfetch information tool
-  ansible.builtin.import_role:
-    name: common
   tags:
     - shell-fastfetch
     - shell-fetch
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -75,11 +75,11 @@
               template: helix/config.toml.j2
 
 - name: Configure atuin history manager
-  ansible.builtin.import_role:
-    name: common
   tags:
     - shell-atuin
     - shell-history
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -94,11 +94,11 @@
           file: atuin/config.toml
 
 - name: Configure carapace autocompletition
-  ansible.builtin.import_role:
-    name: common
   tags:
     - shell-carapace
     - shell-completion
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -110,11 +110,11 @@
         - "{{ users.user.cache }}/carapace"
 
 - name: Configure zoxide directory navigator
-  ansible.builtin.import_role:
-    name: common
   tags:
     - shell-zoxide
     - shell-navigation
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -125,11 +125,11 @@
         - "{{ users.user.share }}/zoxide"
 
 - name: Configure mise version manager
-  ansible.builtin.import_role:
-    name: common
   tags:
     - shell-mise
     - shell-version-manager
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:

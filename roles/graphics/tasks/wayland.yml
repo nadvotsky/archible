@@ -1,10 +1,11 @@
 ---
+# TODO: unset DISPLAY
 - name: Configure hyprland compositor
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-wayland-hyprland
     - graphics-wm
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -85,11 +86,11 @@
           template: waybar/style.css.j2
 
 - name: Configure mako notification daemon
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-wayland-mako
     - graphics-notifications
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:

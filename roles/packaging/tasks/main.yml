@@ -16,8 +16,6 @@
       become: true
 
     - name: Populate mirrorlist with reflector
-      tags:
-        - packaging-reflector-refresh
       ansible.builtin.command:
         argv:
           - reflector
@@ -65,8 +63,8 @@
     - name: Reset pacman keyring
       when: policy.destructive is true
       ansible.builtin.file:
-        state: absent
         path: /etc/pacman.d/gnupg/
+        state: absent
       become: true
 
 - name: Sync pacman database
@@ -77,10 +75,10 @@
       sync: true
 
 - name: Add makepkg enchancements
-  ansible.builtin.import_role:
-    name: common
   tags:
     - packaging-makepkg
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:

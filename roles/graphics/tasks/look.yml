@@ -37,10 +37,10 @@
             }}
 
 - name: Configure Qt applications
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-look-qt
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:
@@ -93,10 +93,10 @@
           content: *qtctconf
 
 - name: Configure GTK applications
-  ansible.builtin.import_role:
-    name: common
   tags:
     - graphics-look-gtk
+  ansible.builtin.import_role:
+    name: common
   vars:
     _common_packages:
       install:

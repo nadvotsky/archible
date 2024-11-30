@@ -201,7 +201,7 @@
     groups: "{{ _common_groups }}"
     append: true
 
-- name: Modify global environmental variables
+- name: Common global environmental variables management
   when: _common_environment is defined
   ansible.builtin.lineinfile:
     dest: /etc/environment

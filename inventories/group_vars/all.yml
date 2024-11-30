@@ -63,9 +63,9 @@ machine:
     cpuidle.governor: teo
     cryptomgr.notests:
     debugfs: "off"
-    dis_ucode_ldr:
+    dis_ucode_ldr: ~
     driver_async_probe: "*"
-    enable_mtrr_cleanup:
+    enable_mtrr_cleanup: ~
     hibernate: "no"
     hostname: *machine-workspace
     hpet_mmap: "1"
@@ -78,7 +78,7 @@ machine:
     io_delay: none
     kmemleak: "off"
     kunit.enable: "0"
-    logo.nologo:
+    logo.nologo: ~
     lp: "0"
     memory_corruption_check: "0"
     mitigations: "off"
@@ -87,7 +87,7 @@ machine:
     nowatchdog:
     panic: "0"
     parport: "0"
-    nopti:
+    nopti: ~
     ras: cec_disable
     rootdelay: "0"
     selinux: "0"
@@ -95,7 +95,7 @@ machine:
     transparent_hugepage: always
     lsm: capability,yama,bpf
     split_lock_detect: "off"
-    no_timer_check:
+    no_timer_check: ~
     pci: pcie_bus_perf
     #
     # systemd related
