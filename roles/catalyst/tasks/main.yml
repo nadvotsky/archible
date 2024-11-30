@@ -41,13 +41,13 @@
   tags:
     - catalyst-sudo
   ansible.builtin.import_role:
-      name: common
-    vars:
-      _common_install:
-        targets:
-          /etc/sudoers.d/70-overrides:
-            become: true
-            file: sudo/70-overrides
+    name: common
+  vars:
+    _common_install:
+      targets:
+        /etc/sudoers.d/70-overrides:
+          become: true
+          file: sudo/70-overrides
 
 - name: Create user skeleton
   tags:
