@@ -1,6 +1,6 @@
 ---
 - name: Configure booster initramfs generator
-  vars:
+  block:
     - name: Install and configure booster
       ansible.builtin.import_role:
         name: common
