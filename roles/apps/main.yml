@@ -1,13 +1,14 @@
 ---
-# cli file-manager, lazydocker, strings, etc...
-# - name: Install additonal tools
-#   community.general.pacman:
-#     name:
-#       - lazydocker
-#     state: present
-#   become: true
+# TODO: cli file-manager, lazydocker, strings, etc...
 
-# ..., configuration
+# TODO: xdg-mime default chromium.desktop image/avif
+# TODO: /usr/share/applications/mimeinfo.cache
+- name: Reset XDG Mime Applications
+  when: policy.destructive is true
+  ansible.builtin.file:
+    path: "{{ users.user.config }}/mimeapps.list"
+    state: absent
+  become: true
 
 # browser-launcher
 
