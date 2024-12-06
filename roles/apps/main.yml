@@ -10,53 +10,150 @@
     state: absent
   become: true
 
-# browser-launcher
+- name: Configure browser launcher
+  tags:
+    - apps-browser-launcher
+  block:
+    - name: Install browser launcher
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          install:
+            - browsers-bin
+
+        _common_install:
+          wipes:
+            - "{{ users.user.cache }}/software.Browsers"
+            - "{{ users.user.state }}/software.Browsers"
+          targets:
+            software.Browsers/config.json:
+              wipe: true
+              content: >-
+                {
+                  "hidden_apps": [],
+                  "hidden_profiles": [],
+                  "profile_order": [],
+                  "default_profile": null,
+                  "rules": [],
+                  "ui": {
+                    "show_hotkeys": true,
+                    "quit_on_lost_focus": false,
+                    "theme": "Auto"
+                  },
+                  "behavior": {
+                    "unwrap_urls": false
+                  }
+                }
+
+    - name: Set browser launcher as default browser
+      ansible.builtin.command:
+        argv:
+          - xdg-settings
+          - set
+          - default-web-browser
+          - software.Browsers.desktop
+      register: __xdg_settings_invocation
+      changed_when: __xdg_settings_invocation.rc == 0
+
+- name: Configure git
+  tags:
+    - apps-git
+  vars:
+    __git_opts:
+      user.name: "{{ users.user.full }}"
+      user.email: "{{ users.user. }}"
+
+      commit.gpgSign: "true"
+      push.gpgSign: "if-asked"
+      tag.gpgSign: "true"
+
+      apply.whitespace: fix
+      core.whitespace: tabwidth=4
+
+      checkout.workers: -1
+      #
+      # split index feature seems to be incompatible
+      # with feature.manyFiles
+      #
+      # core.splitIndex: "true"
+      core.bigFileThreshold: 256m
+      fetch.parallel: 0
+      feature.experimental: "true"
+      feature.manyFiles: "true"
+      http.maxRequests: 10
+      pack.threads: 0
+
+      grep.lineNumber: "true"
+      grep.column: "true"
+      grep.fallbackToNoIndex: "true"
+      core.notesRef: "true"
+      log.mailmap: "false"
+      init.defaultBranch: main
+  block:
+    - name: Install and configure git
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          install:
+            - git
+
+        _common_install:
+          wipes:
+            - "{{ users.user.home }}/.gitconfig"
+          targets:
+            git/config:
+              touch: true
+
+    - name: Get GnuPG primary signing key
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_gpg: primary_sign
+
+    - name: Configure git options
+      ansible.builtin.command:
+        argv:
+          - git
+          - config
+          - --global
+          - "{{ item.key }}"
+          - "{{ item.value }}"
+      loop: >-
+        {{
+          __git_opts | dict2items + [{
+            'key': 'user.signingkey', 'value': _common_gpg_invocation.fingerprint
+          }]
+        }}
+      register: __git_invocation
+      changed_when: __git_invocation.rc == 0
 
 - name: Configure vopono network namespace launcher
   tags:
     - apps-nets
-  block:
-    - name: Install vopono via AUR
-      ansible.builtin.import_role:
-        name: common
-      vars:
-        _common_aur: vopono-bin
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install:
+        - vopono-bin
+        - nftables
+        - wireguard-tools
+        - openvpn
 
-    - name: Install additional vopono dependencies
-      community.general.pacman:
-        name:
-          - nftables
-          - wireguard-tools
-          - openvpn
-        state: present
-      become: true
-
-    - name: Configure sudo to allow running vopono
-      tags: ssudo
-      ansible.builtin.copy:
-        content: |
-          %wheel,%sudo ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/bin/vopono
-        dest: /etc/sudoers.d/10-vopono
-        mode: "0640"
-        owner: 0
-        group: 0
-      become: true
-
-    - name: Clean vopono configuration
-      ansible.builtin.file:
-        path: "{{ users.user.config }}/vopono"
-        mode: "0755"
-        state: "{{ item }}"
-      loop:
-        - absent
-        - directory
-
-    - name: Configure vopono
-      ansible.builtin.copy:
-        content: |
-          firewall = "NfTables"
-          provider = "Custom"
-          protocol = "openvpn"
-          config = "{{ users.user.config }}/vopono/custom-config"
-        dest: "{{ users.user.config }}/vopono/config.toml"
-        mode: "0644"
+    _common_install:
+      targets:
+        /etc/sudoers.d/10-vopono:
+          become: true
+          content: |
+            %wheel ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/bin/vopono
+          filemode: "0640"
+          dirmode: "0750"
+        vopono/config.toml:
+          wipe: true
+          content: |
+            firewall = "NfTables"
+            provider = "Custom"
+            protocol = "openvpn"
+            config = "{{ users.user.config }}/vopono/custom-config"
