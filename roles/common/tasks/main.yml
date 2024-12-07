@@ -203,7 +203,102 @@
       ansible.builtin.set_fact:
         _common_gpg_invocation: "{{ (__metadata_file.content | b64decode | from_json)[_common_gpg] }}"
 
-- name: Add user to groups
+#
+# TODO:
+#  add _common_pull.[].type = archive/command/file
+#  add _common_push.[].type = archive/file
+#
+- name: Common backup pull operation
+  when: _common_pull is defined
+  vars:
+    __become: "{{ _common_pull.become is true | ternary(true, omit) }}"
+  block:
+    - name: Create archive
+      ansible.builtin.shell:
+        chdir: >-
+          {{
+            _common_pull.base is abs | ternary(_common_pull.base, [users.user.config, _common_pull.base] | path_join)
+          }}
+        cmd: >-
+          {%- set _exclude = [] -%}
+          {%- for _pattern in _common_pull.exclude | default([]) -%}
+            {%- set _ = _exclude.append('--exclude={}'.format(_pattern | squote)) -%}
+          {%- endfor -%}
+          {#--#}
+          tar
+          --wildcards
+          --anchored
+          --no-wildcards-match-slash
+          --numeric-owner
+          --group=0
+          --owner=0
+          --create
+          --to-stdout
+          {{ _common_pull.include | join(' ') }}
+          {{ _exclude | join(' ') }}
+          | base64 --wrap=0
+      register: __tar_invocation
+      changed_when: __tar_invocation.rc == 0
+      become: "{{ __become }}"
+
+    - name: Stat persist directory
+      delegate_to: localhost
+      ansible.builtin.stat:
+        path: "{{ persist.base }}"
+      register: __persist_stat
+
+    - name: Ensure persist subdirectory exists
+      delegate_to: localhost
+      ansible.builtin.file:
+        path: "{{ persist.base }}/{{ _common_pull.name | dirname }}"
+        state: directory
+        mode: "{{ __persist_stat.stat.mode }}"
+        owner: "{{ __persist_stat.stat.uid }}"
+        group: "{{ __persist_stat.stat.gid }}"
+
+    - name: Save archive to the persist
+      ansible.builtin.file:
+        dest: "{{ persist.base }}/{{ _common_pull.name }}{{ persist.format }}"
+        content: "{{ __tar_invocation.stdout }}"
+        mode: "0644"
+        owner: "{{ __persist_stat.stat.uid }}"
+        group: "{{ __persist_stat.stat.gid }}"
+
+- name: Common backup push operation
+  when: _common_push is defined
+  vars:
+    __base: >-
+      {{
+        _common_push.base is abs | ternary(_common_push.base, [users.user.config, _common_push.base] | path_join)
+      }}
+    __become: "{{ _common_push.become is true | ternary(true, omit) }}"
+  block:
+    - name: Wipe target directory
+      when: policy.destructive is true and _common_push.wipe is defined 
+      ansible.builtin.file:
+        path: "{{ __base }}"
+        state: absent
+      become: "{{ __become }}"
+
+    - name: Ensure target directory exists
+      ansible.builtin.file:
+        path: "{{ __base }}"
+        state: directory
+        mode: "{{ _common_push.mode | default('0755') }}"
+        owner: "{{ _common_push.become | default(false) is true | ternary(0, omit) }}"
+        group: "{{ _common_push.become | default(false) is true | ternary(0, omit) }}"
+      become: "{{ __become }}"
+
+    - name: Unpack archive
+      ansible.builtin.unarchive:
+        src: "{{ persist.base }}/{{ _common_push.name }}{{ persist.format }}"
+        dest: "{{ __base }}"
+        extra_opts:
+          - --no-same-owner
+          - --preserve-permissions
+      become: "{{ __become }}"
+
+- name: Common user groups management
   when: _common_groups is defined
   ansible.builtin.user:
     name: "{{ users.user.name }}"
