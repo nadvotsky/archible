@@ -2,7 +2,7 @@
 - name: Install prelude partition dependencies
   tags:
     - prelude-partition-deps
-    - prelude-dependecies
+    - prelude-dependencies
     - prelude-deps
   ansible.builtin.package:
     name:
@@ -49,15 +49,17 @@
           - "{{ item.path }}"
       register: __findmnt_invocation
       failed_when: __findmnt_invocation.rc == 0
+      changed_when: false
       loop: "{{ __disk_partitions.files }}"
 
     - name: Ensure nothing is mounted at the 'machine.mount'
       ansible.builtin.command:
         argv:
           - findmnt
-          - "{{ machine.mount }}" 
+          - "{{ machine.mount }}"
       register: __findmnt_invocation
       failed_when: __findmnt_invocation.rc == 0
+      changed_when: false
 
 - name: Perform disk partitioning using apart
   block:
