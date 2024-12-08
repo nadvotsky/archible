@@ -117,6 +117,8 @@
           - --unbuffered
           - "KEYATTR {{ __keys[item.key].keygrip }} Use-for-ssh: {{ item.value.priority }}"
           - /bye
+      register: __gpg_keyattr_invocation
+      changed_when: __gpg_keyattr_invocation.rc == 0
       loop: "{{ __subkeys | selectattr('value.priority', 'defined') }}"
 
     - name: Render keys metadata into the file
@@ -132,6 +134,7 @@
                 '.gnupg/{}'.format(security.gpg.metadata): {
                   'content': __keys,
                   'filemode': '0600',
+                  'dirmode': '0700',
                 },
               }
             }}
