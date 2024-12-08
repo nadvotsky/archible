@@ -64,7 +64,6 @@
           {{ item.mntops }}
           \g<freq>
           \g<passno>
-        backrefs: true
         mode: "0644"
         owner: 0
         group: 0
@@ -89,7 +88,7 @@
           - --stdin
         stdin: "{{ users.root.password }}"
       register: __mkpasswd_invocation
-      failed_when: __mkpasswd_invocation.rc != 0
+      changed_when: __mkpasswd_invocation.rc == 0
 
     - name: Run systemd-firstboot
       ansible.builtin.command:
