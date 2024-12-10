@@ -167,7 +167,7 @@
   tags:
     - user-gpg
   block:
-    - name: Configure GnuPG
+    - name: Disable GnuPG services
       ansible.builtin.import_role:
         name: common
       vars:
@@ -198,6 +198,10 @@
             user: true
             stop: true
 
+    - name: Configure GnuPG
+      ansible.builtin.import_role:
+        name: common
+      vars:
         _common_install:
           defaults:
             wipe: true
@@ -217,19 +221,6 @@
             .gnupg/gpg-agent.conf:
               template: gpg/gpg-agent.conf.j2
 
-    - name: Retrieve whether keyring is available in persist
-      delegate_to: localhost
-      ansible.builtin.stat:
-        path: "{{ persist  }}/gpg/keyring.tar"
-      register: __gpg_keyring_stat
-
-    - name: Push keyring from persist
-      when: __gpg_keyring_stat.stat.exists is true
-      ansible.builtin.import_tasks:
-        file: gpg/push.yml
-      tags:
-        - user-gpg-push
-
     - name: Enable GnuPG services
       ansible.builtin.import_role:
         name: common
@@ -248,9 +239,22 @@
             user: true
             start: true
 
+    - name: Retrieve whether backup is available in persist
+      delegate_to: localhost
+      ansible.builtin.stat:
+        path: "{{ persist.base }}/gpg"
+      register: __gpg_backup_stat
+
+    - name: Push keyring from persist
+      when: __gpg_backup_stat.stat.exists is true
+      tags:
+        - user-gpg-push
+      ansible.builtin.import_tasks:
+        file: gpg/push.yml
+
     - name: Generate new keyring
-      when: >-
-        __gpg_keyring_stat.stat.exists is false
-        or not ['user-gpg-push'] | is_tagged(ansible_run_tags, ansible_skip_tags)
+      tags:
+        - user-gpg-generate
+      when: __gpg_backup_stat.stat.exists is false
       ansible.builtin.include_tasks:
         file: gpg/generate.yml

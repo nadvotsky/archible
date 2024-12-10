@@ -7,13 +7,13 @@
         path: /var/tmp
       register: __gpg_push_dir
 
-    - name: Unpack persist keyring archive to the temporary directory
-      ansible.builtin.unarchive:
-        src: "{{ persist }}/gnupg/keyring.tar"
-        dest: "{{ __gpg_push_dir.path }}"
-        extra_args:
-          - --no-same-owner
-          - --preserve-permissions
+    - name: Unpack keyring and ownertrust
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_push:
+          name: gpg/keyring
+          base: "{{ __gpg_push_dir.path }}"
 
     - name: Import keyring to GnuPG
       ansible.builtin.command:
@@ -36,21 +36,14 @@
       register: __gpg_import_ownertrust_invocation
       changed_when: __gpg_import_ownertrust_invocation.rc == 0
 
-    - name: Set up private keys directory
-      ansible.builtin.file:
-        path: "{{ users.user.home }}/.gnupg/private-keys-v1.d"
-        mode: "0700"
-        state: "{{ item }}"
-      loop:
-        - absent
-        - directory
-
     - name: Import private keys explicitly
-      ansible.builtin.copy:
-        src: "{{ __gpg_push_dir.path }}/private-keys-v1.d/"
-        dest: "{{ users.user.home }}/.gnupg/private-keys-v1.d"
-        remote_src: true
-        mode: "0600"
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_push:
+          name: gpg/keys
+          base: "{{ users.user.home }}/.gnupg/private-keys-v1.d"
+          mode: "0600"
   always:
     - name: Ensure temporary directory is removed
       when: __gpg_push_dir.path is defined
