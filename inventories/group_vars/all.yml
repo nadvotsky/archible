@@ -326,6 +326,45 @@ gpg:
         algo: ed25519
         hint: ~
 
+media:
+  features:
+    #
+    # Whenever enable save feature for volumes and "fallback" source and sink.
+    #
+    save: false
+    #
+    # Video capture support.
+    #
+    video_v4l2: false
+    video_libcamera: false
+    #
+    # Midi support.
+    #
+    midi: false
+    #
+    # Jack support.
+    #
+    jack: false
+    #
+    # Bluez5 support.
+    #
+    bluetooth: false
+    #
+    # Noise suppression device.
+    #
+    rnnoise: true
+    #
+    # Loopback device that basically acts as a virtual output
+    #  particulary useful to omit some of the applications from recordings.
+    #
+    loopback: true
+  quantum:
+    min: 256
+    default: 1024
+    max: 4096
+  realtime:
+    nice: -10
+    priority: 80
 icons:
   main:
     name: Zorin

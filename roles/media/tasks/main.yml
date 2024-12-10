@@ -1,0 +1,75 @@
+---
+#
+# alsa-utils contains alsa-restore.service and alsa-state.service
+#  are not recommended to be used with sound server.
+#
+- name: Reset Alsa
+  when: policy.destructive is true
+  block:
+    - name: Remove alsa-utils
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          remove:
+            - alsa-utils
+
+    - name: Remove persistent alsa configuration
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      become: true
+      loop:
+        - /var/lib/alsa/asound.state
+        - /etc/alsa/state-daemon.conf
+
+- name: Install PipeWire
+  tags:
+    - audio-install # TODO: add position_fix
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install: >-
+        {{
+          [
+            "pipewire",
+            "pipewire-pulse",
+            "wireplumber",
+            "pavucontrol",
+            "noise-suppression-for-voice" if media.features.rnnoise is true else none,
+            "pipewire-jack" if media.features.jack is true else none,
+            "bluez" if media.features.bluetooth is true else none,
+            "pipewire-v4l2" if media.features.video_v4l2 is true else none,
+            "pipewire-libcamera" if media.features.video_libcamera is true else none,
+          ] | reject("none")
+        }}
+
+    _common_groups:
+      - rtkit
+
+    _common_services:
+      pipewire-pulse.service:
+        user: true
+        stop: true
+      wireplumber:
+        user: true
+        stop: true
+      pipewire:
+        user: true
+        stop: true
+
+- name: Start pipewire services
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_services:
+      pipewire-pulse.service:
+        user: true
+        start: true
+      wireplumber:
+        user: true
+        start: true
+      pipewire:
+        user: true
+        start: true
