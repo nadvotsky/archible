@@ -1,0 +1,114 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- set _path_name = item.key -%}
+{%- set _path = item.value -%}
+{%- set _card = item.card -%}
+
+{%- set _unit_key = {"input-path": "inputs", "output-path": "outputs"}[_path.type] -%}
+{%- set _direction = {"input-path": "playback", "output-path": "capture"}[_path.type] -%}
+{%- set _units = _card[_unit_key] -%}
+
+{%- set _blacklist = {} -%}
+{%- for _unit in ["jacks", "elements", "enumerations"] -%}
+    {%- set _exclude = _path[_unit] | dict2items | map(attribute="key") -%}
+    {%- set _ = _blacklist.update({
+        _unit: _units[_unit] | dict2items | rejectattr("key", "in", _exclude) | items2dict
+    }) -%}
+{%- endfor -%}
+
+{%- macro _whitelist_jack_render() -%}
+    {% for _jack_name, _jack in _path.jacks.items() %}
+        [Jack {{ _jack_name }}]
+        required = any
+        {##}
+        {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _blacklist_jack_render() -%}
+    {% for _jack_name, _jack in _blacklist.jacks.items() %}
+        [Jack {{ _jack_name }}]
+        required = any
+        state.unplugged = yes
+        {##}
+        {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _elements_type_handle(_type, _enable) -%}
+    {% if _type | length == 1 %}
+        required = {{ _type | first }}
+    {% else %}
+        required = any
+    {% endif %}
+    {##}
+    {% if "switch" in _type %}
+        switch = {{ _enable | ternary("mute", "off") }}
+    {% endif %}
+    {% if "volume" in _type %}
+        volume = {{ _enable | ternary("merge", "off") }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _whitelist_elements_render() -%}
+    {% for _element_name, _element in _path.elements.items() %}
+        {% set _element_meta = _units.elements[_element_name] %}
+        {##}
+        [Element {{ _element_name }}]
+        {{ _elements_type_handle(_element_meta.type, true) | relative_indent(times=2, **_indent) }}
+        override-map.1 = all
+        override-map.2 = all-left,all-right
+        direction = {{ _element_meta.direction | default(_direction) }}
+        direction-try-other = no
+        {#
+            Additional props such as `volume-limit`, if specified.
+        #}
+        {% for _key, _value in (_props is mapping | ternary(_props, {})).items() %}
+        {{ _key }} = {{ _value }}
+        {% endmacro %}
+        {##}
+        {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _blacklist_elements_render() -%}
+    {% for _element_name, _element in _blacklist.elements.items() %}
+        [Element {{ _element_name }}]
+        {{ _elements_type_handle(_element.type | default(_path.type), false) | relative_indent(times=2, **_indent) }}
+        direction = {{ _element.direction | default(_direction) }}
+        direction-try-other = no
+        {##}
+        {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _whitelist_enumerations_render() -%}
+    {% for _enum_name, _enum in _path.enumerations.items() %}
+        [Element {{ _enum_name }}]
+        required = enumeration
+        enumeration = select
+        direction = {{ _enum_meta.direction | default(_direction) }}
+        direction-try-other = no
+
+        [Option {{ _enum_name }}:{{ _enum.option }}]
+        required = enumeration
+        name = {{ _enum.description }}
+        {##}
+        {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+
+[General]
+priority = {{ _path.priority }}
+description-key = {{ _path.label | default(_path_name) }}
+
+{{ _whitelist_jack_render() | relative_indent }}
+
+{{ _whitelist_elements_render() | relative_indent }}
+
+{{ _whitelist_enumerations_render() | relative_indent }}
+
+{{ _blacklist_jack_render() | relative_indent }}
+
+{{ _blacklist_elements_render() | relative_indent }}

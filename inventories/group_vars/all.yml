@@ -365,6 +365,158 @@ media:
   realtime:
     nice: -10
     priority: 80
+  #
+  # VAD Threshold.
+  #
+  rnnoise_threshold: 50.0
+  #
+  # Percentage of complexity
+  #
+  resampling: 0.5
+  volume:
+    output: 0.68 # -10db
+    input: 0.56 # -25 db
+  #
+  # List of the apps that have full access to the mixers.
+  #  Extremely useful in case of WebRTC automatic gain control.
+  #
+  whitelist:
+    - pavucontrol
+    - helvum
+    - waybar
+    - wpctl
+  cards:
+    main:
+      selectors:
+        device:
+          device.form-factor: internal
+        input:
+          api.alsa.card.name: HDA ATI SB
+          api.alsa.pcm.stream: capture
+        output:
+          api.alsa.card.name: HDA ATI SB
+          api.alsa.pcm.stream: playback
+      #
+      # Create a rule that would disable any other devices other than this.
+      #
+      exclusive: true
+      #
+      # Must be of 48000 when `virtual.rnnoise` is enabled.
+      #
+      frequency: 48000
+      format: S32LE
+      channels: [FL, FR]
+      inputs:
+        jacks:
+          Rear Mic:
+          Line:
+          Front Mic:
+        enumerations:
+          Loopback Mixing:
+          Input Source:
+        #
+        # Some capture mixers are bugged and marked for playback.
+        #
+        elements:
+          Capture,0:
+            type: [switch, volume]
+          Capture,1:
+            type: [switch, volume]
+          Rear Mic:
+            type: [switch, volume]
+            direction: playback
+          Rear Mic Boost:
+            type: [volume]
+          Line:
+            type: [switch, volume]
+            direction: playback
+          Line Boost:
+            type: [volume]
+            direction: playback
+          Front Mic:
+            type: [switch, volume]
+            direction: playback
+          Front Mic Boost:
+            type: [volume]
+      outputs:
+        jacks:
+          Line Out Front:
+          Line Out Surround:
+          Line Out CLFE:
+          Line Out Side:
+          Front Headphone:
+          SPDIF Phantom:
+        enumerations:
+          Auto-Mute Mode:
+        elements:
+          Front:
+            type: [switch, volume]
+          PCM:
+            type: [volume]
+          Master:
+            type: [switch, volume]
+          Headphone:
+            type: [switch, volume]
+          Surround:
+            type: [switch, volume]
+          Center:
+            type: [switch, volume]
+          LFE:
+            type: [switch, volume]
+          Side:
+            type: [switch, volume]
+          IEC958:
+            type: [switch]
+          IEC958 Default PCM:
+            type: [switch]
+      acp:
+        output:analog-stereo-headset+input:analog-stereo-headset:
+          type: profile
+          inputs:
+            - analog-stereo-headset
+          outputs:
+            - analog-stereo-headset
+        analog-stereo-headset:
+          type: mapping
+          label: analog-stereo-headset
+          device: front:%f
+          priority: 10
+          inputs:
+            - analog-input-microphone-headset
+          outputs:
+            - analog-output-headphones
+        analog-input-microphone-headset:
+          type: input-path
+          label: analog-input-microphone-headset
+          priority: 10
+          jacks:
+            Rear Mic:
+          elements:
+            Capture,0:
+            Rear Mic:
+            Rear Mic Boost:
+          enumerations:
+            Input Source:
+              option: Rear Mic
+              description: input-microphone
+            Loopback Mixing:
+              option: Disabled
+              description: input
+        analog-output-headphones:
+          type: output-path
+          label: analog-output-headphones
+          priority: 10
+          jacks:
+            Line Out Front:
+          elements:
+            Front:
+            PCM:
+            Master:
+          enumerations:
+            Auto-Mute Mode:
+              option: Disabled
+              description: output-headphones
+
 icons:
   main:
     name: Zorin

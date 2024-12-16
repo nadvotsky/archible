@@ -59,6 +59,49 @@
         user: true
         stop: true
 
+- name: Configure ALSA card profiles
+  tags:
+    - audio-acp
+  block:
+    - name: Prepare directory for ALSA card profiles
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          defaults:
+            wipe: true
+          targets:
+            alsa-card-profile/profile-sets/dummy-pattern.conf: ~
+            alsa-card-profile/paths/dummy-pattern.conf: ~
+
+    - name: Render profile-sets for ALSA card profiles
+      ansible.builtin.template:
+        src: acp/profile-set.j2
+        dest: "{{ users.user.config }}/alsa-card-profile/profile-sets/{{ item.key }}.conf"
+        mode: "0644"
+        lstrip_blocks: true
+        trim_blocks: true
+      loop: "{{ media.cards | dict2items }}"
+
+    - name: Render alsa card profile paths
+      ansible.builtin.template:
+        src: "acp/path.j2"
+        dest: "{{ users.user.config }}/alsa-card-profile/paths/{{ item.key }}.conf"
+        mode: "0644"
+        lstrip_blocks: true
+        trim_blocks: true
+      loop: >-
+        {%- set _items = [] -%}
+        {%- for _card_name, _card in media.cards.items() -%}
+          {%- for _path in _card.acp | dict2items | selectattr("value.type", "in", ["input-path", "output-path"]) -%}
+            {%- set _ = _items.append({
+              "key": _path.key,
+              "value": _path.value,
+              "card": _card,
+            }) -%}
+          {%- endfor -%}
+        {%- endfor -%}
+        {{ _items }}
 - name: Start pipewire services
   ansible.builtin.import_role:
     name: common

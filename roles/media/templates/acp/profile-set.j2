@@ -1,0 +1,54 @@
+{%- set _profiles = item.value.acp | dict2items | selectattr("value.type", "eq", "profile") | items2dict -%}
+{%- set _mappings = item.value.acp | dict2items | selectattr("value.type", "eq", "mapping") | items2dict -%}
+{%- set _channels = item.value.channels -%}
+
+{% set _channel_maps = {
+    "FL": "front-left",
+    "FR": "front-right",
+    "RL": "rear-left",
+    "RR": "rear-right",
+    "LFE": "lfe",
+    "FC": "front-center",
+    "SL": "side-left",
+    "SR": "side-right"
+} %}
+{%- macro _mappings_channel_map() -%}
+    {% set _acc = [] %}
+    {% for _channel in _channels %}
+        {% set _ = _acc.append(_channel_maps[_channel]) %}
+    {% endfor %}
+    {{ _acc | join(",") }}
+{%- endmacro -%}
+
+{%- macro _mappings_render() -%}
+    {% for _mapping_name, _mapping in _mappings.items() %}
+        [Mapping {{ _mapping_name }}]
+        device-strings = {{ _mapping.device }}
+        description-key = {{ _mapping.label | default(_mapping_name) }}
+        priority = {{ _mapping.priority }}
+        channel-map = {{ _mappings_channel_map() | relative_indent }}
+        paths-input = {{ _mapping.outputs | join(" ") }}
+        paths-output = {{ _mapping.inputs | join(" ") }}
+        {##}
+        {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _profiles_render() -%}
+    {% for _profile_name, _profile in _profiles.items() %}
+        [Profile {{ _profile_name }}]
+        input-mappings = {{ _profile.inputs | join(" ") }}
+        output-mappings = {{ _profile.outputs | join(" ") }}
+        skip-probe = no
+        {##}
+        {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+
+[General]
+auto-profiles = no
+
+{{ _mappings_render() | relative_indent }}
+
+{{ _profiles_render() | relative_indent }}
