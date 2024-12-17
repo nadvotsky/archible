@@ -102,6 +102,93 @@
           {%- endfor -%}
         {%- endfor -%}
         {{ _items }}
+
+- name: Configure PipeWire
+  tags:
+    - audio-config
+  vars:
+    __default_rate: >-
+      {%- set _freqs = media.cards | dict2items | map(attribute='value.frequency') | unique -%}
+      {{ (_freqs | first) if _freqs | length == 1 else 48000 }}
+    __context_properties: |-
+      clock.power-of-two-quantum = true
+      cpu.zero.denormals = true
+
+      default.clock.rate = {{ __default_rate }}
+      default.clock.allowed-rates = []
+
+      default.video.width = 1280
+      default.video.height = 720
+      default.video.rate.num = 30
+      default.video.rate.denom = 1
+
+      default.clock.min-quantum = {{ media.quantum.min }}
+      default.clock.quantum-floor = {{ media.quantum.min }}
+      default.clock.quantum = {{ media.quantum.default }}
+      default.clock.max-quantum = {{ media.quantum.max }}
+      default.clock.quantum-limit = {{ media.quantum.max }}
+
+      settings.check-quantum = false
+      settings.check-rate = false
+
+      link.max-buffers = 32
+      log.level = 0
+
+      mem.allow-mlock = true
+      mem.warn-mlock = true
+      mem.mlock-all = false
+    __realtime_properties: |-
+      {
+          name = libpipewire-module-rt
+          args = {
+              nice.level = {{ media.realtime.nice }}
+              rt.prio = {{ media.realtime.priority }}
+              rlimits.enabled = true
+              rtportal.enabled = true
+              rtkit.enabled = true
+          }
+          flags = [ ifexists nofail ]
+      }
+    __stream_properties: |-
+      resample.quality = {{ (14 * media.resampling) | round | int }}
+
+      channelmix.mix-lfe = true
+      channelmix.upmix = false
+  block:
+    - name: Assert that the frequency is supported by rnnoise
+      when: media.features.rnnoise is true
+      ansible.builtin.assert:
+        that: "item == 48000"
+        fail_msg: "'media.<card>.frequency' must be set to 48000 if `media.features.rnnoise` is requested"
+      loop: "{{ media.cards | dict2items | map(attribute='value.frequency') }}"
+
+    - name: Render PipeWire config
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          defaults:
+            wipe: true
+          wipes:
+            - "{{ users.user.state }}/wipeplumber"
+          targets:
+            pipewire/pipewire.conf:
+              template: pipewire/pipewire.conf.j2
+            pipewire/client.conf:
+              template: pipewire/client.conf.j2
+            pipewire/client-rt.conf:
+              template: pipewire/client.conf.j2
+            pipewire/pipewire-pulse.conf:
+              template: pipewire/pulse.conf.j2
+            #
+            # Unlike daemon and clients, wireplumber loads tons of lua scripts,
+            #  which is hard to replicate, using drop-in instead.
+            #
+            # It also has some handy switches so most of the unnecessary stuff still can be omited.
+            #
+            wireplumber/wireplumber.conf.d/10-config.conf:
+              template: wireplumber/10-config.conf.j2
+
 - name: Start pipewire services
   ansible.builtin.import_role:
     name: common

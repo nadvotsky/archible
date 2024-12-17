@@ -88,10 +88,11 @@ machine:
     panic: "0"
     parport: "0"
     nopti: ~
+    preempt: full
     ras: cec_disable
     rootdelay: "0"
     selinux: "0"
-    sysrq_always_enabled:
+    sysrq_always_enabled: ~
     transparent_hugepage: always
     lsm: capability,yama,bpf
     split_lock_detect: "off"
@@ -108,14 +109,17 @@ machine:
     systemd.gpt_auto: "0"
     systemd.firstboot: "off"
     #
+    # Audio
+    #
+    module_blacklist: "snd_hda_codec_hdmi,snd_seq,asus_wmi"
+    snd_hda_intel.position_fix: 6
+    #
     # video
     #
-    module_blacklist: "snd_hda_codec_hdmi,asus_wmi"
     video: efifb:mode=0
     nvidia.NVreg_InitializeSystemMemoryAllocations: "0"
     nvidia.NVreg_UsePageAttributeTable: "1"
     nvidia_drm.modeset: "1"
-    #
     #
     # sysctl
     #
@@ -130,7 +134,7 @@ machine:
     #
     rootfstype: xfs
     rootflags: *machine-mountopts-root
-    rw:
+    rw: ~
     booster.log: error
     #
     # frequently used

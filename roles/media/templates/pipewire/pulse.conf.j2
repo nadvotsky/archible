@@ -1,0 +1,113 @@
+{%- set _indent = {"space": 4} -%}
+
+
+#
+# PipeWire PulseAudio configuration.
+#
+context.properties = {
+    {{ __context_properties | relative_indent(times=1, **_indent) }}
+}
+
+context.spa-libs = {
+    audio.convert.* = audioconvert/libspa-audioconvert
+    support.* = support/libspa-support
+}
+
+context.modules = [
+    {{ __realtime_properties | relative_indent(times=1, **_indent) }}
+
+    { name = libpipewire-module-protocol-native }
+    { name = libpipewire-module-client-node }
+    { name = libpipewire-module-adapter }
+    { name = libpipewire-module-metadata }
+
+    { name = libpipewire-module-protocol-pulse }
+]
+
+pulse.cmd = [
+    { cmd = "load-module" args = "module-always-sink" flags = [ ] }
+{% if media.features.save is true %}
+    { cmd = "load-module" args = "module-device-manager" flags = [ ] }
+    { cmd = "load-module" args = "module-device-restore" flags = [ ] }
+    { cmd = "load-module" args = "module-stream-restore" flags = [ ] }
+{% endif %}
+]
+
+stream.properties = {
+    {{ __stream_properties | relative_indent(times=1, **_indent) }}
+}
+
+pulse.properties = {
+    server.address = [
+        "unix:native"
+    ]
+
+    pulse.idle.timeout = 1
+
+    pulse.min.req = {{ media.quantum.min }}/48000
+    pulse.min.frag = {{ media.quantum.min }}/48000
+    pulse.min.quantum = {{ media.quantum.min }}/48000
+    pulse.default.req = {{ media.quantum.default }}/48000
+
+{% if media.cards | dict2items | map(attribute='value.format') | unique | length == 1 %}
+    pulse.default.format = {{ (media.cards | dict2items | first).value.format }}
+{% endif %}
+}
+
+pulse.rules = [
+
+    #
+    # Skype does not want to use devices that don't have an S16 sample format.
+    #
+    {
+        matches = [
+            { application.process.binary = "teams" }
+            { application.process.binary = "teams-insiders" }
+            { application.process.binary = "skypeforlinux" }
+        ]
+        actions = { quirks = [ force-s16-info ] }
+    }
+
+    #
+    # Firefox marks the capture streams as 'do not move'.
+    #
+    {
+
+        matches = [
+            { application.process.binary = "firefox" }
+        ]
+        actions = { quirks = [ remove-capture-dont-move ] }
+    }
+
+    #
+    # Seech dispatcher asks for too small latency and then underruns.
+    #
+    {
+        matches = [
+            { application.name = "~speech-dispatcher.*" }
+        ]
+        actions = {
+            update-props = {
+                pulse.min.req = 512/48000
+                pulse.min.quantum = 512/48000
+            }
+        }
+    }
+
+    #
+    # WirePlumber already handles this, but it is preferable to explicitly have it here
+    #  for better error handling and compatibility.
+    #
+    {
+        matches = [
+            {
+            {% for _app in media.whitelist %}
+                application.process.binary = "!{{ _app }}"
+            {% endfor %}
+            }
+        ]
+        actions = {
+            quirks = [ block-source-volume block-sink-volume ]
+        }
+    }
+]

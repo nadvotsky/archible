@@ -1,0 +1,194 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- macro _feature_state(_val) -%}
+    {{ _val is true | ternary("required", "disabled") }}
+{%- endmacro -%}
+
+{%- macro _exclusive_render() -%}
+    {% set _cards = media.cards | dict2items | selectattr("value.exclusive", "true") | items2dict %}
+    {% for _card_name, _card in _cards.items() %}
+        {
+            matches = [
+                { 
+                    device.nick = !null
+                    {% for _prop, _value in _card.selectors.device.items() %}
+                    {{ _prop }} = "!{{ _value }}"
+                    {% endfor %}
+                }
+            ]
+            actions = {
+                update-props = {
+                    device.disabled = true
+                }
+            }
+        }
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _device_render(_card_name, _card) -%}
+    {
+        matches = [
+            {
+            {% for _prop, _value in _card.selectors.device.items() %}
+                {{ _prop }} = "{{ _value }}"
+            {% endfor %}
+            }
+        ]
+        actions = {
+            update-props = {
+                device.name = "{{ _card_name }}"
+                device.profile-set = "{{ _card_name }}.conf"
+
+                api.alsa.use-acp = true
+                api.alsa.use-ucm = false
+
+                api.acp.auto-profile = true
+                api.acp.auto-port = true
+            }
+        }
+    }
+{%- endmacro -%}
+
+{%- macro _node_render(_type, _card_name, _card) -%}
+    {% set _pretty_card = _card_name | replace("-", " ") | replace("_", " ") | title %}
+    {% set _pretty_type = _type | title %}
+    {
+        matches = [
+            {
+            {% for _prop, _value in _card.selectors[_type].items() %}
+                {{ _prop }} = "{{ _value }}"
+            {% endfor %}
+            }
+        ]
+        actions = {
+            update-props = {
+                node.nick = "{{ _pretty_card }} {{ _pretty_type }}"
+                node.name = "{{ _card_name }}-{{ _type }}"
+
+                node.rate = "{{ _card.frequency }}"
+
+                audio.format = "{{ _card.format }}"
+                audio.rate = "{{ _card.frequency }}"
+            }
+        }
+    }
+{%- endmacro -%}
+
+{%- macro _devices_render() -%}
+    {% for _card_name, _card in media.cards.items() %}
+        {{ _device_render(_card_name, _card) | relative_indent(times=2, **_indent) }}
+
+        {{ _node_render("input", _card_name, _card) | relative_indent(times=2, **_indent) }}
+
+        {{ _node_render("output", _card_name, _card) | relative_indent(times=2, **_indent) }}
+    {% endfor %}
+{%- endmacro -%}
+
+
+wireplumber.profiles = {
+    main = {
+        node.software-dsp = disabled
+
+        hardware.audio = required
+        monitor.alsa = required
+        monitor.alsa-midi = {{ _feature_state(media.features.midi) }}
+
+        hardware.bluetooth = {{ _feature_state(media.features.bluetooth) }}
+        monitor.bluez = {{ _feature_state(media.features.bluetooth) }}
+        monitor.bluez.seat-monitoring = {{ _feature_state(media.features.bluetooth) }}
+        monitor.bluez-midi = {{ _feature_state(media.features.midi) }}
+
+        hardware.video-capture = {{
+            _feature_state(media.features.video_v4l2 is true or media.features.video_libcamera is true)
+        }}
+        monitor.v4l2 = {{ _feature_state(media.features.video_v4l2) }}
+        monitor.libcamera = {{ _feature_state(media.features.video_libcamera) }}
+
+        support.dbus = required
+        support.logind = required
+        support.portal-permissionstore = required
+        support.reserve-device = optional
+        monitor.alsa.reserve-device = optional
+
+        policy.standard = required
+        policy.role-priority-system = disabled
+    }
+}
+
+wireplumber.settings = {
+    device.restore-profile = false
+    device.restore-routes = false
+    device.routes.default-sink-volume = {{ media.volume.output }}
+    device.routes.default-source-volume = {{ media.volume.input }}
+
+    linking.allow-moving-streams = true
+    linking.follow-default-target = true
+
+    node.features.audio.no-dsp = false
+    node.features.audio.monitor-ports = false
+    node.features.audio.control-port = false
+
+    node.stream.restore-props = {{ media.features.save is true | ternary("true", "false") }}
+    node.stream.restore-target = true
+    node.stream.default-playback-volume = {{ media.volume.output }}
+    node.stream.default-capture-volume = {{ media.volume.input }}
+
+    node.filter.forward-format = true
+    node.restore-default-targets = {{ media.features.save is true | ternary("true", "false") }}
+}
+
+monitor.alsa.properties = {
+    alsa.use-acp = true
+    alsa.use-ucm = false
+}
+
+access.rules = [
+    {
+        matches = [
+            { pipewire.sec.socket = "pipewire-0-manager" }
+        ]
+        actions = {
+            update-props = {
+                default_permissions = "all"
+            }
+        }
+    }
+
+    {
+        matches = [
+            {
+                pipewire.sec.socket = "pipewire-0"
+                {% for _app in media.whitelist %}
+                application.process.binary = "!{{ _app }}"
+                {% endfor %}
+            }
+        ]
+        actions = {
+            update-props = {
+                default_permissions = "rx"
+            }
+        }
+    }
+]
+
+monitor.alsa.rules = [
+
+    {{ _exclusive_render() | relative_indent(times=1, **_indent) }}
+
+    {{ _devices_render() | relative_indent(times=1, **_indent) }}
+
+    {
+        matches = [
+            {
+                node.name = !null
+                media.class = !null
+            }
+        ]
+        actions = {
+            update-props = {
+                {{ __stream_properties | relative_indent(times=4, **_indent) }}
+            }
+        }
+    }
+
+]

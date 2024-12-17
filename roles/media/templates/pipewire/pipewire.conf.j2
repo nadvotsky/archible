@@ -1,0 +1,180 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- macro _channels_render() -%}
+    {{ media.cards | dict2items | map(attribute="value.channels") | map("length") | min() }}
+{%- endmacro -%}
+
+{%- macro _position_render() -%}
+    {% set _min_pos = [] %}
+    {% for _card in media.cards.values() %}
+        {% set _ = _min_pos.append({
+            "length": _card.channels | length,
+            "position": _card.channels,
+        }) %}
+    {% endfor %}
+    [ {{ (_min_pos | min(attribute="length")).position | join(" ") }} ]
+{%- endmacro -%}
+
+#
+# PipeWire daemon configuration.
+#
+context.properties = {
+    core.daemon = true
+    core.name = pipewire-0
+
+    support.dbus = true
+
+    loop.rt-prio = -1
+    context.num-data-loops = 1
+
+    {{ __context_properties | relative_indent(times=1, **_indent) }}
+}
+
+context.spa-libs = {
+{% if media.features.video_v4l2 is true %}
+    api.v4l2.* = v4l2/libspa-v4l2
+{% endif %}
+{% if media.features.video_libcamera is true %}
+    api.libcamera.* = libcamera/libspa-libcamera
+{% endif %}
+{% if media.features.bluetooth is true %}
+    api.bluez5.* = bluez5/libspa-bluez5
+{% endif %}
+{% if media.features.jack is true %}
+    api.jack.* = jack/libspa-jack
+{% endif %}
+    api.alsa.* = alsa/libspa-alsa
+    api.vulkan.* = vulkan/libspa-vulkan
+
+    support.* = support/libspa-support
+
+    audio.convert.* = audioconvert/libspa-audioconvert
+    video.convert.* = videoconvert/libspa-videoconvert
+}
+
+context.modules = [
+
+    {{ __realtime_properties | relative_indent(times=1, **_indent) }}
+
+    {
+        name = libpipewire-module-protocol-native
+        args = {
+            sockets = [
+                { name = pipewire-0 }
+                { name = pipewire-0-manager }
+            ]
+        }
+    }
+
+    { name = libpipewire-module-client-node }
+    { name = libpipewire-module-client-device }
+
+    { name = libpipewire-module-adapter }
+    { name = libpipewire-module-link-factory }
+
+    { name = libpipewire-module-profiler }
+    { name = libpipewire-module-metadata }
+
+    { name = libpipewire-module-session-manager }
+    { name = libpipewire-module-portal }
+
+{% if media.features.video_v4l2 is true or media.features.video_libcamera is true %}
+    { name = libpipewire-module-spa-device-factory }
+    { name = libpipewire-module-spa-node-factory }
+
+{% endif %}
+    {
+        name = libpipewire-module-access
+        args = {
+            access.legacy = false
+            access.socket = {
+                pipewire-0 = default
+                pipewire-0-manager = unrestricted
+            }
+        }
+    }
+
+{% if media.features.loopback is true %}
+    {
+        name = libpipewire-module-loopback
+        args = {
+            audio.position = {{ _position_render() | relative_indent }}
+            capture.props = {
+                node.name = loopback-input
+                node.description = "Loopback Input"
+                media.class = Audio/Sink
+                priority.session = 0
+            }
+            playback.props = {
+                node.name = loopback-output
+                node.description = "Loopback Output"
+                node.passive = true
+            }
+        }
+        flags = [ ifexists nofail ]
+    }
+
+{% endif %}
+{% if media.features.rnnoise is true %}
+    {
+        name = libpipewire-module-filter-chain
+        args = {
+            node.description = "RNNoise"
+            filter.graph = {
+                nodes = [
+                    {
+                        type = ladspa
+                        name = rnnoise
+                        label = noise_suppressor_mono
+                        plugin = /usr/lib/ladspa/librnnoise_ladspa.so
+                        control = {
+                            "VAD Threshold (%)" = {{ media.rnnoise_threshold }}
+                            "VAD Grace Period (ms)" = 300
+                            "Retroactive VAD Grace (ms)" = 0
+                        }
+                    }
+                ]
+            }
+            capture.props = {
+                node.name =  "rnnoise-input"
+                node.description = "RNNoise Input"
+                node.passive = true
+
+                audio.rate = 48000
+            }
+            playback.props = {
+                node.name = "rnnoise-output"
+                node.description = "RNNoise Output"
+                media.class = Audio/Source
+
+                priority.session = 9999
+                audio.rate = 48000
+            }
+        }
+        flags = [ ifexists nofail ]
+    }
+
+{% endif %}
+{% if media.features.jack is true %}
+    {
+        name = libpipewire-module-jackdbus-detect
+        args = {
+            jack.client-name = PipeWire
+            jack.connect = true
+            tunnel.mode = duplex
+            source.props = {
+                audio.channels = {{ _channels_render() | relative_indent }}
+                audio.position = {{ _position_render() | relative_indent }}
+                midi.ports = {{ media.features.midi is true | ternary(1, 0) }}
+            }
+            sink.props = {
+                audio.channels = {{ _channels_render() | relative_indent }}
+                audio.position = {{ _position_render() | relative_indent }}
+                midi.ports = {{ media.features.midi is true | ternary(1, 0) }}
+            }
+        }
+        flags = [ ifexists nofail ]
+    }
+
+{% endif %}
+]
