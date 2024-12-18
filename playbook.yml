@@ -16,9 +16,10 @@
     - { role: bootloader, tags: bootloader }
     - { role: system, tags: system }
     - { role: user, tags: user }
-    - { role: graphics, tags: graphics }
     - { role: shell, tags: shell }
+    - { role: graphics, tags: graphics }
+    - { role: media, tags: media }
     - { role: apps, tags: apps }
     - { role: dev, tags: dev }
-    - { role: cleanup, tags: cleanup }
-    - { role: pull, tags: pull }
+    # - { role: cleanup, tags: cleanup }
+    # - { role: pull, tags: pull }
