@@ -59,6 +59,40 @@
         user: true
         stop: true
 
+# TODO: add position_fix kernel parameter
+
+#
+# Alsa card profile configuration allows to set up the way PulseAudio/PipeWire talks to the alsa.
+#
+# The algorithm for ACP is common for both PulseAudio and PipeWire as they share the same codebase,
+#  though PipeWire includes a handly spa-acp-tool utility that makes the debugging easier.
+#
+# For more information about syntax and entities, refer to the:
+#  https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/mixer/profile-sets/default.conf
+#  https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/mixer/paths/analog-output.conf.common
+#
+# Having a custom profile set is beneficial in the number of ways:
+#  - blacklist ports that have never been used in the usual headphones setup, but still visible in the settings;
+#  - blacklist the whole screen of different 7.1, 5.1, ... profiles that have no use;
+#  - solve various compatibility issues such as crackling sound when plugging headphones because of the line boost;
+#  - correct profile and device naming instead of generic Analog Stereo;
+#  - complete control over all alsa mixers, including boosts, loopback, and auto-mute;
+#  - gain a 0.000001s sound server startup boost! :)
+#
+# To retrieve the list of jacks:
+#  alsactl dump-state
+#  or alsa-info.sh --with-alsactl --no-upload
+#
+# To retrieve the list of enumerations and elements:
+#  amixer -c0 scontents
+#  or alsa-info.sh --with-amixer --no-upload
+#
+# The are also the well-known keys for most of the units:
+#  Profiles: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n4735
+#  Mappings: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n4566
+#  Options: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n2706
+#  Paths: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n2794
+#
 - name: Configure ALSA card profiles
   tags:
     - audio-acp
