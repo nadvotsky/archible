@@ -15,20 +15,13 @@
               become: true
               file: booster/booster.yaml
 
-    - name: Remove mkinitcpio, default initramfs generator
-      ansible.builtin.import_role:
-        name: common
-      vars:
-        _common_packages:
-          remove:
-            - mkinitcpio
-
 - name: Configure kernel-install
   ansible.builtin.import_role:
     name: common
   vars:
     _common_packages:
-      - pacman-hook-kernel-install
+      install:
+        - pacman-hook-kernel-install
 
     _common_install:
       defaults:
@@ -36,7 +29,7 @@
         base: /etc
       targets:
         kernel/install.conf:
-          file: install.conf
+          file: kernel-install/install.conf
 
         kernel/install.d/60-booster.install:
           wipe: true
@@ -51,9 +44,17 @@
         pacman.d/hooks/60-booster-install.hook:
           link: /dev/null
 
-- name: Install bootloader
+- name: Generate initrd
   block:
-    - name: Trigger kernel-install by reinstalling booster
+    - name: Patch booster to use universal image
+      when: policy.headless is true
+      ansible.builtin.lineinfile:
+        path: /etc/booster.yaml
+        backrefs: true
+        regexp: '^universal: .*$'
+        line: "universal: true"
+
+    - name: Trigged kernel-install by installing booster
       ansible.builtin.import_role:
         name: common
       vars:
@@ -61,8 +62,20 @@
           install:
             - booster
           force: true
+  always:
+    - name: Restore booster configuration file
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          targets:
+            /etc/booster.yaml:
+              become: true
+              file: booster/booster.yaml
 
-    - name: Install systemd-boot
+- name: Configure systemd-boot bootloader
+  block:
+    - name: Invoke systemd-boot
       ansible.builtin.command:
         argv:
           - bootctl
@@ -86,6 +99,14 @@
 - name: Clean unnecessary files
   when: policy.destructive is true
   block:
+    - name: Remove mkinitcpio, default initramfs generator
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          remove:
+            - mkinitcpio
+
     - name: Remove systemd-boot directories that have no use
       ansible.builtin.file:
         path: "/boot/EFI/{{ item }}"

@@ -50,18 +50,18 @@ machine:
     #
     iommu: "off"
     amd_iommu: "off"
-    gbpages:
+    gbpages: ~
     mce: "off"
     align_va_addr: "on"
     ipv6.disable: "1"
     apparmor: "0"
     audit: "0"
-    cgroup_disable: memory
-    clocksource: tsc
-    console_msg_format: syslog
-    cpufreq.default_governor: performance
-    cpuidle.governor: teo
-    cryptomgr.notests:
+    cgroup_disable: "memory"
+    clocksource: "tsc"
+    console_msg_format: "syslog"
+    cpufreq.default_governor: "performance"
+    cpuidle.governor: "teo"
+    cryptomgr.notests: ~
     debugfs: "off"
     dis_ucode_ldr: ~
     driver_async_probe: "*"
@@ -71,33 +71,33 @@ machine:
     hpet_mmap: "1"
     ia32_emulation: "false"
     ima_appraise: "off"
-    ima_policy: critical_data
+    ima_policy: "critical_data"
     init_on_alloc: "0"
     init_on_free: "0"
-    iomem: relaxed
-    io_delay: none
+    iomem: "relaxed"
+    io_delay: "none"
     kmemleak: "off"
     kunit.enable: "0"
     logo.nologo: ~
     lp: "0"
     memory_corruption_check: "0"
     mitigations: "off"
-    nohibernate:
-    nosoftlockup:
-    nowatchdog:
+    nohibernate: ~
+    nosoftlockup: ~
+    nowatchdog: ~
     panic: "0"
     parport: "0"
     nopti: ~
-    preempt: full
-    ras: cec_disable
+    preempt: "full"
+    ras: "cec_disable"
     rootdelay: "0"
     selinux: "0"
     sysrq_always_enabled: ~
-    transparent_hugepage: always
-    lsm: capability,yama,bpf
+    transparent_hugepage: "always"
+    lsm: "capability,yama,bpf"
     split_lock_detect: "off"
     no_timer_check: ~
-    pci: pcie_bus_perf
+    pci: "pcie_bus_perf"
     #
     # systemd related
     #
@@ -132,10 +132,10 @@ machine:
     #
     # initrd
     #
-    rootfstype: xfs
+    rootfstype: "xfs"
     rootflags: *machine-mountopts-root
     rw: ~
-    booster.log: error
+    booster.log: "error"
     #
     # frequently used
     #

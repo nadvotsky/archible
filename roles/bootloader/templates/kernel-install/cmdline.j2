@@ -1,9 +1,9 @@
 {% set _cmdline = [] %}
 {% for _key, _value in machine.cmdline.items() %}
-    {% if _value is not none %}
-        {% set _ = _cmdline.append("{}={}".format(_key, _value)) %}
-    {% else %}
+    {% if _value is none %}
         {% set _ = _cmdline.append(_key) %}
+    {% else %}
+        {% set _ = _cmdline.append("{}={}".format(_key, _value)) %}
     {% endif %}
 {% endfor %}
 {##}
