@@ -7,7 +7,7 @@ argument_specs:
         type: dict
         required: false
         description:
-          - Packaging tasks
+          - Packaging tasks.
         options:
           remove:
             type: list
@@ -15,6 +15,12 @@ argument_specs:
             required: false
             description:
               - List of the packages to remove.
+          force:
+            type: bool
+            required: false
+            description:
+              - Whenever to forcefully install package even if it already installed.
+              - Might be useful to trigger installation hooks.
           sync:
             type: bool
             required: false
@@ -48,13 +54,13 @@ argument_specs:
                 required: false
                 default: false
                 description:
-                  - Whenever use the ansible 'become' mechanism.
+                  - Whenever to use the ansible 'become' mechanism.
               wipe:
                 type: bool
                 required: false
                 default: false
                 description:
-                  - Whenever wipe the directory the target belongs to.
+                  - Whenever to wipe the directory the target belongs to.
               filemode:
                 type: str
                 required: false
@@ -79,15 +85,16 @@ argument_specs:
             elements: str
             required: false
             description:
-              - An additional list of directories to wipe.
+              - An additional list of filesystem entries to wipe.
           targets:
             type: dict
             description:
               - A mapping of the target to its options.
               - >-
-                Each key must either be relative or absolute, consisting of the following items:
-                `become`, `wipe`, `filemode`, `dirmode`, and `base`, which have the same meaning as `defaults`,
-                along with `content`, `template`, and `file` for specifying the source for the target, respectively.
+                Each key must either be relative or absolute path with at least two parts (so that dirname exists),
+                consisting any of the following items: `become`, `wipe`, `filemode`, `dirmode`, and `base`,
+                which have the same meaning as `defaults`, along with `content`, `template`, and `file`
+                for specifying the source for the target, respectively.
 
       _common_services:
         type: dict
