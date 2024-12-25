@@ -104,6 +104,18 @@ argument_specs:
         description:
           - Retrieves previously generated GnuPG key metadata.
 
+      _common_cmdline:
+        type: dict
+        required: false
+        description:
+          - Updates the kernel command-line parameters for the next boot.
+          - Must be mapping, where each key denotes name of the parameter, and key its value.
+          - >-
+            Value may take several forms:
+             - null (i.e. YAML `~` or empty) => rendered as `key`, previous keys are overwritten.
+             - string => rendered as `key=value`, previous values are overwritten.
+             - array => rendered as `key=value1,value2`, previous values are merged.
+
       _common_groups:
         type: list
         elements: str

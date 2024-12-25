@@ -298,6 +298,35 @@
           - --preserve-permissions
       become: "{{ __become }}"
 
+
+- name: Common kernel cmdline operation
+  when: _common_cmdline is defined
+  block:
+    - name: Read current cmdline file
+      ansible.builtin.slurp:
+        src: /etc/kernel/cmdline
+      register: __cmdline
+
+    - name: Inject new kernel cmdline variables
+      ansible.builtin.template:
+        src: cmdline/cmdline.j2
+        dest: /etc/kernel/cmdline
+        mode: "0644"
+        owner: 0
+        group: 0
+        lstrip_blocks: true
+        trim_blocks: true
+      become: true
+
+    - name: Run kernel-install to after cmdline change
+      ansible.builtin.command:
+        argv:
+          - kernel-install
+          - add-all
+      register: __kernel_install_invocation
+      changed_when: __kernel_install_invocation.rc == 0
+      become: true
+
 - name: Common user groups management
   when: _common_groups is defined
   ansible.builtin.user:
