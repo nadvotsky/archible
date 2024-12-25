@@ -2,7 +2,7 @@
 - name: Common packaging tasks
   when: _common_packages is defined
   vars:
-    __cmdline: /usr/bin/paru --sudoflags "--stdin" --noconfirm
+    __paru_args: /usr/bin/paru --sudoflags "--stdin" --noconfirm
     __assert: &paru-assert
       register: __paru_invocation
       changed_when: __paru_invocation.rc == 0
@@ -10,7 +10,7 @@
     - name: Remove packages
       when: _common_packages.remove is defined
       ansible.builtin.command:
-        cmd: "{{ __cmdline }} --remove --recursive {{ _common_packages.remove | join(' ') }}"
+        cmd: "{{ __paru_args }} --remove --recursive {{ _common_packages.remove | join(' ') }}"
         stdin: "{{ users.user.password }}"
       register: __paru_invocation
       failed_when: false
@@ -21,7 +21,7 @@
       when: _common_packages.sync is true or _common_packages.upgrade is true
       ansible.builtin.command:
         cmd: >-
-          {{ __cmdline }}
+          {{ __paru_args }}
           {{ _common_packages.sync is true | ternary('--refresh', '') }}
           {{ _common_packages.upgrade is true | ternary('--sysupgrade', '') }}
         stdin: "{{ users.user.password }}"
@@ -31,7 +31,7 @@
       when: _common_packages.install is defined
       ansible.builtin.command:
         cmd: >-
-          {{ __cmdline }}
+          {{ __paru_args }}
           {{ ['--sync', _common_packages.force is true | ternary(none, '--needed')] | reject('none') | join(' ') }}
           {{ _common_packages.install | join(' ') }}
         stdin: "{{ users.user.password }}"
@@ -42,8 +42,8 @@
     __defaults: >-
       {{
         {
-          'become': False,
-          'wipe': False,
+          'become': false,
+          'wipe': false,
           'filemode': '0644',
           'dirmode': '0755',
           'base': users.user.config,
@@ -54,7 +54,7 @@
       owner: "{{ item.value.become | default(__defaults.become) is true | ternary(0, omit) }}"
       group: "{{ item.value.become | default(__defaults.become) is true | ternary(0, omit) }}"
   block:
-    - name: Wipe explicitly marked directories
+    - name: Wipe explicitly marked files and directories
       when: policy.destructive is true and _common_install.wipes is defined
       ansible.builtin.file:
         path: "{{ item is abs | ternary(item, [__defaults.base, item] | path_join) }}"
