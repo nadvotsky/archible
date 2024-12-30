@@ -217,7 +217,6 @@
     ("line_delete", ["edit: MoveToLineStart", "edit: ClearToLineEnd"]),
 
     ("cycle_next", [_binds_until, "send: menu, name: completion_menu", "send: menunext", "edit: complete"]),
-    ("cycle_prev", "send: menuprevious"),
 
     ("undo", "edit: Undo"),
     ("redo", "edit: Redo"),
@@ -335,6 +334,12 @@
             "key": "char_h",
             "mode": _binds_mode_all,
             "evn": "edit: Delete",
+        },
+        "shift-backtab": {
+            "mods": "shift",
+            "key": "backtab",
+            "mode": _binds_mode_all,
+            "evn": "send: menuprevious",
         },
     }) %}
 {%- endmacro -%}

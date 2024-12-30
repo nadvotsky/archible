@@ -174,7 +174,7 @@
       ansible.builtin.uri:
         url:
           "https://raw.githubusercontent.com/nushell/nushell/refs/heads/main/\
-          crates/nu-utils/src/sample_config/default_config.nu"
+          crates/nu-utils/src/default_files/default_config.nu"
         method: GET
         return_content: true
       register: __default_config
