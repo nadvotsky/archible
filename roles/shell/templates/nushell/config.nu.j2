@@ -598,6 +598,11 @@ $env.config = {
     highlight_resolved_externals: true,
     recursion_limit: 50,
 
+    display_errors: {
+        exit_code: true,
+        termination_signal: true,
+    },
+
     plugin_gc: {
         default: {
             enabled: true,
@@ -607,6 +612,11 @@ $env.config = {
 
     hooks: {
         pre_prompt: [
+            {% if ["shell-starship", "shell-prompt"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+            {
+                $env.PROMPT_STATUS = ($env.LAST_EXIT_CODE | default 0)
+            },
+            {% endif %}
             {% if ["shell-atuin", "shell-history"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
             {
                 condition: { 'ATUIN_HISTORY_ID' in $env },
