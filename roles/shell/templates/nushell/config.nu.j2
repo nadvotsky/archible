@@ -457,21 +457,23 @@ def --wrapped --env mise [...rest: string] {
            $env.MISE_SHELL = "nu"
         },
         "hook-env" | "deactivate" | "shell" => {
-            let parsed = (^/usr/bin/mise ...$rest) | from csv --noheaders;
+            let parsed = (^/usr/bin/mise ...$rest)
+                | from csv --noheaders
+                | rename op variable value
 
             $parsed
-                | where column1 == set
+                | where op == set
                 | reduce -f {} {|it, acc|
-                    let val = if ($it.column2 == "PATH") {
-                        ($it.column3 | split row (char esep))
+                    let val = if ($it.variable == "PATH") {
+                        ($it.value | split row (char esep))
                     } else {
-                        $it.column3
+                        $it.value
                     }
 
-                    $acc | upsert $it.column2 $val
+                    $acc | upsert $it.variable $val
                 }
                 | load-env
-            hide-env ...($parsed | where column1 == hide | each {|it| $it.column2 })
+            hide-env ...($parsed | where op == hide | each {|it| $it.variable })
 
             if ($rest.0 == "deactivate") {
                 hide-env ...($env | columns | filter {|$k| $k | str contains "MISE" })
