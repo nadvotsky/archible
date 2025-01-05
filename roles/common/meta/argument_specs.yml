@@ -170,3 +170,16 @@ argument_specs:
         required: false
         description:
           - Modifies global system-wide /etc/environment file with the provided key-value pairs.
+        elements: dict
+        options:
+          key:
+            type: str
+            required: true
+            description:
+              - Key of the environmental variable.
+          value:
+            type: str
+            required: true
+            description:
+              - Value of the environmental variable.
+
