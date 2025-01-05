@@ -74,11 +74,18 @@
     _common_packages:
       install:
         - dunst
+
     _common_install:
       targets:
         dunst/dunstrc:
           wipe: true
           template: dunst/dunstrc.j2
+
+    _common_services:
+      targets:
+        dunst.service:
+          - user
+          - disable
 
 - name: Configure picom compositor
   tags:

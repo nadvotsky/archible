@@ -1,7 +1,7 @@
 ---
 #
 # alsa-utils contains alsa-restore.service and alsa-state.service
-#  are not recommended to be used with sound server.
+#  that are not recommended to be used with sound server.
 #
 - name: Reset Alsa
   when: policy.destructive is true
@@ -16,7 +16,7 @@
 
     - name: Remove persistent alsa configuration
       ansible.builtin.file:
-        path: "{{ item }}"
+        path: "{{ item }}" 
         state: absent
       become: true
       loop:
@@ -25,7 +25,7 @@
 
 - name: Install PipeWire
   tags:
-    - audio-install # TODO: add position_fix
+    - audio-install
   ansible.builtin.import_role:
     name: common
   vars:
@@ -45,21 +45,22 @@
           ] | reject("none")
         }}
 
+    _common_services:
+      defaults:
+        - user
+        - enable
+        - stop
+      targets:
+        pipewire.service:
+        pipewire.socket:
+        pipewire-pulse.service:
+        pipewire-pulse.socket:
+        wireplumber.service:
+
     _common_groups:
       - rtkit
 
-    _common_services:
-      pipewire-pulse.service:
-        user: true
-        stop: true
-      wireplumber:
-        user: true
-        stop: true
-      pipewire:
-        user: true
-        stop: true
-
-# TODO: add position_fix kernel parameter
+    _common_cmdline: "{{ media.cmdline }}"
 
 #
 # Alsa card profile configuration allows to set up the way PulseAudio/PipeWire talks to the alsa.
@@ -223,17 +224,17 @@
             wireplumber/wireplumber.conf.d/10-config.conf:
               template: wireplumber/10-config.conf.j2
 
-- name: Start pipewire services
+- name: Restart media services
   ansible.builtin.import_role:
     name: common
   vars:
     _common_services:
-      pipewire-pulse.service:
-        user: true
-        start: true
-      wireplumber:
-        user: true
-        start: true
-      pipewire:
-        user: true
-        start: true
+      defaults:
+        - user
+        - start
+      targets:
+        pipewire.service:
+        pipewire.socket:
+        pipewire-pulse.service:
+        pipewire-pulse.socket:
+        wireplumber.service:

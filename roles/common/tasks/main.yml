@@ -163,33 +163,93 @@
 
 - name: Common systemd service management
   when: _common_services is defined
+  vars:
+    __defaults: "{{ _common_services.defaults | default([]) }}"
   ansible.builtin.systemd_service:
     name: "{{ item.key }}"
-    scope: "{{ item.value.user is true | ternary('user', omit) }}"
-    daemon_reload: "{{ item.value.reload is true | ternary(true, omit) }}"
-    masked: "{{ item.value.mask is true | ternary(true, omit) }}"
+    daemon_reload: "{{ ('reload' in (__defaults + item.value)) | ternary(true, omit) }}"
+    scope: >-
+      {{
+        [
+          ("user" in item.value) | ternary(true, none),
+          ("user" in __defaults) | ternary(true, none),
+        ]
+          | reject("none")
+          | first_or_default(none)
+          | ternary("user", omit)
+      }}
+    masked: >-
+      {{
+        [
+          ("mask" in item.value) | ternary(true, none),
+          ("unmask" in item.value) | ternary(false, none),
+
+          ("mask" in __defaults) | ternary(true, none),
+          ("unmask" in __defaults) | ternary(false, none),
+        ]
+          | reject("none")
+          | first_or_default(none)
+          | ternary(true, false, false)
+      }}
     enabled: >-
       {{
-        (
-          item.value.enable is true | ternary(true, None)
-          or item.value.disable is true | ternary(false, None)
-        ) | ternary(true, false, omit)
+        [
+          ("enable" in item.value) | ternary(true, none),
+          ("disable" in item.value) | ternary(true, none),
+
+          ("enable" in __defaults) | ternary(true, none),
+          ("disable" in __defaults) | ternary(true, none),
+        ]
+          | reject("none")
+          | first_or_default(none)
+          | ternary(true, false, omit)
       }}
     state: >-
       {{
-        (
-          item.value.enable is true | ternary(true, None)
-          or item.value.start is true | ternary(true, None)
-          or item.value.disable is true | ternary(false, None)
-          or item.value.mask is true | ternary(false, None)
-          or item.value.stop is true | ternary(false, None)
-        ) | ternary('restarted', 'stopped', omit)
+        [
+          ("start" in item.value) | ternary(true, none),
+          ("stop" in item.value) | ternary(false, none),
+          ("unmask" in item.value) | ternary(true, none),
+          ("mask" in item.value) | ternary(false, none),
+          ("enable" in item.value) | ternary(true, none),
+          ("disable" in item.value) | ternary(false, none),
+
+          ("start" in __defaults) | ternary(true, none),
+          ("stop" in __defaults) | ternary(false, none),
+          ("unmask" in __defaults) | ternary(true, none),
+          ("mask" in __defaults) | ternary(false, none),
+          ("enable" in __defaults)| ternary(true, none),
+          ("disable" in __defaults) | ternary(false, none),
+        ]
+          | reject("none")
+          | first_or_default(none)
+          | ternary("restarted", "stopped", omit)
       }}
   environment:
-    SYSTEMD_OFFLINE: "{{ '1' if ansible_connection == 'nspawn' else omit }}"
-    SYSTEMD_IN_CHROOT: "{{ '1' if ansible_connection == 'nspawn' else omit }}"
-  become: "{{ item.value.user is true | ternary(omit, true) }}"
-  loop: "{{ _common_services | dict2items }}"
+    SYSTEMD_OFFLINE: "{{ '1' if policy.headless else omit }}"
+    SYSTEMD_IN_CHROOT: "{{ '1' if policy.headless else omit }}"
+  become: >-
+    {{
+      [
+        ("user" in item.value) | ternary(false, none),
+        ("system" in item.value) | ternary(true, none),
+
+        ("user" in __defaults) | ternary(false, none),
+        ("system" in __defaults) | ternary(true, none),
+      ]
+        | reject("none")
+        | first_or_default(none)
+        | ternary(true, omit, true)
+    }}
+  loop: >-
+    {%- set _acc = [] -%}
+    {%- for _item in _common_services.targets | dict2items -%}
+      {%- set _ = _acc.append({
+        "key": _item.key,
+        "value": _item.value is none | ternary([], _item.value),
+      }) -%}
+    {%- endfor -%}
+    {{ _acc }}
 
 - name: Get GnuPG key metadata
   when: _common_gpg is defined

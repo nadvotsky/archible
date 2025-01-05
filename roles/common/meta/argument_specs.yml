@@ -44,7 +44,7 @@ argument_specs:
         description:
           - Installation tasks (wiping, creating required directories, rendering files, etc).
         options:
-          defaults:
+          defaults: &common-install-opts
             type: dict
             description:
               - Sets default flags for all targets that did not specify it explicitly.
@@ -100,10 +100,45 @@ argument_specs:
         type: dict
         required: false
         description:
-          - Service manager
-          - >-
-              Each key must be the name of a service to stop, and the item must be a mapping that includes
-              any of the following flags: `enable`, `disable`, `mask`, `stop`, or `start`.
+          - Service manager.
+        options:
+          defaults:
+            type: list
+            elements: str
+            required: false
+            description:
+              - Sets default flags for all targets that did not specify it explicitly.
+              - >-
+                'user' or 'system' switches between user and system manager instances.
+              - >-
+                'reload' requests the service manager to reload its configuration.
+                Apparently useful it case of service configuration change.
+              - >-
+                'start' or 'stop' sets whether service must be restarted or stopped.
+              - >-
+                'mask' or 'unmask' sets whether it must be impossible to load the service
+                even if it is a hard dependency of other services.
+                There are the following possible scenarios according to the passed value:
+                 - 'mask' => implies 'start'
+                 - 'unmask' => implies 'stop'
+                 - nothing => defaults to 'unmask', but without implying neither 'mask' nor 'stop'.
+              - >-
+                'enable' or 'disable' sets whether service must be enabled or disabled at startup automatically.
+                Specifying 'enable' also implies 'start', and 'disable' implies 'stop'.
+            choices:
+              - user
+              - system
+              - reload
+              - mask
+              - unmask
+              - enable
+              - disable
+              - stop
+              - start
+          targets:
+            type: dict
+            description:
+              - A mapping of the target to its options.
 
       _common_gpg:
         type: str

@@ -9,6 +9,18 @@ policy:
   # It also removes unnecessary files for bootloader, user profile, and similar.
   #
   destructive: true
+  #
+  # Headless installation flag is important for tasks
+  #  that need to know whether machine is actually booted,
+  #  i.e. in the consitent and defined state.
+  #
+  # This flag is used in:
+  #  service management (is service running and needs to be stopped),
+  #  temporary files creation (/tmp is mounted or use /var/tmp),
+  #  and others.
+  #
+  headless: "{{ ansible_connection == 'nspawn' }}"
+
 
 persist: "{{ playbook_dir }}/persist"
 

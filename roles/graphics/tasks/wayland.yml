@@ -19,10 +19,6 @@
         - jq
         - playerctl
 
-    _common_environment:
-      - key: LIBSEAT_BACKEND
-        value: logind
-
     _common_install:
       targets:
         hypr/hyprland.conf:
@@ -37,11 +33,19 @@
             org.freedesktop.impl.portal.GlobalShortcuts=hyprland
 
     _common_services:
-      seatd:
-        enable: true
+      targets:
+        seatd:
+          - enable
+        xdg-desktop-portal-hyprland:
+          - user
+          - unmask
 
     _common_groups:
       - seat
+
+    _common_environment:
+      - key: LIBSEAT_BACKEND
+        value: logind
 
 - name: Configure hyprland no-X launch
   tags:
@@ -76,6 +80,12 @@
       install:
         - waybar
 
+    _common_services:
+      targets:
+        waybar.service:
+          - user
+          - disable
+
     _common_install:
       defaults:
         wipe: true
@@ -95,6 +105,12 @@
     _common_packages:
       install:
         - mako
+
+    _common_services:
+      targets:
+        mako.service:
+          - user
+          - disable
 
     _common_install:
       targets:

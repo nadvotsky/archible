@@ -12,6 +12,17 @@
         - nvidia-utils
         - nvidia-settings
         - libva-nvidia-driver
+
+    _common_services:
+      defaults:
+        - disable
+      targets:
+        nvidia-hibernate.service:
+        nvidia-persistenced.service:
+        nvidia-powerd.service:
+        nvidia-resume.service:
+        nvidia-suspend.service:
+
     #
     # VA-API <-> NvDEC bridge
     #
@@ -72,9 +83,10 @@
           Alias=display-manager.service
 
     _common_services:
-      ly:
-        enable: true
-        reload: true
+      targets:
+        ly.service:
+          - reload
+          - enable
 
 - name: Include look tasks
   tags:
@@ -94,6 +106,14 @@
           install:
             - xdg-desktop-portal
             - xdg-desktop-portal-gtk
+
+        _common_services:
+          defaults:
+            - user
+            - unmask
+          targets:
+            xdg-desktop-portal:
+            xdg-desktop-portal-gtk:
 
     - name: Create highest precedence configuration directory for XDG desktop portals
       ansible.builtin.file:
@@ -126,6 +146,7 @@
         - rofi-emoji-git
       remove:
         - rofi-emoji
+
     _common_install:
       targets:
         rofi/config.rasi:

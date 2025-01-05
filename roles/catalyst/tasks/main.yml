@@ -17,8 +17,9 @@
           file: network/20-cloudfare-dns-over-tls.conf.j2
 
     _common_services:
-      systemd-networkd:
-        enable: true
+      targets:
+        systemd-networkd.service:
+          - enable
 
 - name: Configure DNS resolver and cache
   tags:
@@ -34,8 +35,9 @@
           link: /run/systemd/resolve/stub-resolv.conf
 
     _common_services:
-      systemd-resolved:
-        enable: true
+      targets:
+        systemd-resolved.service:
+          - enable
 
 - name: Configure sudo
   tags:

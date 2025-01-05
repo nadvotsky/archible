@@ -47,18 +47,15 @@
         name: common
       vars:
         _common_services:
-          dirmngr@etc-pacman.d-gnupg.socket:
-            mask: true
-          gpg-agent-browser@etc-pacman.d-gnupg.socket:
-            mask: true
-          gpg-agent-extra@etc-pacman.d-gnupg.socket:
-            mask: true
-          gpg-agent-ssh@etc-pacman.d-gnupg.socket:
-            mask: true
-          gpg-agent@etc-pacman.d-gnupg.socket:
-            mask: true
-          keyboxd@etc-pacman.d-gnupg.socket:
-            mask: true
+          defaults:
+            - mask
+          targets:
+            dirmngr@etc-pacman.d-gnupg.socket:
+            keyboxd@etc-pacman.d-gnupg.socket:
+            gpg-agent-browser@etc-pacman.d-gnupg.socket:
+            gpg-agent-extra@etc-pacman.d-gnupg.socket:
+            gpg-agent-ssh@etc-pacman.d-gnupg.socket:
+            gpg-agent@etc-pacman.d-gnupg.socket:
 
     - name: Reset pacman keyring
       when: policy.destructive is true

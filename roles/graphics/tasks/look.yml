@@ -89,7 +89,7 @@
             [Fonts]
             fixed="{{ fonts.monospace.name }},{{ fonts.monospace.sizes.small }},-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
             general="{{ fonts.sans_serif.name }},{{ fonts.sans_serif.sizes.small }},-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
-        qt6ct/qt6ct.conf":
+        qt6ct/qt6ct.conf:
           content: *qtctconf
 
 - name: Configure GTK applications
@@ -104,6 +104,38 @@
         - gtk4
         - "{{ gui.gtk.package }}"
 
+    _common_install:
+      defaults:
+        wipe: true
+      wipes:
+        - dconf
+        - glib-2.0
+      targets:
+        glib-2.0/settings/keyfile:
+          content: |
+            [org/gnome/desktop/interface]
+            icon-theme={{ icons.main.name }}
+            enable-animations=false
+            gtk-theme={{ gui.gtk.name }}
+            font-name={{ fonts.sans_serif.name }} {{ fonts.sans_serif.sizes.small }}
+            document-font-name={{ fonts.serif.name }} {{ fonts.serif.sizes.small }}
+            monospace-font-name={{ fonts.monospace.name }} {{ fonts.monospace.sizes.small }}
+            clock-format=12h
+            clock-show-seconds=true
+            color-scheme=prefer-dark
+        gtk-3.0/settings.ini:
+          content: &settingsini |
+            [Settings]
+            gtk-font-name = {{ fonts.sans_serif.name }} {{ fonts.sans_serif.sizes.small }}
+            gtk-icon-theme-name = {{ icons.main.name }}
+            gtk-application-prefer-dark-theme = true
+            gtk-recent-files-enabled = false
+            gtk-enable-animations = false
+            gtk-error-bell = false
+            gtk-theme-name = {{ gui.gtk.name }}
+        gtk-4.0/settings.ini:
+          content: *settingsini
+
     #
     # GTK settings priority (also refer to the gtk/gtk/gtksettings.c):
     # x11:
@@ -117,34 +149,3 @@
     _common_environment:
       - key: GSETTINGS_BACKEND
         value: keyfile
-
-    _common_install:
-      defaults:
-        wipe: true
-      wipes:
-        - dconf
-        - glib-2.0
-      targets:
-        glib-2.0/settings/keyfile: |
-          [org/gnome/desktop/interface]
-          icon-theme={{ icons.main.name }}
-          enable-animations=false
-          gtk-theme={{ gui.gtk.name }}
-          font-name={{ fonts.sans_serif.name }} {{ fonts.sans_serif.sizes.small }}
-          document-font-name={{ fonts.serif.name }} {{ fonts.serif.sizes.small }}
-          monospace-font-name={{ fonts.monospace.name }} {{ fonts.monospace.sizes.small }}
-          clock-format=12h
-          clock-show-seconds=true
-          color-scheme=prefer-dark
-        gtk3.0/settings.ini:
-          content: &settingsini |
-            [Settings]
-            gtk-font-name = {{ fonts.sans_serif.name }} {{ fonts.sans_serif.sizes.small }}
-            gtk-icon-theme-name = {{ icons.main.name }}
-            gtk-application-prefer-dark-theme = true
-            gtk-recent-files-enabled = false
-            gtk-enable-animations = false
-            gtk-error-bell = false
-            gtk-theme-name = {{ gui.gtk.name }}
-        gtk4.0/settings.ini:
-          content: *settingsini

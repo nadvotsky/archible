@@ -106,11 +106,7 @@
         _common_packages:
           install:
             - xdg-user-dirs
-
-        _common_services:
-          xdg-user-dirs-update:
-            user: true
-            disable: true
+            - dex
 
     - name: Create XDG user directories
       ansible.builtin.file:
@@ -152,6 +148,13 @@
     _common_packages:
       install:
         - openssh
+
+    _common_services:
+      defaults:
+        - disable
+      targets:
+        sshdgenkeys.service:
+        sshd.service:
 
     _common_install:
       defaults:
