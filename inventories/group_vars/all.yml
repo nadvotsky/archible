@@ -126,13 +126,6 @@ machine:
     module_blacklist: "snd_hda_codec_hdmi,snd_seq,asus_wmi"
     snd_hda_intel.position_fix: 6
     #
-    # video
-    #
-    video: efifb:mode=0
-    nvidia.NVreg_InitializeSystemMemoryAllocations: "0"
-    nvidia.NVreg_UsePageAttributeTable: "1"
-    nvidia_drm.modeset: "1"
-    #
     # sysctl
     #
     sysctl.kernel.stack_erasing: "0"
