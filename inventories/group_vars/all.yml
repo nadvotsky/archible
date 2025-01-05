@@ -382,8 +382,11 @@ media:
   # Percentage of complexity
   #
   resampling: 0.5
+  #
+  # If hard limit is required instead, there is `volume-limit` in the acp.
+  #
   volume:
-    output: 0.68 # -10db
+    output: 0.68 # -10 db
     input: 0.56 # -25 db
   #
   # List of the apps that have full access to the mixers.
@@ -394,6 +397,9 @@ media:
     - helvum
     - waybar
     - wpctl
+  #
+  # Refer to the roles/media/tasks/main.yml for more info.
+  #
   cards:
     main:
       selectors:
