@@ -81,6 +81,8 @@
       install:
         - base-devel
         - aria2
+        - bsdtar
+        - curl
 
     _common_install:
       targets:

@@ -21,8 +21,14 @@ policy:
   #
   headless: "{{ ansible_connection == 'nspawn' }}"
 
+base64:
+  shell_decode: "base64 --decode -"
+  shell_encode: "base64 --wrap=0"
 
-persist: "{{ playbook_dir }}/persist"
+persist:
+  base: "{{ playbook_dir }}/persist"
+  filemode: '0644'
+  dirmode: '0755'
 
 machine:
   disk_identifier: ata-SSD_256GB

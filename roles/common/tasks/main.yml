@@ -261,47 +261,19 @@
 
     - name: Process metadata file as JSON
       ansible.builtin.set_fact:
-        _common_gpg_invocation: "{{ (__metadata_file.content | b64decode | from_json)[_common_gpg] }}"
+        _common_gpg_invocation: >-
+          {%- set _metadata = __metadata_file.content | b64decode | from_json -%}
+          {{
+            _metadata if _common_gpg is none else _metadata[_common_gpg]
+          }}
 
-#
-# TODO:
-#  add _common_pull.[].type = archive/command/file
-#  add _common_push.[].type = archive/file
-#
 - name: Common backup pull operation
   when: _common_pull is defined
   vars:
-    __become: "{{ _common_pull.become is true | ternary(true, omit) }}"
+    __base: "{{ _common_pull.defaults.base | default(users.user.config) }}"
+    __become: "{{ _common_pull.defaults.become | default(false) }}"
   block:
-    - name: Create archive
-      ansible.builtin.shell:
-        chdir: >-
-          {{
-            _common_pull.base is abs | ternary(_common_pull.base, [users.user.config, _common_pull.base] | path_join)
-          }}
-        cmd: >-
-          {%- set _exclude = [] -%}
-          {%- for _pattern in _common_pull.exclude | default([]) -%}
-            {%- set _ = _exclude.append('--exclude={}'.format(_pattern | squote)) -%}
-          {%- endfor -%}
-          {#--#}
-          tar
-          --wildcards
-          --anchored
-          --no-wildcards-match-slash
-          --numeric-owner
-          --group=0
-          --owner=0
-          --create
-          --to-stdout
-          {{ _common_pull.include | join(' ') }}
-          {{ _exclude | join(' ') }}
-          | base64 --wrap=0
-      register: __tar_invocation
-      changed_when: __tar_invocation.rc == 0
-      become: "{{ __become }}"
-
-    - name: Stat persist directory
+    - name: Stat persist directory on the control node
       delegate_to: localhost
       ansible.builtin.stat:
         path: "{{ persist.base }}"
@@ -310,52 +282,203 @@
     - name: Ensure persist subdirectory exists
       delegate_to: localhost
       ansible.builtin.file:
-        path: "{{ persist.base }}/{{ _common_pull.name | dirname }}"
+        path: "{{ persist.base }}/{{ item | dirname }}"
         state: directory
-        mode: "{{ __persist_stat.stat.mode }}"
+        mode: "{{ persist.dirmode }}"
         owner: "{{ __persist_stat.stat.uid }}"
         group: "{{ __persist_stat.stat.gid }}"
+      loop: "{{ _common_pull.targets | dict2items | map(attribute='key') }}"
 
-    - name: Save archive to the persist
+    - name: Pull a base64 content to the persist
+      delegate_to: localhost
+      no_log: true
+      ansible.builtin.shell:
+        cmd: >-
+          {{ base64.shell_decode }} > "{{ persist.base }}/{{ item.key }}"
+        stdin: "{{ item.value.base64 }}"
+      register: __base64_invocation
+      changed_when: __base64_invocation.rc == 0
+      loop: "{{ _common_pull.targets | dict2items | selectattr('value.base64', 'defined') }}"
+
+    - name: Pull a file to the persist
+      ansible.builtin.fetch:
+        src: >-
+          {{
+            item.value.file is abs | ternary(
+              item.value.file, [item.value.base | default(__base), item.value.file] | path_join,
+            )
+          }}
+        dest: "{{ persist.base }}/{{ item.key }}"
+        flat: true
+      become: "{{ item.value.become | default(__become) | ternary(true, omit) }}"
+      loop: "{{ _common_pull.targets | dict2items | selectattr('value.file', 'defined') }}"
+
+    - name: Run a shell command
+      no_log: true
+      ansible.builtin.shell:
+        cmd: "set -o pipefail && {{ item.value.shell }} | {{ base64.shell_encode }}"
+        stdin: "{{ item.value.stdin | default(omit) }}"
+      register: __shell_invocation
+      changed_when: __shell_invocation.rc == 0
+      become: "{{ item.value.become | default(__become) | ternary(true, omit) }}"
+      loop: "{{ _common_pull.targets | dict2items | selectattr('value.shell', 'defined') }}"
+
+    - name: Pull a shell command results to the persist
+      delegate_to: localhost
+      no_log: true
+      ansible.builtin.shell:
+        cmd: >-
+          {{ base64.shell_decode }} > "{{ persist.base }}/{{ item.item.key }}"
+        stdin: "{{ item.stdout }}"
+      register: __base64_invocation
+      changed_when: __base64_invocation.rc == 0
+      loop: "{{ __shell_invocation.results }}"
+
+    - name: Create an archive
+      ansible.builtin.shell:
+        chdir: >-
+          {{
+            item.value.archive is abs | ternary(
+              item.value.archive, [item.value.base | default(__base), item.value.archive] | path_join,
+            )
+          }}
+        cmd: >-
+          {%- set _exclude = [] -%}
+          {%- for _pattern in item.value.exclude | default([]) -%}
+            {%- set _ = _exclude.append('--exclude={}'.format(_pattern | squote)) -%}
+          {%- endfor -%}
+          {#--#}
+          set -o pipefail &&
+          tar
+          --wildcards
+          --anchored
+          --no-wildcards-match-slash
+          --numeric-owner
+          --group=0
+          --owner=0
+          --gzip
+          --create
+          --to-stdout
+          {{ item.value.include | join(' ') }}
+          {{ _exclude | join(' ') }}
+          | {{ base64.shell_encode }}
+      register: __tar_invocation
+      changed_when: __tar_invocation.rc == 0
+      become: "{{ item.value.become | default(__become) | ternary(true, omit) }}"
+      loop: "{{ _common_pull.targets | dict2items | selectattr('value.archive', 'defined') }}"
+
+    - name: Pull the archive to the persist
+      delegate_to: localhost
+      no_log: true
+      ansible.builtin.shell:
+        cmd: >-
+          {{ base64.shell_decode }} > "{{ persist.base }}/{{ item.item.key }}"
+        stdin: "{{ item.stdout }}"
+      register: __pull_invocation
+      changed_when: __pull_invocation.rc == 0
+      loop: "{{ __tar_invocation.results }}"
+
+    - name: Ensure pulled items permissions are set
+      delegate_to: localhost
       ansible.builtin.file:
-        dest: "{{ persist.base }}/{{ _common_pull.name }}{{ persist.format }}"
-        content: "{{ __tar_invocation.stdout }}"
-        mode: "0644"
+        path: "{{ persist.base }}/{{ item.key }}"
+        mode: "{{ persist.filemode }}"
         owner: "{{ __persist_stat.stat.uid }}"
         group: "{{ __persist_stat.stat.gid }}"
+      loop: "{{ _common_pull.targets | dict2items }}"
 
 - name: Common backup push operation
   when: _common_push is defined
   vars:
-    __base: >-
-      {{
-        _common_push.base is abs | ternary(_common_push.base, [users.user.config, _common_push.base] | path_join)
-      }}
-    __become: "{{ _common_push.become is true | ternary(true, omit) }}"
+    __wipe: "{{ _common_push.defaults.wipe | default(false) }}"
+    __base: "{{ _common_push.defaults.base | default(users.user.config) }}"
+    __become: "{{ _common_push.defaults.become | default(false) }}"
+    __filemode: "{{ _common_push.defaults.filemode | default('0644') }}"
+    __dirmode: "{{ _common_push.defaults.dirmode | default('0755') }}"
+    __dirs: >-
+        {%- set _items = [] -%}
+        {%- for _target in _common_push.targets.values() -%}
+          {%- if 'file' in _target and 'archive' in _target -%}
+            {%- set _path = [
+              _target.file | default(none),
+              _target.archive | default(none),
+            ] | reject("none") | first -%}
+            {%- set _abs = _path is abs | ternary(_path, [_target.base | default(__base), _path] | path_join) -%}
+            {%- set _ = _items.append({
+              "path": _target.file is defined | ternary(_abs | dirname, _abs),
+              "become": item.value.become | default(__become),
+              "filemode": item.value.filemode | default(__filemode),
+              "dirmode": item.value.dirmode | default(__dirmode),
+            }) -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {{ _items }}
   block:
     - name: Wipe target directory
-      when: policy.destructive is true and _common_push.wipe is defined 
+      when: policy.destructive is true and item.wipe | default(__wipe)
       ansible.builtin.file:
-        path: "{{ __base }}"
+        path: "{{ item }}"
         state: absent
-      become: "{{ __become }}"
+      become: "{{ item.become | ternary(true, omit) }}"
+      loop: "{{ __dirs }}"
 
     - name: Ensure target directory exists
       ansible.builtin.file:
-        path: "{{ __base }}"
+        path: "{{ item }}"
         state: directory
-        mode: "{{ _common_push.mode | default('0755') }}"
-        owner: "{{ _common_push.become | default(false) is true | ternary(0, omit) }}"
-        group: "{{ _common_push.become | default(false) is true | ternary(0, omit) }}"
-      become: "{{ __become }}"
+        mode: "{{ _common_push.dirmode }}"
+        owner: "{{ item.value.become | ternary(0, omit) }}"
+        group: "{{ item.value.become | ternary(0, omit) }}"
+      become: "{{ item.become | ternary(true, omit) }}"
+      loop: "{{ __dirs }}"
 
-    - name: Unpack archive
+    - name: Push the file from the persist
+      ansible.builtin.copy:
+        src: "{{ persist.base }}/{{ item.key }}"
+        dest: >-
+          {{
+            item.value.file is abs | ternary(
+              item.value.file, [item.value.base | default(__base), item.value.file] | path_join,
+            )
+          }}
+        mode: "{{ item.value.filemode | default(__filemode) }}"
+        owner: "{{ item.value.become | default(__become) | ternary(0, omit) }}"
+        group: "{{ item.value.become | default(__become) | ternary(0, omit) }}"
+      become: "{{ item.value.become | default(__become) | ternary(true, omit) }}"
+      loop: "{{ _common_push.targets | dict2items | selectattr('value.file', 'defined') }}"
+
+    - name: Prepare the persist files to be piped to the shell
+      delegate_to: localhost
+      ansible.builtin.slurp:
+        src: "{{ persist.base }}/{{ item.key }}"
+      register: __slurp_invocation
+      loop: "{{ _common_push.targets | dict2items | selectattr('value.shell', 'defined') }}"
+
+    - name: Pipe persist file to the shell
+      no_log: true
+      ansible.builtin.shell:
+        cmd: "set -o pipefail && {{ base64.shell_decode }} | {{ item.item.value.shell }}"
+        stdin: "{{ item.content }}"
+      register: __shell_invocation
+      changed_when: __shell_invocation.rc == 0
+      become: "{{ item.item.value.become | default(__become) | ternary(true, omit) }}"
+      loop: "{{ __slurp_invocation.results }}"
+
+    - name: Push the archive from the persist
       ansible.builtin.unarchive:
-        src: "{{ persist.base }}/{{ _common_push.name }}{{ persist.format }}"
-        dest: "{{ __base }}"
+        src: "{{ persist.base }}/{{ item.key }}"
+        dest: >-
+          {{
+            item.value.archive is abs | ternary(
+              item.value.archive, [item.value.base | default(__base), item.value.archive] | path_join,
+            )
+          }}
         extra_opts:
           - --no-same-owner
           - --preserve-permissions
+      become: "{{ item.value.become | default(__become) | ternary(true, omit) }}"
+      loop: "{{ _common_push.targets | dict2items | selectattr('value.archive', 'defined') }}"
+
       become: "{{ __become }}"
 
 

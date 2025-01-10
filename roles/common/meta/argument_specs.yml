@@ -145,6 +145,80 @@ argument_specs:
         required: false
         description:
           - Retrieves previously generated GnuPG key metadata.
+          - If string is passed, that specific entry is retrieved.
+          - If none is passed instead, the entire key metadata dictionary is returned instead.
+          - The result is stored in the `_common_gpg_invocation` variable.
+
+      _common_pull:
+        type: dict
+        required: false
+        description:
+          - Pull artifacts of different types from manage node to control node to the persist directory.
+          - Persist files are located on control node in the `persist.base` directory.
+          - >-
+            Pulling artifacts to the persist storage always respects `persist.filemode` and `persist.dirmode`,
+            as well as the owner of the `persist.base`. This way, even when ansible is running as root, it still
+            creates accessible files.
+        options:
+          defaults:
+            type: dict
+            required: false
+            description:
+              - Sets default options for all targets that did not specify it explicitly.
+            options:
+              become:
+                type: bool
+                required: false
+                default: false
+                description:
+                  - Whenever to use the ansible 'become' mechanism.
+              base:
+                type: str
+                required: false
+                default: "{{ users.user.config }}"
+                description:
+                  - The base path for all targets that are not absolute.
+          targets:
+            type: dict
+            description:
+              - A mapping of the target to its options.
+              - >-
+                Each key must be a relative path to the persist item, typically <class>/<item> such as
+                myapp/settings, consisting any of the following items:
+                 `base64` - base64 encoded string to pull.
+                 `shell` - shell command that runs on manage node, whose stdout is pulled.
+                 `stdin` - stdin to pass to the `shell`.
+                 `file` - manage node path to the file to pull.
+                 `archive` - manage node path to create archive and pull from.
+                 `include` - list of patterns to include to `archive`.
+                 `exclude` - list of patterns to exclude from `archive`.
+                 `become`, `base` - individual overrides with the same meaning as in the `defaults`.
+
+      _common_push:
+        type: dict
+        required: false
+        description:
+          - Push artifacts of different types from control node to manage node from the persist directory.
+        options:
+          defaults: *common-install-opts
+          targets:
+            type: dict
+            description:
+              - A mapping of the target to its options.
+              - >-
+                Each key must be a relative path to the persist item, typically <class>/<item> such as
+                myapp/settings, consisting any of the following items:
+                 `shell` - shell command that runs on manage node and receives content of the persist item from the stdin.
+                 `file` - manage node path to the file to push the persist item to.
+                 `archive` - manage node path to unpack archive to.
+                 `become`, `base`, `filemode`, `dirmode`, `wipe` - individual overrides with the same meaning as in the `defaults`.
+
+      _common_persist:
+        type: str
+        required: false
+        description:
+          - Try to query the persist item in the base64 encoding.
+          - Sets variable `_common_persist_invocation`, which would have `content` element if the query was successful.
 
       _common_cmdline:
         type: dict

@@ -1,5 +1,128 @@
----
-- name: Generate GnuPG keys
+- name: Mask unnecessary GnuPG services
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_services:
+      defaults:
+        - user
+        - mask
+      targets:
+        keyboxd.socket:
+        keyboxd.service:
+        gpg-agent-browser.socket:
+        gpg-agent-extra.socket:
+
+- name: Stop GnuPG services
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_services:
+      defaults:
+        - user
+        - stop
+      targets:
+        gpg-agent.service:
+        gpg-agent.socket:
+        dirmngr.service:
+        dirmngr.socket:
+
+- name: Configure GnuPG
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      defaults:
+        wipe: true
+        base: "{{ users.user.home }}"
+        dirmode: "0700"
+        filemode: "0600"
+      targets:
+        .gnupg/common.conf:
+          content: |
+            #
+            # common.conf - common defaults for all components.
+            #
+        .gnupg/dirmngr.conf:
+          template: gpg/dirmngr.conf.j2
+        .gnupg/gpg.conf:
+          template: gpg/gpg.conf.j2
+        .gnupg/gpg-agent.conf:
+          template: gpg/gpg-agent.conf.j2
+
+- name: Enable GnuPG services
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_services:
+      defaults:
+        - user
+        - enable
+      targets:
+        gpg-agent.service:
+        gpg-agent.socket:
+        dirmngr.service:
+        dirmngr.socket:
+
+- name: Retrieve the keyring from the persist
+  block:
+    - name: Retrieve the keyring from the persist
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_persist: gpg/keyring
+
+    - name: Save the exported variable
+      ansible.builtin.set_fact:
+        __gpg_keyring: "{{ _common_persist_invocation }}"
+
+- name: Push the keyring from the persist
+  tags:
+    - user-gpg-push
+  when: __gpg_keyring.content is defined
+  block:
+    - name: Push the private keys explicitly to GnuPG
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_push:
+          defaults:
+            base: "{{ users.user.home }}"
+            dirmode: "0700"
+            filemode: "0600"
+          targets:
+            gpg/keyring:
+              shell: gpg --batch --import-options restore --import -
+            gpg/private-keys:
+              archive: .gnupg/private-keys-v1.d
+            gpg/unattended-keys:
+              file: ".gnupg/{{ security.gpg.metadata }}"
+
+    - name: Retrieve keys metadata
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_gpg: ~
+
+    - name: Import ownertrust to GnuPG
+      vars:
+        __stdin: >-
+          {%- set _acc = [] -%}
+          {%- for _key in _common_gpg_invocation.values() -%}
+            {%- set _ = _acc.append("{}:6:".format(_key.fingerprint)) -%}
+          {%- endfor -%}
+          {{ _acc | join("\n") }}
+      ansible.builtin.command:
+        argv:
+          - gpg
+          - --import-ownertrust
+        stdin: "{{ __stdin | replace('\\n', '\n') }}"
+      register: __gpg_import_ownertrust_invocation
+      changed_when: __gpg_import_ownertrust_invocation.rc == 0
+
+- name: Generate new keyring
+  tags:
+    - user-gpg-generate
+  when: __gpg_keyring.content is not defined
   vars:
     __regex_fingerprint: .*KEY_CREATED.*([0-9-A-Z]{40})
     __regex_keygrip: fpr:+{}:+\sgrp:+(\w+)
@@ -79,6 +202,7 @@
       ansible.builtin.command:
         argv:
           - gpg
+          - --batch
           - --with-colons
           - --with-keygrip
           - --list-keys
@@ -122,19 +246,18 @@
       loop: "{{ __subkeys | selectattr('value.priority', 'defined') }}"
 
     - name: Render keys metadata into the file
-      ansible.builtin.import_role:
-        name: common
       vars:
-        _common_install:
-          defaults:
-            base: "{{ users.user.home }}"
-          targets: >-
-            {{
-              {
-                '.gnupg/{}'.format(security.gpg.metadata): {
-                  'content': __keys,
-                  'filemode': '0600',
-                  'dirmode': '0700',
-                },
-              }
-            }}
+        __metadata: "{{ users.user.home }}/.gnupg/{{ security.gpg.metadata }}"
+      block:
+        - name: Render keys metadata into the file
+          ansible.builtin.shell:
+            cmd: >-
+              {{ base64.shell_decode }} > "{{ __metadata }}"
+            stdin: "{{ __keys | to_nice_json | b64encode }}"
+          register: __metadata_shell_invocation
+          changed_when: __metadata_shell_invocation.rc == 0
+
+        - name: Ensure keys metadata file permissions is set
+          ansible.builtin.file:
+            path: "{{ __metadata }}"
+            mode: "0600"
