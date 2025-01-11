@@ -58,9 +58,7 @@
         become: true
       targets:
         /usr/local/stubs/Xwayland:
-          content: |
-            #!/bin/sh
-            exit 1
+          link: /usr/bin/false
         /usr/share/wayland-sessions/hyprland-nox.desktop:
           content: |
             [Desktop Entry]
