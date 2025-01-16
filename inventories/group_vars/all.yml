@@ -1158,3 +1158,97 @@ jetbrains:
     - -Djdk.module.illegalAccess.silent=true
     - -Dkotlinx.coroutines.debug=off
     - -Djbr.catch.SIGABRT=true
+  ide:
+    idea:
+      name: IntelliJ IDEA Ultimate Edition
+      comment: The Leading Java and Kotlin IDE by JetBrains
+      release: IIU
+      license: II
+      plugins:
+        - https://plugins.jetbrains.com/plugin/6317-lombok
+    clion:
+      name: CLion
+      comment: A Cross-Platform IDE for C and C++ by JetBrains
+      release: CL
+      license: CL
+    rustrover:
+      name: RustRover
+      comment: Rust IDE by JetBrains
+      release: RR
+      license: RR
+    goland:
+      name: GoLand
+      comment: More than just a Go IDE by JetBrains
+      release: GO
+      license: GO
+    pycharm:
+      name: PyCharm Professional Edition
+      comment: The Python IDE for data science and web development by JetBrains
+      release: PCP
+      license: PC
+      plugins:
+        - https://plugins.jetbrains.com/plugin/12861-pydantic
+    rider:
+      name: Rider
+      comment: The Cross-Platform .NET IDE by JetBrains
+      #
+      # Rider has a very long story of licensing, mainly because of the various .NET tools.
+      # Luckily as for now, the licensing model was simplified:
+      #  https://resellers.jetbrains.com/hc/en-us/articles/360015807159-What-has-changed-in-NET-tools-licensing
+      #
+      # There are the following license product codes that have ever existed:
+      #  01) RS0 => ReSharper
+      #  02) RC  => ReSharper C++
+      #  03) RSU => ReSharper Ultimate
+      #  04) RRR => ReSharper Ultimate + Rider license 
+      #  05) RS  => ReSharper ?
+      #  06) RSC => ReSharper ?
+      #  07) RSF => ReSharper ?
+      #  08) RSV => ReSharper ?
+      #  09) DM  => dotMemory
+      #  10) DPN => dotTrace
+      #  11) DC  => dotCover
+      #  12) DUL => dotUltimate (basically AIO)
+      #
+      release: RD
+      license: DUL
+    webide:
+      name: WebStorm
+      comment: The JavaScript and TypeScript IDE by JetBrains
+      release: WS
+      license: WS
+    writerside:
+      name: Writerside
+      comment: A new technical writing environment by JetBrains
+      release: WRS
+      license: WRS
+    datagrip:
+      name: DataGrip
+      comment: The Cross-Platform IDE for Databases & SQL by JetBrains
+      release: DG
+      license: DB
+    dataspell:
+      name: DataSpell
+      comment: A tool for data analysts by JetBrains
+      product: DS
+      license: DS
+    rubymine:
+      name: RubyMine
+      comment: The Ruby on Rails IDE by JetBrains
+      release: RM
+      license: RM
+    aqua:
+      name: Aqua
+      comment: The IDE for test automation
+      release: QA
+      license: QA
+  #
+  # Common plugins to install for all IDEs.
+  #
+  plugins:
+    - https://plugins.jetbrains.com/plugin/10321-nord
+    - https://plugins.jetbrains.com/plugin/10080-rainbow-brackets
+    - https://plugins.jetbrains.com/plugin/9792-key-promoter-x
+    - https://plugins.jetbrains.com/plugin/11058-extra-icons
+    - https://plugins.jetbrains.com/plugin/21904-developer-tools
+    - https://plugins.jetbrains.com/plugin/13389-conventional-commit
