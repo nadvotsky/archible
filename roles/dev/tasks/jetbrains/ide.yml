@@ -165,3 +165,58 @@
       register: __update_database_invocation
       changed_when: __update_database_invocation.rc == 0
       become: true
+
+- name: Configure JetBrains IDE
+  block:
+    - name: Install plugins
+      ansible.builtin.command:
+        argv: >-
+          {%- set _prefix = _jetbrains_ide | upper -%}
+          {{
+            [
+              "/usr/bin/env",
+              "{}_JDK={}/{}".format(_prefix, jetbrains.base, "jbr"),
+              "{}_PROPERTIES={}/{}".format(_prefix, jetbrains.base, "properties/ide.properties"),
+              __bin,
+              "-Dide.codename={}".format(_jetbrains_ide),
+              "installPlugins",
+            ] + (__plugins_metadata.results | map(attribute="json.xmlId") | list)
+          }}
+      register: __install_plugins_invocation
+      changed_when: __install_plugins_invocation.rc == 0
+
+    - name: Render JetBrains IDE configuration
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          defaults:
+            base: "{{ users.user.config }}/{{ _jetbrains_ide }}"
+          targets:
+            config/disabled_plugins.txt:
+              file: jetbrains/noplugins.txt
+            config/options/ide.general.xml:
+              file: jetbrains/ide.xml
+            config/options/updates.xml:
+              file: jetbrains/updates.xml
+            config/options/security.xml:
+              file: jetbrains/brackets.xml
+            config/options/editor.xml:
+              file: jetbrains/editor.xml
+            config/options/editor-font.xml:
+              file: jetbrains/font.xml
+            config/options/postfixTemplates.xml:
+              file: jetbrains/postfix.xml
+            config/options/ui.lnf.xml:
+              file: jetbrains/ui.xml
+            config/options/trusted-paths.xml:
+              file: jetbrains/trust.xml
+            config/options/project.default.xml:
+              file: jetbrains/trust.xml
+            config/options/rainbow_brackets.xml:
+              file: jetbrains/brackets.xml
+
+    - name: Remove third party plugins warning
+      ansible.builtin.file:
+        path: "{{ users.user.config }}/{{ _jetbrains_ide }}/config/alien_plugins.txt"
+        state: absent

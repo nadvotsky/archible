@@ -1,0 +1,6 @@
+<application>
+  <component name="RainbowSettings">
+    <option name="indentGuidesOptions" value="Only selected indent guide" />
+    <option name="suppressAdvancedIndentGuidesBanner" value="true" />
+  </component>
+</application>

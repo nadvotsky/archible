@@ -1,0 +1,9 @@
+<application>
+  <component name="UISettings">
+    <option name="compactTreeIndents" value="true" />
+    <option name="smoothScrolling" value="false" />
+    <option name="FULL_PATHS_IN_TITLE_BAR" value="true" />
+    <option name="MARK_MODIFIED_TABS_WITH_ASTERISK" value="true" />
+    <option name="UI_DENSITY" value="COMPACT" />
+  </component>
+</application>

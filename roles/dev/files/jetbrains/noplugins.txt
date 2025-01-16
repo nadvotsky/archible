@@ -1,0 +1,12 @@
+PerforceDirectPlugin
+Subversion
+hg4idea
+com.intellij.lang.puppet2
+com.intellij.settingsSync
+org.intellij.qodana
+com.intellij.plugins.github.colorscheme
+com.intellij.plugins.monokai.colorscheme
+com.intellij.plugins.twilight.colorscheme
+com.intellij.plugins.warmneon.colorscheme
+com.intellij.ja
+com.intellij.zh

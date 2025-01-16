@@ -1,0 +1,11 @@
+<application>
+  <component name="ProjectManager">
+    <defaultProject>
+      <component name="CommitMessageInspectionProfile">
+        <profile version="1.0">
+          <inspection_tool class="SubjectBodySeparation" enabled="true" level="ERROR" enabled_by_default="true" />
+        </profile>
+      </component>
+    </defaultProject>
+  </component>
+</application>
