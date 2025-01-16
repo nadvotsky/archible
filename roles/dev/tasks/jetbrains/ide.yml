@@ -1,0 +1,167 @@
+---
+- name: Set common variables for all JetBrains tasks
+  ansible.builtin.set_fact:
+    __ide: "{{ jetbrains.ide[_jetbrains_ide] }}"
+    __dir: "{{ jetbrains.base }}/ide/{{ _jetbrains_ide }}"
+    __bin: "{{ jetbrains.base }}/ide/{{ _jetbrains_ide }}/bin/{{ _jetbrains_ide }}"
+
+- name: Prepare IDE directory
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      defaults:
+        wipe: true
+      targets: >-
+        {
+          "{{ users.user.config }}/{{ _jetbrains_ide }}/plugins": {},
+          "{{ users.user.config }}/{{ _jetbrains_ide }}/config": {},
+          "{{ users.user.config }}/{{ _jetbrains_ide }}/config/dummy.key": {},
+        }
+
+- name: Retrieve plugins metadata
+  ansible.builtin.uri:
+    url: "https://plugins.jetbrains.com/api/plugins/{{ item | regex_search('\\d+') }}"
+    method: GET
+    return_content: true
+  loop: "{{ jetbrains.plugins + (__ide.plugins | default([])) }}"
+  register: __plugins_metadata
+
+- name: Download JetBrains IDE
+  block:
+    - name: List releases for JetBrains IDE
+      ansible.builtin.uri:
+        url:
+          "https://data.services.jetbrains.com/products/releases\
+          ?code={{ __ide.release }}\
+          &latest=true&type=release"
+        method: GET
+        return_content: true
+      register: __releases
+
+    - name: Set common variables for all JetBrains tasks
+      ansible.builtin.set_fact:
+        __release: "{{ (__releases.json | dict2items | first).value | first }}"
+
+    - name: Download and unpack JetBrains IDE
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          defaults:
+            wipe: true
+            become: true
+          targets: >-
+            {
+              "{{ __dir }}/build.txt": {}
+            }
+
+        _common_urlunpack:
+          url: "{{ __release.downloads.linux.link }}"
+          dest: "{{ __dir }}"
+          creates: "{{ __bin }}"
+          strip: 1
+          exclude:
+            - jbr
+          become: true
+
+- name: Agentize IDE
+  when: jetbrains.agent is true
+  block:
+    - name: Generate license
+      ansible.builtin.set_fact:
+        __license: >-
+          {%- set _up_to = '{}-01-01'.format(now(fmt="%Y") | int + jetbrains.years) -%}
+          {%- set _lic = {
+            "licenseId": lookup("community.general.random_string", special=false, lower=false, length=10),
+            "licenseeName": users.user.short,
+            "licenseeType": "PERSONAL",
+            "assigneeName": "",
+            "assigneeEmail": "",
+            "checkConcurrentUse": false,
+            "products": [{
+              "code": __ide.license,
+              "paidUpTo": _up_to,
+            }],
+            "metadata": "01{}0101PPAM000005".format(now(fmt="%Y")),
+          } -%}
+          {%- if jetbrains.code_with_me -%}
+            {%- set _ = _lic.products.append({
+              "code": "PCWMP",
+              "paidUpTo": _up_to,
+            }) -%}
+          {%- endif -%}
+          {%- for _plugin in __plugins_metadata.results -%}
+            {%- if _plugin.json.pricingModel != "FREE" -%}
+              {%- set _ = _lic.products.append({
+                "code":  _plugin.json.purchaseInfo.productCode,
+                "paidUpTo": _up_to,
+              }) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ _lic }}
+
+    #
+    # SHA1withRSA, i.e. RSASSA-PKCS1-v1_5
+    #
+    - name: Sign license
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail &&
+          echo -n '{{ __license | to_json(separators=(',', ':')) }}'
+          | openssl dgst -sha1 -sign "{{ jetbrains.base }}/agent/trust-crt/cert.pem" -keyform pem
+          | openssl base64 -A
+      register: __sign_invocation
+      changed_when: __sign_invocation.rc == 0
+      become: true
+
+    - name: Load certificate
+      ansible.builtin.slurp:
+        src: "{{ jetbrains.base }}/agent/trust-crt/cert.crt"
+      register: __certificate
+      become: true
+
+    - name: Render JetBrain IDE key
+      ansible.builtin.copy:
+        dest: "{{ users.user.config }}/{{ _jetbrains_ide }}/config/{{ _jetbrains_ide }}.key"
+        mode: "0755"
+        content: >-
+          {%- set _id = __license.licenseId -%}
+          {%- set _license = __license | to_json(separators=(',', ':')) | b64encode -%}
+          {%- set _sign = __sign_invocation.stdout -%}
+          {%- set _cert = [] -%}
+          {%- for _line in (__certificate.content | b64decode).split("\n") -%}
+            {%- if not _line.startswith("-") -%}
+              {%- set _ = _cert.append(_line) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- set _key = [_id, _license, _sign, _cert | join("")] | join("-") -%}
+          {%- set _prefix = (0xFFFF).to_bytes(2) + "<certificate-key>".encode("utf-16le") + (0xA).to_bytes(2, "little") -%}
+          {{ _prefix }}{{ _key.encode("utf-16le") }}
+
+#
+# One may use `dex` with any other wrapper (e.g. mise exec --)
+#  to launch IDEs2 within an arbitrary environment.
+#
+- name: Configure JetBrains IDE desktop entries
+  block:
+    - name: Render JetBrain IDE desktop entry
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          defaults:
+            become: true
+          targets: >-
+            {
+              "/usr/local/share/applications/{{ _jetbrains_ide }}.desktop": {
+                "template": "jetbrains/entry.desktop.j2"
+              }
+            }
+
+    - name: Update XDG desktop database
+      ansible.builtin.command:
+        cmd: update-desktop-database /usr/local/share/applications
+      register: __update_database_invocation
+      changed_when: __update_database_invocation.rc == 0
+      become: true
