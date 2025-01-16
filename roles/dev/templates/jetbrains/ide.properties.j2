@@ -1,0 +1,20 @@
+{%- macro _idea_user_path(_prefix, _suffix="") -%}
+    {%- set _acc = [] -%}
+    {%- if _prefix.startswith(users.user.home) -%}
+        {%- set _ = _acc.extend([
+            "${user.home}", _prefix.removeprefix(users.user.home).strip("/")
+        ]) -%}
+    {%- else -%}
+        {%- set _ = _acc.append(_prefix) -%}
+    {%- endif -%}
+    {##}
+    {%- set _ = _acc.extend(["${ide.codename}", _suffix.strip("/")]) -%}
+    {##}
+    {{ _acc | select() | join("/") }}
+{%- endmacro -%}
+
+
+idea.config.path={{ _idea_user_path(users.user.config, "config") | relative_indent }}
+idea.system.path={{ _idea_user_path(users.user.cache) | relative_indent }}
+idea.plugins.path={{ _idea_user_path(users.user.config, "plugins") | relative_indent }}
+idea.log.path={{ _idea_user_path("${java.io.tmpdir}") | relative_indent }}

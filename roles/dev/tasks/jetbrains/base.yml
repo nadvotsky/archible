@@ -1,0 +1,41 @@
+---
+- name: Wipe existing JetBrains IDEs
+  tags:
+    - dev-jetbrains-wipe
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      defaults:
+        become: true
+      wipes: >-
+        {%- set _acc = [
+          jetbrains.base,
+          "{}/{}".format(users.user.config, "JetBrains"),
+          "{}/{}".format(users.user.cache, "JetBrains"),
+        ] -%}
+        {%- for _codename in jetbrains.ide | dict2items | map(attribute="key") -%}
+          {%- set _ = _acc.extend([
+            "/usr/local/share/applications/{}.desktop".format(_codename),
+            "{}/{}".format(users.user.config, _codename),
+            "{}/{}".format(users.user.cache, _codename),
+          ]) -%}
+        {%- endfor -%}
+        {{ _acc }}
+
+- name: Configure base JetBrains skeleton
+  tags:
+    - dev-jetbrains-base
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      defaults:
+        base: "{{ jetbrains.base }}"
+        wipe: true
+        become: true
+      targets:
+        properties/ide.properties:
+          template: jetbrains/ide.properties.j2
+        vmoptions/ide.vmoptions:
+          template: jetbrains/ide.vmoptions.j2

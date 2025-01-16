@@ -1072,3 +1072,89 @@ keys:
       - :wm MouseMiddle
     resize:
       - :wm MouseRight
+
+
+jetbrains:
+  #
+  # Base directory to store JBR, IDEs, vmoptions, properties and scripts
+  #
+  base: /opt/jetbrains
+  #
+  # Whenever use the agent.
+  #
+  agent: true
+  #
+  # How many years to cover if using agent.
+  #
+  years: 10
+  
+  #
+  # Whenever generate scripts and desktop application actions
+  #  to run ide with WLToolkit.
+  #
+  wayland: true
+  #
+  # Whenever enable Code With Me support:
+  #  Agentize Code With Me for Host
+  #  Generate desktop application action to launch Jetbrains Client,
+  #   (a.k.a. Code With Me launcher for guests)
+  #
+  code_with_me: true
+  #
+  # JBR options.
+  #
+  vmoptions:
+    #
+    # Heap tweaks.
+    #
+    - -Xms3g
+    - -Xmx3g
+    - -XX:+AlwaysPreTouch
+    - -XX:+UseLargePages
+    - -XX:+UseTransparentHugePages
+    #
+    # Metaspace tweaks.
+    #
+    - -XX:MetaspaceSize=128m
+    #
+    # JIT tweaks.
+    #
+    - -XX:CICompilerCount=2
+    - -XX:ReservedCodeCacheSize=512m
+    #
+    # GC tweaks.
+    #
+    - -XX:+UseG1GC
+    - -XX:SoftRefLRUPolicyMSPerMB=50
+    - -XX:TieredOldPercentage=100000
+    #
+    # Misc tweaks.
+    #
+    - -XX:-OmitStackTraceInFastThrow
+    - -XX:+ParallelRefProcEnabled
+    - -XX:+PerfDisableSharedMem
+    #
+    # I/O tweaks.
+    #
+    - -Dsun.io.useCanonCaches=false
+    - -Djdk.nio.maxCachedBufferSize=2097152
+    - -Djava.util.zip.use.nio.for.zip.file.access=true
+    - -Dsun.tools.attach.tmp.only=true
+    - -Dawt.lock.fair=true
+    #
+    # Editor tweaks.
+    #
+    - -Deditor.zero.latency.typing=true
+    #
+    # Network tweaks.
+    #
+    - -Djava.net.preferIPv4Stack=true
+    - -Djdk.http.auth.tunneling.disabledSchemes=""
+    #
+    # Debug tweaks.
+    #
+    - -Dide.no.platform.update=true
+    - -Djdk.attach.allowAttachSelf=true
+    - -Djdk.module.illegalAccess.silent=true
+    - -Dkotlinx.coroutines.debug=off
+    - -Djbr.catch.SIGABRT=true
