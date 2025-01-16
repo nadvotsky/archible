@@ -479,8 +479,64 @@
       become: "{{ item.value.become | default(__become) | ternary(true, omit) }}"
       loop: "{{ _common_push.targets | dict2items | selectattr('value.archive', 'defined') }}"
 
+- name: Common persist operation
+  when: _common_persist is defined
+  delegate_to: localhost
+  ansible.builtin.slurp:
+    src: "{{ persist.base }}/{{ _common_persist }}"
+  register: _common_persist_invocation
+  failed_when: _common_persist_invocation.failed is true and 'file not found' not in _common_persist_invocation.msg
+  changed_when: false
+
+- name: Common urlunpack operation
+  when: _common_urlunpack is defined
+  vars:
+    __become: "{{ _common_urlunpack.become | default(omit) }}"
+    __creates: "{{ _common_urlunpack.creates is defined }}"
+  block:
+    - name: Stat what urlunpack creates
+      when: _common_urlunpack.creates is defined
+      ansible.builtin.stat:
+        path: "{{ _common_urlunpack.creates }}"
+      register: __creates_stat
       become: "{{ __become }}"
 
+    #
+    # TODO: Likely not required; we always do _common_install beforehand
+    #
+    # - name: Ensure target directory is created
+    #   ansible.builtin.file:
+    #     path: "{{ _common_urlunpack.dest }}"
+    #     state: directory
+    #     mode: "{{ _common_urlunpack.dirmode | default('0755') }}"
+    #     owner: "{{ _common_urlunpack.become | ternary(0, omit) }}"
+    #     group: "{{ _common_urlunpack.become | ternary(0, omit) }}"
+    #   become: "{{ __become }}"
+
+    - name: Download and unpack on the fly
+      when: __creates_stat is not defined or __creates_stat.stat.exists is false
+      vars:
+        __id: "{{ _common_urlunpack.become | ternary('root', users.user.name) }}"
+        __exclude: >-
+          {%- set _exclude = [] -%}
+          {%- for _pattern in _common_urlunpack.exclude | default([]) -%}
+            {%- set _ = _exclude.append("--exclude {}".format(_pattern | squote)) -%}
+          {%- endfor -%}
+          {{ _exclude | join(' ') }}
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail &&
+          curl --location --silent '{{ _common_urlunpack.url }}' |
+          bsdtar --extract
+          --same-owner --group {{ __id }} --owner {{ __id }}
+          --preserve-permissions --no-acls --no-mac-metadata --no-xattrs
+          --strip-components={{ _common_urlunpack.strip | default(0) }}
+          {{ __exclude }}
+          --file -
+        chdir: "{{ _common_urlunpack.dest }}"
+      register: __urlunpack_invocation
+      changed_when: __urlunpack_invocation.rc == 0
+      become: "{{ __become }}"
 
 - name: Common kernel cmdline operation
   when: _common_cmdline is defined

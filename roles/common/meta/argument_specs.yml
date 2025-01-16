@@ -240,7 +240,7 @@ argument_specs:
           - Adds the user to the specified list of groups.
 
       _common_environment:
-        type: dict
+        type: list
         required: false
         description:
           - Modifies global system-wide /etc/environment file with the provided key-value pairs.
@@ -257,3 +257,44 @@ argument_specs:
             description:
               - Value of the environmental variable.
 
+      _common_urlunpack:
+        type: dict
+        required: false
+        description:
+          - Downloads and unpacks specified archive without creating temporary files.
+          - Backed up by the bsdtar (libarchive).
+          - Capable of handling not only .tar archives, but also .zip, .7z, .jar, and more.
+        options:
+          become:
+            type: bool
+            required: false
+            default: false
+            description:
+              - Whenever to use the ansible 'become' mechanism.
+              - Also modifies owner and group of all unpacked files to root if `true` and `users.user.name` otherwise.
+          creates:
+            type: str
+            required: false
+            description:
+              - Same as Ansible's `creates` - a path, the existence of which indicates that the operation must not be performed.
+          dest:
+            type: str
+            required: true
+            description:
+              - The destination directory that is created if needed.
+          exclude:
+            type: list
+            required: false
+            elements: str
+            description:
+              - List of the file pattern to exclude.
+          url:
+            type: str
+            required: true
+            description:
+              - The link to download archive from.
+          strip:
+            type: int
+            required: false
+            description:
+              - Number specifying the number of removed leading path elements from archive.
