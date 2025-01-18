@@ -183,9 +183,12 @@ users:
     state: /home/test/.local/state
     bin: /home/test/.local/bin
 
+    # TODO: more of these
     xdg_quirks:
       PYTHONPYCACHEPREFIX: $XDG_CACHE_HOME/python/pycache
       PYTHON_HISTORY: $XDG_CACHE_HOME/python/history
+      RUFF_CACHE_DIR: $XDG_CACHE_HOME/ruff
+      NUGET_PACKAGES: $XDG_CACHE_HOME/nuget
 
     xdg:
       downloads: dls

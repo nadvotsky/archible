@@ -9,7 +9,7 @@ plugin_autoupdate_last_check_duration = "0"
 
 python_precompiled_os = "unknown-linux-gnu"
 python_precompiled_arch = "x86_64_v2"
-
+pipx.uvx = true
 
 [settings.status]
 show_tools = true

@@ -1,0 +1,45 @@
+---
+- name: Install Python tools and clean common tools data
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install:
+        - uv
+
+    _common_install:
+      wipes:
+        - "{{ users.user.cache }}/python"
+        - "{{ users.user.cache }}/pip"
+
+        - "{{ users.user.config }}/uv"
+        - "{{ users.user.cache }}/uv"
+        - "{{ users.user.share }}/uv"
+
+        - "{{ users.user.config }}/pypoetry"
+        - "{{ users.user.cache }}/pypoetry"
+        - "{{ users.user.share }}/pypoetry"
+
+        - "{{ users.user.config }}/pdm"
+        - "{{ users.user.cache }}/pdm"
+        - "{{ users.user.share }}/pdm"
+
+        - "{{ users.user.config }}/black"
+        - "{{ users.user.cache }}/black"
+
+        - "{{ users.user.cache }}/ruff"
+
+- name: Preinstall latest Python globally
+  ansible.builtin.command:
+    argv:
+      - mise
+      - install
+      - python@latest
+  register: __mise_python_invocation
+  changed_when: __mise_python_invocation.rc == 0
+
+- name: Configure PyCharm IDE
+  ansible.builtin.import_tasks:
+    file: jetbrains.yml
+  vars:
+    _jetbrains_ide: pycharm
