@@ -1,0 +1,41 @@
+---
+- name: Install C++ tools
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      install:
+        - llvm
+        - clang
+        - lldb
+        - lld
+        - libc++
+        - cmake
+        - meson
+        - bazel
+        - conan
+
+    _common_install:
+      defaults:
+        base: "{{ users.user.config }}"
+        wipe: true
+      targets:
+        cmake/clang-toolchain.cmake:
+          content: >-
+            set(CMAKE_C_COMPILER "clang")
+            set(CMAKE_C_USING_LINKER_LLD "-fuse-ld=lld")
+            set(CMAKE_C_FLAGS, "-march=native -mtune=native")
+            set(CMAKE_C_FLAGS_RELEASE, "-flto=thin")
+
+            set(CMAKE_CXX_COMPILER "clang++")
+            set(CMAKE_CXX_USING_LINKER_LLD "-fuse-ld=lld")
+            set(CMAKE_CXX_FLAGS, "-stdlib=libc++ -march=native -mtune=native")
+            set(CMAKE_CXX_FLAGS_RELEASE, "-flto=thin")
+
+            # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+- name: Configure Clion IDE
+  ansible.builtin.import_tasks:
+    file: jetbrains/ide.yml
+  vars:
+    _jetbrains_ide: clion
