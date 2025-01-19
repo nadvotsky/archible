@@ -1,0 +1,55 @@
+---
+- name: Install Rust tools and do not use rustup globally
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_packages:
+      remove:
+        - rustup
+      install:
+        - rust
+        - lldb
+        - lld
+
+    _common_install:
+      wipes:
+        - "{{ users.user.home }}/.rustup"
+        - "{{ users.user.home }}/.cargo"
+        - "{{ users.user.state }}/rustup"
+        - "{{ users.user.state }}/cargo"
+
+- name: Preinstall Rust via mise
+  ansible.builtin.command:
+    argv:
+      - mise
+      - install
+      - rust@nightly
+      - rust@stable
+  environment:
+    MISE_RUSTUP_HOME: "{{ users.user.state }}/rustup"
+    MISE_CARGO_HOME: "{{ users.user.state }}/cargo"
+  register: __mise_rust_invocation
+  changed_when: __mise_rust_invocation.rc == 0
+
+- name: Render optimized cargo profile for builds via mise env
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      defaults:
+        base: "{{ users.users.state }}"
+      targets:
+        cargo/config.toml:
+          content: >-
+            [profile.release]
+            lto = "thin"
+
+            [target.x86_64-unknown-linux-gnu]
+            linker = "ldd"
+            rustflags = ["-Z", "threads=8", "-C", "target-cpu=native"]
+
+- name: Configure RustRover IDE
+  ansible.builtin.import_tasks:
+    file: jetbrains.yml
+  vars:
+    _jetbrains_ide: rustrover

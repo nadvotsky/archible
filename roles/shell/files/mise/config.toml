@@ -14,3 +14,7 @@ pipx.uvx = true
 [settings.status]
 show_tools = true
 show_env = true
+
+[env]
+MISE_CARGO_HOME = "{{ env.XDG_DATA_HOME }}/cargo"
+MISE_RUSTUP_HOME = "{{ env.XDG_DATA_HOME }}/rustup"
