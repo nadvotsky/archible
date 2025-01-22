@@ -1161,6 +1161,60 @@ jetbrains:
     - -Djdk.module.illegalAccess.silent=true
     - -Dkotlinx.coroutines.debug=off
     - -Djbr.catch.SIGABRT=true
+  #
+  # Supported IDEs.
+  #
+  # Keys of this mapping must be the codename of IDE. Codename is used
+  #  in various places, including environmental variables for properties,
+  #  vmoptions, jdk, as well as determing individual paths.
+  # Usually, such codename is a short representation of the IDE name. For instance,
+  #  `idea` for IntelliJ IDEA, `goland` for GoLand, and the rest.
+  #  However, it is `webide` for WebStorm.
+  # It seems like there is no other practical way to determine this other than
+  #  download the IDE itself and browse .../bin/<ide_name>.sh.
+  # Also note that there is a special codename `jetbrains_client`, which is explicitly
+  #  enabled, and is used for Code With Me service.
+  #
+  # Core IDE identification is Product Code. Typically, it is an acronym of the IDE name,
+  #  such as `PCC` for PyCharm Community, `AQ` for Aqua, and so on.
+  #
+  # For different purposes, JetBrains use different product codes:
+  #  1) Release Product Code
+  #  2) License Product Code
+  #
+  # While sometimes they may overlap, they are not interchangeable.
+  #
+  # Release Product Code is used in update channels and artifacts downloading. Such 
+  #  release product codes include Professional, Community and other special editions
+  #  (e.g. Education).
+  # Even more confusion is brought by the use of multiple release product codes that point
+  #  to the same IDE. For example, all of the `PY`, `PCP`, and `PC` are acceptable as release
+  #  product codes for PyCharm Professional Edition.
+  # The particular list of the release product codes may be retrieved using the following:
+  #  curl -s https://www.jetbrains.com/updates/updates.xml | grep -oP "<code>([A-Z]*)</code>"
+  # To verify release product code, use the command below:
+  #  curl -s https://data.services.jetbrains.com/products/releases?code=IU | jq -c keys
+  #
+  # License product codes are slighty different; only paid IDEs are included. Consequently,
+  #  `IIU` is replaced with `II`, `PCP` with `PC`, and so forth.
+  #  Refer to the https://plugins.jetbrains.com/docs/marketplace/product-codes.html for more information.
+  # License product codes also include plugins, both built-in and from marketplace.
+  # There are few well-known plugins:
+  #  1) PCWMP => Code With Me Premium
+  #  2) AIL/AIP => AI Assistant / AI Pro (obviously have no use with agent)
+  #  3) PSI => Shared Index (no longer requires separate license and built-in)
+  #  4) PDB => Plugin Database Tools and SQL for WebStorm (no longer requires separate license and built-in)
+  #  5) PRR => Rust Plugin (deprecated in favor of RustRover)
+  #  6) PWS/PPS/PGO/PPC/PRB/PSW => Unknown built-in plugins, likely integrated in the IDE's main license. 
+  #
+  # Follow these steps to identify license product code:
+  #  1) Open the link in the marketplace, e.g. https://plugins.jetbrains.com/plugin/10080-rainbow-brackets
+  # To identify via the string id:
+  #  2) Scroll to the `Additional Information` section and extract Plugin ID, e.g. `izhangzhihao.rainbow.brackets`
+  #  3) Parse the `<productCode>` tag from https://plugins.jetbrains.com/plugins/list?pluginId=izhangzhihao.rainbow.brackets
+  # To identify via the numeric id:
+  #  2) Extract a number from the URL slug, e.g. `10080`
+  #  3) Parse the `purchaseInfo.productCode` from https://plugins.jetbrains.com/api/plugins/10080 
   ide:
     idea:
       name: IntelliJ IDEA Ultimate Edition
