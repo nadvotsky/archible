@@ -1,0 +1,28 @@
+---
+    - name: Configure WebStorm IDE
+      ansible.builtin.import_tasks:
+        file: jetbrains.yml
+      vars:
+        _jetbrains_ide: webide
+
+    - name: Wipe various tools caches
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          # DENO_DIR
+          wipes:
+            - "{{ users.user.cache }}/biome"
+            - "{{ users.user.cache }}/npm"
+            - "{{ users.user.cache }}/deno"
+            - "{{ users.user.cache }}/pnpm"
+            - "{{ users.user.cache }}/corepack"
+
+    - name: Install latest Python globally
+      ansible.builtin.command:
+        argv:
+          - mise
+          - install
+          - node@latest
+          - bun@latest
+          - deno@latest
