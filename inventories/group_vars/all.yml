@@ -547,6 +547,11 @@ icons:
     package: zorin-icon-themes
 
   launcher:
+    #
+    # Nordzy contains thousands of files, be aware
+    #  that if makepkg is going to try to strip it (OPTIONS=(strip) in makepkg.conf),
+    #  this would lead into a very long installation time.
+    #
     name: Nordzy
     package: nordzy-icon-theme
 
@@ -958,6 +963,10 @@ keys:
       - :wm Tilde
     workspace_prev:
       - :wm :alt Tilde
+    #
+    # Make sure it reflects total amount of workspaces
+    #  summed by monitors.<>.workspaces.
+    #
     workspaces:
       - :wm F5
       - :wm F6
