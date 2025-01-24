@@ -127,7 +127,7 @@
 {%- set _username_hostname_style = {"_bold": True, "_fg": _preset.unimportant.line} -%}
 {%- set _username_hostname_format = "{}{}".format(
     _block(
-        _escape(["[", "$username", _icon("eb3a"), " ", "$hostname", "]"] | join(_spacing)),
+        _escape(["[", "$username", _icon("eb3a"), "$hostname", "]"] | join(_spacing)),
         **_username_hostname_style,
     ),
     _spacing,
