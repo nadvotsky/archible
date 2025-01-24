@@ -11,6 +11,7 @@
 
 - name: Perform main provisioning of the system
   hosts: apex
+  gather_facts: no
   roles:
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }
