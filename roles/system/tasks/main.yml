@@ -4,3 +4,13 @@
 # TODO: terminus-font
 # TODO: udev
 # TODO: journald
+# TODO: systemd-preset
+# TODO: systemd-tmpfiles
+# TODO: kernel command-lines
+#   - systemd.restore_state: "0"
+#   - quotacheck.mode: skip
+#   - net.ifnames: "0"
+#   - plymouth.enable: "0"
+#   - systemd.verity: "no"
+#   - systemd.gpt_auto: "0"
+#   - systemd.firstboot: "off"

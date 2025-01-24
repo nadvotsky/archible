@@ -117,20 +117,9 @@ machine:
     no_timer_check: ~
     pci: "pcie_bus_perf"
     #
-    # systemd related
+    # Blacklist.
     #
-    systemd.restore_state: "0"
-    quotacheck.mode: skip
-    net.ifnames: "0"
-    plymouth.enable: "0"
-    systemd.verity: "no"
-    systemd.gpt_auto: "0"
-    systemd.firstboot: "off"
-    #
-    # Audio
-    #
-    module_blacklist: "snd_hda_codec_hdmi,snd_seq,asus_wmi"
-    snd_hda_intel.position_fix: 6
+    module_blacklist: "asus_wmi"
     #
     # sysctl
     #
@@ -345,6 +334,11 @@ gpg:
         hint: ~
 
 media:
+  cmdline:
+    snd_hda_intel.position_fix: "6"
+    module_blacklist:
+      - snd_hda_codec_hdmi
+      - snd_seq
   features:
     #
     # Whenever enable save feature for volumes and "fallback" source and sink.
