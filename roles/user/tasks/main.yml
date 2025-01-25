@@ -1,4 +1,43 @@
 ---
+- name: Configure pam and faillock to use no delay
+  when: security.pam.nodelay is true
+  tags:
+    - user-pam
+  block:
+    - name: Render faillock configuration
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_install:
+          targets:
+            /etc/security/faillock.conf:
+              become: true
+              file: files/faillock/faillock.conf
+
+    - name: Add nodelay to pam_unix in system-auth
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/system-auth
+        regexp: ^(?P<prep>auth\s+.*\s+pam_unix\.so\s+)(?P<flags>[\w ]+)(?<!nodelay)$
+        line: \g<prep>\g<flags> nodelay
+        backrefs: true
+        mode: "0644"
+        owner: 0
+        group: 0
+      become: true
+
+- name: Configure system-wide XDG quirks
+  tags:
+    - user-env-quirks
+    - user-env
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_install:
+      targets:
+        /etc/profile.d/env-quirks.sh:
+          become: true
+          template: system-profile/env-quirks.sh.j2
+
 - name: Configure user profile
   tags:
     - user-profile
@@ -27,32 +66,6 @@
             .profile:
               template: user-profile/login.j2
 
-- name: Configure pam and faillock to use no delay
-  when: security.pam.nodelay is true
-  tags:
-    - user-pam
-  block:
-    - name: Render faillock configuration
-      ansible.builtin.import_role:
-        name: common
-      vars:
-        _common_install:
-          targets:
-            /etc/security/faillock.conf:
-              become: true
-              file: files/faillock/faillock.conf
-
-    - name: Add nodelay to pam_unix in system-auth
-      ansible.builtin.lineinfile:
-        path: /etc/pam.d/system-auth
-        regexp: ^(?P<prep>auth\s+.*\s+pam_unix\.so\s+)(?P<flags>[\w ]+)(?<!nodelay)$
-        line: \g<prep>\g<flags> nodelay
-        backrefs: true
-        mode: "0644"
-        owner: 0
-        group: 0
-      become: true
-
 - name: Configure XDG Base Dirs
   tags:
     - user-xdg-base-dirs
@@ -80,19 +93,6 @@
         - "{{ users.user.share }}"
         - "{{ users.user.state }}"
         - "{{ users.user.bin }}"
-
-- name: Configure system-wide XDG quirks
-  tags:
-    - user-xdg-quirks
-    - user-xdg
-  ansible.builtin.import_role:
-    name: common
-  vars:
-    _common_install:
-      targets:
-        /etc/profile.d/xdg-quirks.sh:
-          become: true
-          template: system-profile/xdg-quirks.sh.j2
 
 - name: Configure XDG User Dirs
   tags:

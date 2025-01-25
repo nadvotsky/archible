@@ -1,0 +1,34 @@
+{#
+    While these variable are user-agnostic, it is still safe
+     to use `users.user` paths, as these are effectively replaced
+     with the corresponding $XDG_* variables. 
+#}
+{%- set _xdg_subs = {
+    "$XDG_CONFIG_HOME": users.user.config,
+    "$XDG_CACHE_HOME": users.user.cache,
+    "$XDG_DATA_HOME": users.user.share,
+    "$XDG_STATE_HOME": users.user.state,  
+} -%}
+
+{%- macro _xdg_dedup(_var) -%}
+    {%- set _ns = namespace(var=_var) -%}
+    {%- for _xdg_env, _expanded in _xdg_subs.items() -%}
+        {%- set _ns.var = _ns.var.replace(_expanded, _xdg_env) -%}
+    {%- endfor -%}
+    {##}
+    {{ _ns.var }}
+{%- endmacro -%}
+
+
+if
+    [ -z "$XDG_CONFIG_HOME" ] ||
+    [ -z "$XDG_CACHE_HOME" ] ||
+    [ -z "$XDG_DATA_HOME" ] ||
+    [ -z "$XDG_STATE_HOME" ];
+then
+    return 0
+fi
+
+{% for _variable, _value in env.items() %}
+export {{ _variable }}="{{ _xdg_dedup(_value) | relative_indent }}"
+{% endfor %}
