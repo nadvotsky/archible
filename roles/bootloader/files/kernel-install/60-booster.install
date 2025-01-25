@@ -14,12 +14,13 @@ then
     exit 0
 fi
 
-EXEC=(
-    booster
-    build
-    --force
-    --kernel-version=$KERNEL_VERSION
-    $KERNEL_INSTALL_STAGING_AREA/initrd
+EXEC=("booster" "build" "--force")
+if [[ -n "$KERNEL_INSTALL_BOOSTER_UNIVERSAL" ]]; then
+    EXEC+=("--universal")
+fi
+EXEC+=(
+    "--kernel-version=$KERNEL_VERSION"
+    "$KERNEL_INSTALL_STAGING_AREA/initrd"
 )
 
 echo "+$SELF: ${EXEC[*]}"
