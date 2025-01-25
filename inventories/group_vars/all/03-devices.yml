@@ -1,0 +1,236 @@
+---
+inputs:
+  mask:
+    keyboard-subdevice: "SEM USB Keyboard Consumer Control"
+    power-button: "Power Button"
+    fake-keyboard: "USB OPTICAL MOUSE  Keyboard"
+
+  mouse:
+    accel: flat
+    speed: -0.5
+
+  keyboard:
+    model: pc104
+    layout: us,ru,ua
+    options: grp:menu_toggle,compose:rctrl,terminate:ctrl_alt_bksp
+
+monitors:
+  stack: horizontal
+  outputs:
+    primary:
+      workspaces: 8
+      width: 1920
+      height: 1080
+      refresh: 60
+      x11: DFP-1
+      wayland: HDMI-A-1
+
+    secondary:
+      workspaces: 4
+      width: 1280
+      height: 1024
+      refresh: 75
+      x11: DFP-5
+      wayland: HDMI-A-3
+
+media:
+  cmdline:
+    snd_hda_intel.position_fix: "6"
+    module_blacklist:
+      - snd_hda_codec_hdmi
+      - snd_seq
+  features:
+    #
+    # Whenever enable save feature for volumes and "fallback" source and sink.
+    #
+    save: false
+    #
+    # Video capture support.
+    #
+    video_v4l2: false
+    video_libcamera: false
+    #
+    # Midi support.
+    #
+    midi: false
+    #
+    # Jack support.
+    #
+    jack: false
+    #
+    # Bluez5 support.
+    #
+    bluetooth: false
+    #
+    # Noise suppression device.
+    #
+    rnnoise: true
+    #
+    # Loopback device that basically acts as a virtual output
+    #  particulary useful to omit some of the applications from recordings.
+    #
+    loopback: true
+  quantum:
+    min: 256
+    default: 1024
+    max: 4096
+  realtime:
+    nice: -10
+    priority: 80
+  #
+  # VAD Threshold.
+  #
+  rnnoise_threshold: 50.0
+  #
+  # Percentage of complexity
+  #
+  resampling: 0.5
+  #
+  # If hard limit is required instead, there is `volume-limit` in the acp.
+  #
+  volume:
+    output: 0.68 # -10 db
+    input: 0.56 # -25 db
+  #
+  # List of the apps that have full access to the mixers.
+  #  Extremely useful in case of WebRTC automatic gain control.
+  #
+  whitelist:
+    - pavucontrol
+    - helvum
+    - waybar
+    - wpctl
+  #
+  # Refer to the roles/media/tasks/main.yml for more info.
+  #
+  cards:
+    main:
+      selectors:
+        device:
+          device.form-factor: internal
+        input:
+          api.alsa.card.name: HDA ATI SB
+          api.alsa.pcm.stream: capture
+        output:
+          api.alsa.card.name: HDA ATI SB
+          api.alsa.pcm.stream: playback
+      #
+      # Create a rule that would disable any other devices other than this.
+      #
+      exclusive: true
+      #
+      # Must be of 48000 when `virtual.rnnoise` is enabled.
+      #
+      frequency: 48000
+      format: S32LE
+      channels: [FL, FR]
+      inputs:
+        jacks:
+          Rear Mic:
+          Line:
+          Front Mic:
+        enumerations:
+          Loopback Mixing:
+          Input Source:
+        #
+        # Some capture mixers are bugged and marked for playback.
+        #
+        elements:
+          Capture,0:
+            type: [switch, volume]
+          Capture,1:
+            type: [switch, volume]
+          Rear Mic:
+            type: [switch, volume]
+            direction: playback
+          Rear Mic Boost:
+            type: [volume]
+          Line:
+            type: [switch, volume]
+            direction: playback
+          Line Boost:
+            type: [volume]
+            direction: playback
+          Front Mic:
+            type: [switch, volume]
+            direction: playback
+          Front Mic Boost:
+            type: [volume]
+      outputs:
+        jacks:
+          Line Out Front:
+          Line Out Surround:
+          Line Out CLFE:
+          Line Out Side:
+          Front Headphone:
+          SPDIF Phantom:
+        enumerations:
+          Auto-Mute Mode:
+        elements:
+          Front:
+            type: [switch, volume]
+          PCM:
+            type: [volume]
+          Master:
+            type: [switch, volume]
+          Headphone:
+            type: [switch, volume]
+          Surround:
+            type: [switch, volume]
+          Center:
+            type: [switch, volume]
+          LFE:
+            type: [switch, volume]
+          Side:
+            type: [switch, vbase:olume]
+          IEC958:
+            type: [switch]
+          IEC958 Default PCM:
+            type: [switch]
+      acp:
+        output:analog-stereo-headset+input:analog-stereo-headset:
+          type: profile
+          inputs:
+            - analog-stereo-headset
+          outputs:
+            - analog-stereo-headset
+        analog-stereo-headset:
+          type: mapping
+          label: analog-stereo-headset
+          device: front:%f
+          priority: 10
+          inputs:
+            - analog-input-microphone-headset
+          outputs:
+            - analog-output-headphones
+        analog-input-microphone-headset:
+          type: input-path
+          label: analog-input-microphone-headset
+          priority: 10
+          jacks:
+            Rear Mic:
+          elements:
+            Capture,0:
+            Rear Mic:
+            Rear Mic Boost:
+          enumerations:
+            Input Source:
+              option: Rear Mic
+              description: input-microphone
+            Loopback Mixing:
+              option: Disabled
+              description: input
+        analog-output-headphones:
+          type: output-path
+          label: analog-output-headphones
+          priority: 10
+          jacks:
+            Line Out Front:
+          elements:
+            Front:
+            PCM:
+            Master:
+          enumerations:
+            Auto-Mute Mode:
+              option: Disabled
+              description: output-headphones

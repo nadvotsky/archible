@@ -1,0 +1,507 @@
+---
+icons:
+  main:
+    name: Zorin
+    package: zorin-icon-themes
+
+  launcher:
+    #
+    # Nordzy contains thousands of files, be aware
+    #  that if makepkg is going to try to strip it (OPTIONS=(strip) in makepkg.conf),
+    #  this would lead into a very long installation time.
+    #
+    name: Nordzy
+    package: nordzy-icon-theme
+
+fonts:
+  sizes: &fonts-sizes
+    small: 11
+    medium: 13
+    big: 16
+  offsets: &fonts-offsets
+    small: 1
+    medium: 2
+    big: 3
+
+  monospace:
+    name: Source Code Pro
+    package: adobe-source-code-pro-fonts
+    sizes: *fonts-sizes
+    offsets: *fonts-offsets
+  serif:
+    name: Inter
+    package: inter-font
+    sizes: *fonts-sizes
+    offsets: *fonts-offsets
+  sans_serif:
+    name: Inter
+    package: inter-font
+    sizes: *fonts-sizes
+    offsets: *fonts-offsets
+  emoji:
+    name: JoyPixels
+    package: ttf-joypixels
+    sizes: *fonts-sizes
+    offsets: *fonts-offsets
+  icon:
+    name: Symbols Nerd Font Mono
+    package: ttf-nerd-fonts-symbols-mono
+    sizes:
+      small: 13
+      medium: 15
+      big: 18
+    offsets:
+      small: 2
+      medium: 2
+      big: 3
+
+gui:
+  gtk:
+    name: Arc-Dark-solid
+    package: arc-solid-gtk-theme
+
+  kvantum:
+    name: ArcDark
+    package: kvantum-theme-arc
+
+scaling:
+  #code_with
+  # Assuming that virtual perfect monitor has the following DPI.
+  # All spacings are based on this value.
+  #
+  ethalon: 96
+  #
+  # Real monitor is different.
+  #
+  # Dpi is a very tricky metric, because it is up to the application
+  # how to implement scaling. For example:
+  #   herbstluftwm
+  #     scales font,
+  #     does not scale paddings, offsets, etc.
+  #   polybar
+  #     scales spaces, points, both :size and :pixelsize,
+  #     does not scale pixels and font offsets.
+  #   dunst
+  #     scales sizes, spacings, and font when dpi is greater than 96,
+  #     but only (down)scales font when dpi is smaller than 96
+  #   and so on.
+  #
+  #   While it is okay for the regular user applications to be scaled arbitrary,
+  #   it is not the case for the WM & related programs.
+  #
+  #   For instance, when herbstluftwm draws a 5 pixels border around window,
+  #   it is quite noticable when rofi draws about 7 pixels.
+  #   Another example is that changing dpi for polybar will not affect other
+  #   programs, as well as will break polybar itself, because font offset
+  #   is not affected by the DPI.
+  #
+  #   Practically it means that it is impossible to create a dpi-aware stack
+  #   of the window manager environment. Therefore, using its own dpi-like mechanism,
+  #   where elements are being scaled at the template rendering stage.
+  #
+  real: 0.9
+
+spacing:
+  thin: 1
+  small: 2
+  medium: 6
+  big: 11
+
+notifications:
+  monitor: secondary
+  height: 0.3
+  width: 0.6
+  icon: 0.1
+
+wms:
+  scratch: Scratch
+
+theme:
+  dark1: &dark1 "#2e3440"
+  dark2: &dark2 "#3b4252"
+  dark3: &dark3 "#434c5e"
+  dark4: &dark4 "#4c566a"
+
+  snow1: &snow1 "#d8dee9"
+  snow2: &snow2 "#e5e9f0"
+  snow3: &snow3 "#eceff4"
+
+  cyan1: &cyan1 "#8fbcbb"
+  cyan2: &cyan2 "#88c0d0"
+
+  blue1: &blue1 "#81a1c1"
+  blue2: &blue2 "#5e81ac"
+
+  red: &red "#bf616a"
+  orange: &orange "#d08770"
+
+  yellow: &yellow "#ebcb8b"
+  green: &green "#a3be8c"
+
+  purple: &purple "#b48ead"
+
+ansi:
+  normal:
+    # black red green yellow blue magenta cyan white
+    - *dark2
+    - *red
+    - *green
+    - *orange
+    - *blue2
+    - *purple
+    - *cyan1
+    - *snow1
+  bright:
+    # black red green yellow blue magenta cyan white
+    - *dark4
+    - *red
+    - *green
+    - *yellow
+    - *blue1
+    - *purple
+    - *cyan2
+    - *snow3
+
+preset:
+  accent: *blue1
+  alternative: *cyan1
+
+  emphasis: *blue2
+  complement: *cyan2
+
+  sharp: *snow3
+  foreground: *snow1
+  background: *dark3
+
+  important: *purple
+  unimportant: *dark4
+
+  active: *dark4
+  inactive: *dark2
+
+  border: *dark1
+
+  positive: *green
+  neutral: *yellow
+  negative: *red
+
+keys:
+  modifiers:
+    wm:
+      main: SUPER
+      alt: SUPER+SHIFT
+    emacs:
+      main: ALT
+      alt: ALT+SHIFT
+    common:
+      main: CTRL
+      alt: CTRL+SHIFT
+    term:
+      main: CTRL+ALT
+      alt: CTRL+ALT+SHIFT
+    vim:
+      main: ~
+      alt: SHIFT
+    bare:
+      main: ~
+      alt: SHIFT
+    extra:
+      word: ALT
+      many: CTRL
+      select: SHIFT
+
+  binds:
+    escape:
+      - :bare Escape
+    close:
+      - :common w
+      - :wm q
+    kill:
+      - :common :alt w
+      - :wm :alt q
+    quit:
+      - :common q
+      - :wm :alt Backspace
+    terminate:
+      - :common :alt q
+
+    cycle_next:
+      - :bare Tab
+    cycle_prev:
+      - :bare BackTab
+
+    goto:
+      - :common g
+
+    open:
+      - :common o
+    invoke:
+      - :common i
+    clear_all:
+      - :term l
+      - :common l
+    save:
+      - :common s
+    external:
+      - :term p
+      - :common p
+    prompt:
+      - :vim :alt ;
+      - :common e
+
+    enter:
+      - :bare Enter
+    space:
+      - :bare Space
+    delete:
+      - :vim d
+      - :bare Backspace
+    delete_forward:
+      - :bare Delete
+      - :common h
+
+    switch_case:
+      - :vim c
+    search_selection:
+      - :vim s
+    files:
+      - :vim f
+
+    insert_mode:
+      - :vim i
+    select_mode:
+      - :vim v
+
+    select_all:
+      - :common a
+    select_swap:
+      - :vim o
+
+    undo:
+      - :vim u
+      - :common z
+    redo:
+      - :vim :alt u
+      - :common :alt z
+      - :common y
+      - :common r
+    copy:
+      - :vim y
+      - :common c
+      - :term c
+    paste:
+      - :common v
+      - :vim p
+      - :wm v
+    cut:
+      - :wm x
+      - :common x
+
+    left:
+      - :vim h
+      - :bare Left
+      - :wm h
+      - :wm Left
+    up:
+      - :vim k
+      - :bare Up
+      - :wm k
+      - :wm Up
+    right:
+      - :vim l
+      - :bare Right
+      - :wm l
+      - :wm Right
+    down:
+      - :vim j
+      - :bare Down
+      - :wm j
+      - :wm Down
+
+    line_up:
+      - :emacs Up
+    line_down:
+      - :emacs Down
+
+    line_begin:
+      - :vim 0
+      - :emacs a
+    line_begin_alt:
+      - :emacs :alt a
+    line_end:
+      - :vim :alt 4
+      - :emacs e
+    line_end_alt:
+      - :emacs :alt e
+    line_delete:
+      - :emacs d
+    line_clear:
+      - :emacs k
+      - :vim :alt d
+
+    word_next:
+      - :vim w
+    word_prev:
+      - :vim b
+    word_delete:
+      - :emacs w
+
+    pageup:
+      - :vim u
+      - :bare PageUp
+    pagedown:
+      - :vim d
+      - :bare PageDown
+    pageup_half:
+      - :vim :alt u
+    pagedown_half:
+      - :vim :alt d
+
+    file_begin:
+      - :vim g
+      - :emacs ,
+    file_end:
+      - :vim :alt g
+      - :emacs .
+
+    search:
+      - :term f
+      - :common f
+    search_next:
+      - :vim n
+      - :bare F3
+    search_prev:
+      - :vim :alt n
+      - :bare :alt F3
+
+    output_next:
+      - :wm Escape
+    output_prev:
+      - :wm :alt Escape
+
+    workspace_next:
+      - :wm Tilde
+    workspace_prev:
+      - :wm :alt Tilde
+    #
+    # Make sure it reflects total amount of workspaces
+    #  summed by monitors.<>.workspaces.
+    #
+    workspaces:
+      - :wm F5
+      - :wm F6
+      - :wm F7
+      - :wm F8
+      - :wm F1
+      - :wm F2
+      - :wm F3
+      - :wm F4
+      - :wm F9
+      - :wm F10
+      - :wm F11
+      - :wm F12
+    workspaces_move:
+      - :wm :alt F5
+      - :wm :alt F6
+      - :wm :alt F7
+      - :wm :alt F8
+      - :wm :alt F1
+      - :wm :alt F2
+      - :wm :alt F3
+      - :wm :alt F4
+      - :wm :alt F9
+      - :wm :alt F10
+      - :wm :alt F11
+      - :wm :alt F12
+
+    group_next:
+      - :wm Tab
+    group_prev:
+      - :wm :alt Tab
+
+    tab_next:
+      - :common Tab
+      - :wm CapsLock
+      - :wm MouseNext
+    tab_prev:
+      - :common :alt BackTab
+      - :wm :alt CapsLock
+      - :wm MousePrev
+    tabs:
+      - :wm 1
+      - :wm 2
+      - :wm 3
+      - :wm 4
+      - :wm 5
+
+    terminal:
+      - :wm w
+    terminal_topmost:
+      - :wm :alt w
+    run:
+      - :wm e
+    windows:
+      - :vim w
+      - :wm :alt e
+    scratch:
+      - :wm r
+
+    netns:
+      - :wm y
+    screenshot_clipboard:
+      - :wm o
+    screenshot_file:
+      - :wm :alt o
+
+    focus_urgent:
+      - :wm u
+    notifications:
+      - :wm :alt u
+    tiling:
+      - :wm p
+
+    fullscreen:
+      - :wm a
+    layout:
+      - :wm s
+    layout_alt:
+      - :wm :alt s
+    floating:
+      - :wm d
+    group:
+      - :wm f
+    layout_group:
+      - :wm :alt f
+
+    layout_master:
+      - :wm z
+    split_v:
+      - :wm c
+    split_h:
+      - :wm n
+    layout_v:
+      - :wm :alt c
+    layout_h:
+      - :wm :alt n
+
+    minimize:
+      - :wm m
+    focus_minimized:
+      - :wm :alt m
+
+    audio_play:
+      - :bare XF86AudioPlay
+    audio_stop:
+      - :bare XF86AudioStop
+    audio_prev:
+      - :bare XF86AudioPrev
+    audio_next:
+      - :bare XF86AudioNext
+
+    move:
+      - :wm MouseLeft
+    zoom:
+      - :wm MouseMiddle
+    resize:
+      - :wm MouseRight
+

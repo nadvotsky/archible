@@ -1,0 +1,40 @@
+---
+users:
+  root:
+    password: test
+
+  user:
+    name: test
+    password: test
+
+    short: Example
+    full: Example User
+    alt: Exemple d'Utilisateur
+    email: example@.local
+
+    groups:
+      - adm
+      - wheel
+      - audio
+      - video
+      - input
+      - systemd-journal
+      - log
+      - kvm
+
+    home: /home/test
+    config: /home/test/.config
+    cache: /home/test/.cache
+    share: /home/test/.local/share
+    state: /home/test/.local/state
+    bin: /home/test/.local/bin
+
+    xdg:
+      downloads: dls
+      documents: env
+      pictures: media/pics
+      videos: media/vids
+      music: media/music
+      templates: misc/templates
+      publicshare: misc/public
+      desktop: misc/desktop
