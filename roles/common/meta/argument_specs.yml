@@ -3,6 +3,142 @@ argument_specs:
   main:
     short_description: Common tasks role
     options:
+      _common_install:
+        type: dict
+        required: true
+        description:
+          - Installation tasks (akin install(1)).
+        options: &common-install-opts
+          defaults:
+            type: dict
+            description:
+              - Sets default flags for all targets that did not specify it explicitly.
+            options:
+              become:
+                type: bool
+                required: false
+                default: false
+                description:
+                  - Whenever to use the ansible 'become' mechanism.
+              wipe:
+                type: bool
+                required: false
+                default: false
+                description:
+                  - Ignored when `policy.destructive` is false.
+                  - For directory targets, wipe the provided directory.
+                  - For file targets, wipe the parent directory.
+              create:
+                type: bool
+                required: false
+                default: true
+                description:
+                  - Whenever to create the target.
+                  - For file targets, this creates an empty file.
+              owner:
+                type: str
+                required: false
+                default: "{{ users.user.name }}"
+                description:
+                  - Owner of the filesystem objects (including parent directory for file targets).
+              group:
+                type: str
+                required: false
+                default: "{{ users.user.name }}"
+                description:
+                  - Group of the filesystem objects (including parent directory for file targets).
+              filemode:
+                type: str
+                required: false
+                default: "0644"
+                description:
+                  - File targets permissions.
+              dirmode:
+                type: str
+                required: false
+                default: "0644"
+                description:
+                  - For directory targets, set the provided directory permissions.
+                  - Fir file targets, set the parent directory permissions.
+              base:
+                type: str
+                required: false
+                default: "{{ users.user.config }}"
+                description:
+                  - The base path for all targets that are not absolute.
+          targets:
+            type: list
+            description:
+              - A list of targets to process.
+            required: true
+            elements: dict
+            options:
+              dir:
+                type: str
+                required: false
+                description:
+                  - An absolute or relative path to the directory target.
+              file:
+                type: str
+                required: false
+                description:
+                  - An absolute or relative path to the file target.
+              copy:
+                type: str
+                required: false
+                description:
+                  - A file from this playbook to copy to the file target.
+              content:
+                type: str
+                required: false
+                description:
+                  - A string content to write to the file target.
+              template:
+                type: str
+                required: false
+                description:
+                  - A template to render to the file target.
+              link:
+                type: str
+                required: false
+                description:
+                  - The control node filesystem object to link to the target.
+              wipe:
+                type: bool
+                required: false
+                description:
+                  - This setting has the same meaning as the `defaults.wipe` but on the target level.
+              create:
+                type: bool
+                required: false
+                description:
+                  - This setting has the same meaning as the `defaults.create` but on the target level.
+              owner:
+                type: str
+                required: false
+                description:
+                  - This setting has the same meaning as the `defaults.owner` but on the target level.
+              group:
+                type: str
+                required: false
+                description:
+                  - This setting has the same meaning as the `defaults.group` but on the target level.
+              filemode:
+                type: str
+                required: false
+                description:
+                  - This setting has the same meaning as the `defaults.filemode` but on the target level.
+              dirmode:
+                type: str
+                required: false
+                description:
+                  - This setting has the same meaning as the `defaults.dirmode` but on the target level.
+              base:
+                type: str
+                required: false
+                description:
+                  - This setting has the same meaning as the `defaults.base` but on the target level.
+
       _common_packages:
         type: dict
         required: false
@@ -38,63 +174,24 @@ argument_specs:
             description:
               - List of the packages to install. It also supports AURs.
 
-      _common_install:
+      _common_vm:
         type: dict
         required: false
         description:
-          - Installation tasks (wiping, creating required directories, rendering files, etc).
+          - Tools management via version manager.
         options:
-          defaults: &common-install-opts
-            type: dict
-            description:
-              - Sets default flags for all targets that did not specify it explicitly.
-            options:
-              become:
-                type: bool
-                required: false
-                default: false
-                description:
-                  - Whenever to use the ansible 'become' mechanism.
-              wipe:
-                type: bool
-                required: false
-                default: false
-                description:
-                  - Whenever to wipe the directory the target belongs to.
-              filemode:
-                type: str
-                required: false
-                default: '0644'
-                description:
-                  - Permissions of the target file.
-              dirmode:
-                type: str
-                required: false
-                default: '0755'
-                description:
-                  - Permissions of the directory the target file belongs to.
-                  - It may also create some intermediate directories.
-              base:
-                type: str
-                required: false
-                default: "{{ users.user.config }}"
-                description:
-                  - The base path for all targets that are not absolute.
-          wipes:
+          wipe:
             type: list
             elements: str
             required: false
             description:
-              - An additional list of filesystem entries to wipe.
-          targets:
-            type: dict
+              - List of the packages to wipe (including all versions).
+          install:
+            type: list
+            elements: str
+            required: false
             description:
-              - A mapping of the target to its options.
-              - >-
-                Each key must either be relative or absolute path with at least two parts (so that dirname exists),
-                consisting any of the following items: `become`, `wipe`, `filemode`, `dirmode`, and `base`,
-                which have the same meaning as `defaults`, along with `content`, `template`, and `file`
-                for specifying the source for the target, respectively.
+              - List of the packages to install.
 
       _common_services:
         type: dict

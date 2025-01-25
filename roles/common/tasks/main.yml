@@ -3,7 +3,7 @@
   when: _common_packages is defined
   vars:
     __paru_args: /usr/bin/paru --sudoflags "--stdin" --noconfirm
-    __assert: &paru-assert
+    __paru_assert: &paru-assert
       register: __paru_invocation
       changed_when: __paru_invocation.rc == 0
   block:
@@ -11,7 +11,7 @@
       when: _common_packages.remove is defined
       ansible.builtin.command:
         cmd: "{{ __paru_args }} --remove --recursive {{ _common_packages.remove | join(' ') }}"
-        stdin: "{{ users.user.password }}"
+        stdin: "{{ ansible_become_password }}"
       register: __paru_invocation
       failed_when: false
       changed_when: __paru_invocation.rc == 0
@@ -24,7 +24,7 @@
           {{ __paru_args }}
           {{ _common_packages.sync is true | ternary('--refresh', '') }}
           {{ _common_packages.upgrade is true | ternary('--sysupgrade', '') }}
-        stdin: "{{ users.user.password }}"
+        stdin: "{{ ansible_become_password }}"
 
     - name: Install packages
       <<: *paru-assert
@@ -34,7 +34,38 @@
           {{ __paru_args }}
           {{ ['--sync', _common_packages.force is true | ternary(none, '--needed')] | reject('none') | join(' ') }}
           {{ _common_packages.install | join(' ') }}
-        stdin: "{{ users.user.password }}"
+        stdin: "{{ ansible_become_password }}"
+
+- name: Common version management tasks
+  when: _common_vm is defined
+  vars:
+    __vm_assert: &vm-assert
+      register: __mise_invocation
+      changed_when: __mise_invocation.rc == 0
+  block:
+    - name: Wipe packages
+      when: policy.destructive is true and _common_vm.wipe is defined
+      ansible.builtin.command:
+        cmd: "mise uninstall --all {{ _common_vm.wipe | join(' ') }}"
+      environment: "{{ env }}"
+      register: __mise_invocation
+      failed_when: false
+      changed_when: __mise_invocation.rc == 0
+
+    - name: Wipe installation dirs
+      when: policy.destructive is true and _common_vm.wipe is defined
+      ansible.builtin.file:
+        path: "{{ users.user.share }}/mise/installs/{{ item | regex_replace('[:\\/]', '-') }}"
+        state: absent
+      loop: "{{ _common_vm.wipe }}"
+
+    - name: Install a tool via version management
+      when: _common_vm.install is defined
+      ansible.builtin.command:
+        cmd: "mise install {{ _common_vm.install | join(' ') }}"
+      environment: "{{ env }}"
+      register: __mise_invocation
+      changed_when: __mise_invocation.rc == 0
 
 - name: Common installing tasks (akin install(1))
   when: _common_install is defined
