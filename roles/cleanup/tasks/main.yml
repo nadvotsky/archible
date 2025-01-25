@@ -2,3 +2,4 @@
 # TODO: cleanup pacman cache, .cache, .rustup
 # TODO: VACUUM SQLite
 # TODO: fstrim.timer
+# TODO: systemd-tmpfiles --purge
