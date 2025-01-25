@@ -7,14 +7,12 @@ log_level = "warn"
 env_file = ".env"
 plugin_autoupdate_last_check_duration = "0"
 
+trusted_config_paths = ["{{ users.user.home }}"]
+
 python_precompiled_os = "unknown-linux-gnu"
-python_precompiled_arch = "x86_64_v2"
+python_precompiled_arch = "x86_64_v3"
 pipx.uvx = true
 
 [settings.status]
 show_tools = true
 show_env = true
-
-[env]
-MISE_CARGO_HOME = "{{ env.XDG_DATA_HOME }}/cargo"
-MISE_RUSTUP_HOME = "{{ env.XDG_DATA_HOME }}/rustup"

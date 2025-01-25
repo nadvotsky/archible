@@ -138,11 +138,11 @@
     _common_install:
       wipes:
         - "{{ users.user.share }}/mise"
-        - "{{ users.user.config }}/mise"
+        - "{{ users.user.state }}/mise"
       targets:
         mise/config.toml:
           wipe: true
-          file: mise/config.toml
+          template: mise/config.toml.j2
         carapace/specs/mise.yaml:
           file: mise/mise.yaml
 
