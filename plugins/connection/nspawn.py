@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Based on chroot.py (community.general.chroot):
 # (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
 # (c) 2013, Maykel Moya <mmoya@speedyrails.com>
@@ -7,7 +6,7 @@
 # GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
     name: nspawn
     short_description: Interact with systemd-nspawn container.
     description:
@@ -42,7 +41,7 @@ DOCUMENTATION = '''
           - name: ansible_nspawn_args
         type: str
         default: --quiet --as-pid2 --pipe
-'''
+"""
 
 import os
 import subprocess
@@ -57,11 +56,13 @@ from ansible.module_utils.common.text.converters import to_bytes, to_native
 from ansible.utils.display import Display
 from ansible.utils.shlex import shlex_split
 
-from ansible_collections.community.general.plugins.connection.chroot import Connection as ChrootConnection
+from ansible_collections.community.general.plugins.connection.chroot import (
+    Connection as ChrootConnection,
+)
 
 
 class Connection(ChrootConnection):
-    """ Systemd-nspawn (machinectl-less, i.e. stateless) connections """
+    """Systemd-nspawn (machinectl-less, i.e. stateless) connections"""
 
     #
     # Unlike the chroot plugin, we do have an option to select a user (via --user)
@@ -92,14 +93,14 @@ class Connection(ChrootConnection):
         # `self.chroot` is required to be set for the chroot plugin
         #
         self.chroot = self._nspawn_root = self.get_option("nspawn_root")
-        self._nspawn_log = functools.partial(Display().vvv, host=self._nspawn_root) 
+        self._nspawn_log = functools.partial(Display().vvv, host=self._nspawn_root)
 
         user = self.get_option("nspawn_user")
         self._nspawn_args = [
             self.get_option("nspawn_exe"),
             *shlex_split(self.get_option("nspawn_args")),
             *([f"--user={user}"] if user is not None else []),
-            f"--directory={self._nspawn_root}", 
+            f"--directory={self._nspawn_root}",
             "--",
         ]
         self._nspawn_log(f"NSPAWN ARGS {self._nspawn_args}")
@@ -119,7 +120,7 @@ class Connection(ChrootConnection):
     #  cache, therefore only login may occur, which simplifies the code.
     #
     def _nspawn_become(self, in_fd, out_fd):
-        become_output = b''
+        become_output = b""
         while not self.become.check_password_prompt(become_output):
             select.select([in_fd], [], [], self._play_context.timeout)
             chunk = in_fd.read()
@@ -131,19 +132,23 @@ class Connection(ChrootConnection):
             become_output += chunk
             self._nspawn_log(f"NSPAWN BECOME CHUNK :: {become_output}")
 
-        become_pass = self.become.get_option("become_pass", playcontext=self._play_context)
+        become_pass = self.become.get_option(
+            "become_pass", playcontext=self._play_context
+        )
         out_fd.write(to_bytes(become_pass, errors="surrogate_or_strict") + b"\n")
 
     #
     # Slightly modifed version that additionally passes `sudoable` into the `_buffered_exec_command`.
     # This would solve a problem when other executions (such as `put_file` which uses `dd`) are
-    # interpreted as sudo command. 
+    # interpreted as sudo command.
     #
     def exec_command(self, cmd, in_data=None, sudoable=False):
         #
         # Bypassing `ChrootConnection.exec_command` prior to `ConnectionBase.exec_command`.
         #
-        super(ChrootConnection, self).exec_command(cmd, in_data=in_data, sudoable=sudoable)
+        super(ChrootConnection, self).exec_command(
+            cmd, in_data=in_data, sudoable=sudoable
+        )
 
         self._nspawn_log(f"NSPAWN EXEC SUDOABLE {sudoable} COMMAND :: {cmd}")
         p = self._buffered_exec_command(cmd, sudoable=sudoable)
@@ -159,12 +164,15 @@ class Connection(ChrootConnection):
         # Using `shlex_split` to skip one level of nesting /bin/sh -c
         #
         cmdline = [
-            to_bytes(i, errors='surrogate_or_strict')
+            to_bytes(i, errors="surrogate_or_strict")
             for i in self._nspawn_args + shlex_split(cmd)
         ]
         p = subprocess.Popen(
-            cmdline, shell=False,
-            stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmdline,
+            shell=False,
+            stdin=stdin,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
         if sudoable and self.become and self.become.expect_prompt():
