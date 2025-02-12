@@ -1,0 +1,21 @@
+---
+apps:
+  #
+  # Mise version manager.
+  #
+  mise:
+    config:
+      default: "{{ users.user.config }}/mise"
+
+    cache:
+      default: "{{ users.user.cache }}/mise"
+
+    share:
+      default: "{{ users.user.share }}/mise"
+      dot: "{{ users.user.home }}/.mise"
+      env: MISE_DATA_DIR
+
+    state:
+      default: "{{ users.user.state }}/mise"
+      dot: "{{ users.user.home }}/.mise"
+      env: MISE_STATE_DIR
