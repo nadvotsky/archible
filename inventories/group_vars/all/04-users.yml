@@ -29,6 +29,44 @@ users:
     state: /home/test/.local/state
     bin: /home/test/.local/bin
 
+    #
+    # Directory layout for multiple applications,
+    #  mainly listed under the 'apps'.
+    #
+    # Can be either 'dot' or 'xdg'.
+    #
+    # XDG tries to create as much XDG compliant HOME directory as possible.
+    #  However, not every application supports overwriting its directories
+    #  (firefox, yarn, and others), as well as does not implement proper
+    #  functional splitting (configuration, cache, general data, and state):
+    #
+    # - XDG_CONFIG_HOME (~/.config) - plain user configuration files.
+    # - XDG_CACHE_HOME (~/.config) - long lived cache data, such as downloaded
+    #   archives.
+    # - /tmp - short lived cache data, such as repository index.
+    # - XDG_DATA_HOME (~/.local/share) - main application data, such as unpacked
+    #   packages.
+    # - XDG_STATE_HOME (~/.local/state) - application state, such as session.
+    # - ~/.<app> - unsupported applications home.
+    #
+    # As can be seen, it still occupies the home directory, as well as requires
+    #  often environmental variables tweaking (XDG-compliance is rather than
+    #  exception).
+    #
+    # Dot layout tries to force a consistent style across all of the applications
+    #  according to the overall XDG coverage by varietry of utilities. Unlike XDG
+    #  layout, this allows having a single entry point (HOME directory) for both
+    #  compliant and non-compliant applications.
+    #
+    # - ~/.config - very common, plain user configuration files.
+    # - ~/.cache - very common, any intermediate data.
+    # - ~/.<app> - entire application data, including both state (e.g., sessions,
+    #  locks), and the main data (e.g., downloaded data, java runtime, plugins).
+    # - ~/.local/share/<app>, ~/.local/state/<app> - a soft link to the ~/.<app>
+    #   that resolves compatibility issues where directory cannot be changed.
+    #
+    layout: dot
+
     xdg:
       downloads: dls
       documents: env
