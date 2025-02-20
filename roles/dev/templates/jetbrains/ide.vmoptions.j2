@@ -1,7 +1,7 @@
-{%- for option in jetbrains.vmoptions -%}
+{%- for option in apps.jetbrains.jvmoptions -%}
     {{ option | newline }}
 {%- endfor -%}
 
-{%- if jetbrains.agent -%}
--javaagent:{{ jetbrains.base }}/agent/jetbra-agent.jar
+{%- if apps.jetbrains.agentize -%}
+-javaagent:{{ apps.jetbrains.agent }}/jetbra-agent.jar
 {%- endif -%}

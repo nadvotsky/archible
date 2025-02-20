@@ -10,13 +10,14 @@
         become: true
       wipes: >-
         {%- set _acc = [
-          jetbrains.base,
+          apps.jetbrains.base,
           "{}/{}".format(users.user.config, "JetBrains"),
           "{}/{}".format(users.user.cache, "JetBrains"),
+          "{}/{}".format(users.user.share, "JetBrains"),
         ] -%}
-        {%- for _codename in jetbrains.ide | dict2items | map(attribute="key") -%}
+        {%- for _codename in apps.jetbrains.products | dict2items | map(attribute="key") -%}
           {%- set _ = _acc.extend([
-            "/usr/local/share/applications/{}.desktop".format(_codename),
+            "{}/{}.desktop".format(apps.jetbrains.desktop, _codename),
             "{}/{}".format(users.user.config, _codename),
             "{}/{}".format(users.user.cache, _codename),
           ]) -%}
@@ -25,24 +26,29 @@
 
 - name: Configure base JetBrains skeleton
   tags:
-    - dev-jetbrains-base
+    - dev-jetbrains-properties
+    - dev-jetbrains-vmoptions
   ansible.builtin.import_role:
     name: common
   vars:
     _common_install:
       defaults:
-        base: "{{ jetbrains.base }}"
         wipe: true
         become: true
-      targets:
-        properties/ide.properties:
-          template: jetbrains/ide.properties.j2
-        vmoptions/ide.vmoptions:
-          template: jetbrains/ide.vmoptions.j2
+      targets: >-
+        {
+          "{{ apps.jetbrains.properties }}": {
+            "template": "jetbrains/ide.properties.j2"
+          },
+          "{{ apps.jetbrains.vmoptions }}": {
+            "template": "jetbrains/ide.vmoptions.j2"
+          },
+        }
 
 - name: Configure JetBrains Java Runtime (JBR)
   tags:
     - dev-jetbrains-jbr
+    - dev-jetbrains-jre
   block:
     - name: Fetch latest JBR release info
       ansible.builtin.uri:
@@ -55,12 +61,13 @@
         name: common
       vars:
         _common_install:
-          defaults:
-            base: "{{ jetbrains.base }}"
-          targets:
-            jbr/release:
-              wipe: true
-              become: true
+          targets: >-
+            {
+              "{{ apps.jetbrains.jre }}/release": {
+                "wipe": true,
+                "become": true
+              }
+            }
 
         _common_urlunpack:
           url: >-
@@ -69,15 +76,15 @@
             {%- set _major = _tag_name | regex_search(_regexp, "\\g<major>") | first -%}
             {%- set _minor = _tag_name | regex_search(_regexp, "\\g<minor>") | first -%}
             https://cache-redirector.jetbrains.com/intellij-jbr/jbr_jcef-{{ _major }}-linux-x64-{{ _minor }}.tar.gz
-          dest: "{{ jetbrains.base }}/jbr"
-          creates: "{{ jetbrains.base }}/jbr/bin/java"
+          dest: "{{ apps.jetbrains.jre }}"
+          creates: "{{ apps.jetbrains.jre }}/bin/java"
           strip: 1
           become: true
 
 - name: Configure JetBrains Agent
   tags:
     - dev-jetbrains-agent
-  when: jetbrains.agent is true
+  when: apps.jetbrains.agentize is true
   block:
     - name: Prepare agent skeleton
       ansible.builtin.import_role:
@@ -85,12 +92,13 @@
       vars:
         _common_install:
           defaults:
-            base: "{{ jetbrains.base }}"
             become: true
             wipe: true
-          targets:
-            agent/jetbra-agent.jar: {}
-            agent/trust-crt/cert.crt: {}
+          targets: >-
+            {
+              "{{ apps.jetbrains.agent }}/jetbra-agent.jar": {},
+              "{{ apps.jetbrains.agent }}/trust-crt/cert.crt": {}
+            }
 
     - name: Download and unpack agent
       ansible.builtin.import_role:
@@ -98,8 +106,8 @@
       vars:
         _common_urlunpack:
           url: https://github.com/novitechie/jetbra/releases/latest/download/jetbra-all.zip
-          dest: "{{ jetbrains.base }}/agent"
-          creates: "{{ jetbrains.base }}/agent/jetbra-agent.jar"
+          dest: "{{ apps.jetbrains.agent }}"
+          creates: "{{ apps.jetbrains.agent }}/jetbra-agent.jar"
           strip: 1
           exclude:
             - script
@@ -113,18 +121,18 @@
           openssl req
           -x509 -noenc -subj "/CN={{ users.user.short }}/UID={{ users.user.name }}"
           -not_before {{ now(fmt='%Y') }}0101000000Z
-          -not_after {{ now(fmt='%Y') | int + jetbrains.years }}0101000000Z
+          -not_after {{ now(fmt='%Y') | int + apps.jetbrains.years }}0101000000Z
           -sha256
           -newkey rsa:4096
-          -keyform pem -keyout "{{ jetbrains.base }}/agent/trust-crt/cert.pem"
-          -outform pem -out "{{ jetbrains.base }}/agent/trust-crt/cert.crt"
+          -keyform pem -keyout "{{ apps.jetbrains.agent }}/trust-crt/cert.pem"
+          -outform pem -out "{{ apps.jetbrains.agent }}/trust-crt/cert.crt"
       register: __cert_invocation
       changed_when: __cert_invocation.rc == 0
       become: true
 
-    - name: Ensure private key is inaccessible
+    - name: Ensure private key is inaccessible by world
       ansible.builtin.file:
-        path: "{{ jetbrains.base }}/agent/trust-crt/cert.pem"
+        path: "{{ apps.jetbrains.agent }}/trust-crt/cert.pem"
         mode: "0600"
         owner: 0
         group: 0
