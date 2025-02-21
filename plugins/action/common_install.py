@@ -109,6 +109,13 @@ TARGETS_SPEC = {
             "A template to render to the file target.",
         ],
     },
+    "template_plus": {
+        "type": "str",
+        "required": False,
+        "description": [
+            "A path to the template-plus (jinja with indent extensions)."
+        ],
+    },
     "link": {
         "type": "str",
         "required": False,
@@ -206,10 +213,10 @@ class Target:
     ] = {
         TargetKind.DIR: (
             ("link",),
-            ("src", "template", "content", "link", "touch"),
+            ("src", "template", "template_plus", "content", "link", "touch"),
         ),
         TargetKind.FILE: (
-            ("link", "src", "template", "content", "link", "touch"),
+            ("link", "src", "template", "template_plus", "content", "link", "touch"),
             tuple(),
         ),
     }
@@ -231,6 +238,7 @@ class Target:
 
     src: str | None = None
     template: str | None = None
+    template_plus: str | None = None
     content: str | None = None
     link: str | None = None
     touch: bool | None = None
@@ -302,6 +310,14 @@ class Target:
             )
         )
         return Context(name="template", dest="dest", src="src", perm=True, raw=raw)
+
+    def build_template_plus_context(self) -> Context:
+        raw = self._build_common_raw(
+            dict(
+                src=self.template_plus, dest=self.path, lstrip_blocks=True, trim_blocks=True,
+            )
+        )
+        return Context(name="template-plus", dest="dest", src="src", perm=True, raw=raw)
 
     def build_content_context(self) -> Context:
         raw = self._build_common_raw(dict(content=self.content, dest=self.path))
@@ -438,6 +454,7 @@ class ActionModule(ActionBase):
                 target.link is not None: (self._file, target.build_link_context),
                 target.src is not None: (self._copy, target.build_src_context),
                 target.template is not None: (self._template, target.build_template_context),
+                target.template_plus is not None: (self._template_plus, target.build_template_plus_context),
                 target.content is not None: (self._copy, target.build_content_context),
                 target.touch is not None: (self._file, target.build_touch_context),
             }
@@ -488,4 +505,12 @@ class ActionModule(ActionBase):
         return (
             context,
             self._execute_action(task_vars, "ansible.builtin.template", context.raw),
+        )
+
+    def _template_plus(
+        self, task_vars: TaskVars, context: Context
+    ) -> tuple[Context, RawResult]:
+        return (
+            context,
+            self._execute_action(task_vars, "common_template_plus", context.raw),
         )
