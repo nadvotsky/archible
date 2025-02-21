@@ -57,14 +57,14 @@
       defaults:
         become: true
       targets:
-        /usr/local/stubs/Xwayland:
+        /usr/share/stubs/Xwayland:
           link: /usr/bin/false
         /usr/share/wayland-sessions/hyprland-nox.desktop:
           content: |
             [Desktop Entry]
             Name=Hyprland (no X)
             Comment=An intelligent dynamic tiling Wayland compositor
-            Exec=/bin/sh -c "PATH=/usr/local/stubs:$PATH Hyprland"
+            Exec=/bin/sh -c "PATH=/usr/share/stubs:$PATH Hyprland"
             Type=Application
 
 - name: Configure waybar bar
