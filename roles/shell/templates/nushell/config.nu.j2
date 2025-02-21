@@ -434,7 +434,7 @@ def --env zi [...rest:string] {
 #
 # Atuin history manager.
 #
-$env.ATUIN_SESSION = (atuin uuid)
+$env.ATUIN_SESSION = (^atuin uuid)
 $env.ATUIN_LOG = "error"
 hide-env -i ATUIN_HISTORY_ID
 
@@ -449,7 +449,7 @@ $env.MISE_SHELL = "nu"
 #A tool for managing runtime versions.
 def --wrapped --env mise [...rest: string] {
     if (($rest | is-empty) or ("-h" in $rest) or ("--help" in $rest)) {
-        return (^/usr/bin/mise ...$rest)
+        return (^mise ...$rest)
     }
 
     match $rest.0 {
@@ -457,7 +457,7 @@ def --wrapped --env mise [...rest: string] {
            $env.MISE_SHELL = "nu"
         },
         "hook-env" | "deactivate" | "shell" => {
-            let parsed = (^/usr/bin/mise ...$rest)
+            let parsed = (^mise ...$rest)
                 | from csv --noheaders
                 | rename op variable value
 
@@ -480,7 +480,7 @@ def --wrapped --env mise [...rest: string] {
             }
         },
         _ => {
-            ^/usr/bin/mise ...$rest
+            ^mise ...$rest
         },
     }
 }
@@ -644,7 +644,7 @@ $env.config = {
 
                     not ($cmd | is-empty) and not ($cmd | str starts-with "# nushell-ignore-history")
                 },
-                code: { $env.ATUIN_HISTORY_ID = (atuin history start -- (commandline)) },
+                code: { $env.ATUIN_HISTORY_ID = (^atuin history start -- (commandline)) },
             },
             {% endif %}
         ],
