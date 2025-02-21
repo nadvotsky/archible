@@ -1,4 +1,11 @@
 ---
+- name: Print a deprecation message
+  ansible.builtin.debug:
+    msg: >-
+      'common' role is deprecated: consider migrating to the common_* actions instead.
+      They feature various optimizations, robust error handling, templating support,
+      and require no change in ansible configuration.
+
 - name: Common packaging tasks
   when: _common_packages is defined
   vars:
