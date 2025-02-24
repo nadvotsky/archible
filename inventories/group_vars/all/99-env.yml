@@ -17,3 +17,9 @@ env:
   IPYTHONDIR: "{{ apps.python.ipython }}"
   UV_TOOL_BIN_DIR: "{{ apps.python.uv_bin }}"
   MYPY_CACHE_DIR: "{{ apps.python.mypy }}"
+
+  #
+  # Java.
+  #
+  GRADLE_USER_HOME: "{{ apps.gradle.home }}"
+  MAVEN_OPTS: "-Dmaven.repo.local={{ apps.maven.home }}"

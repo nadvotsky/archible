@@ -1,0 +1,46 @@
+[tools]
+java = "oracle-graalvm"
+gradle = "latest"
+
+[env]
+JAVA_OPTS = "{{ apps.java.opts }}"
+
+[tasks.init]
+description = "Initialize template to a working state."
+run = "gradle wrapper"
+
+[tasks.info]
+run = """
+{{
+    [
+        {
+            "deps": "automatically during the build",
+            "update": "vim ./gradle/libs.versions.toml",
+        },
+        {
+            "format": "[./]gradle[w] app:checkstyle[Main/Test] [--rerun-tasks]",
+            "source code analysis": "[./]gradle[w] app:pmd[Main/Test] [--rerun-tasks]",
+            "bytecode analysis": "[./]gradle[w] app:spotbugs[Main/Test] [--rerun-tasks]",
+            "all-in-one": "[./]gradle[w] check [--rerun-tasks]",
+            "test": "[./]gradle[w] test [--rerun-tasks] [--tests SomeTestClass.someMethod]",
+        },
+        {
+            "run": "[./]gradle[w] app:run",
+            "build": "[./]gradle[w] build",
+            "clean": "[./]gradle[w] clean",
+        },
+        {
+            "structuring multi project": "https://docs.gradle.org/current/userguide/multi_project_builds.html",
+            "gradle version catalog": "https://docs.gradle.org/current/userguide/version_catalogs.html",
+            "gradle wrapper": "https://docs.gradle.org/current/userguide/gradle_wrapper.html",
+            "pmd plugin": "https://docs.gradle.org/current/userguide/pmd_plugin.html",
+            "checkstyle plugin": "https://docs.gradle.org/current/userguide/checkstyle_plugin.html",
+            "checkstyle": "https://checkstyle.sourceforge.io/",
+            "checkstyle sun checks": "https://github.com/checkstyle/checkstyle/blob/master/src/main/resources/sun_checks.xml",
+            "spotbugs plugin": "https://spotbugs.readthedocs.io/en/latest/gradle.html",
+            "findsecbugs": "https://find-sec-bugs.github.io/",
+            "errorprone": "https://errorprone.info/docs/installation",
+        },
+    ] | shellmsg("Gradle developement suite")
+}}
+"""

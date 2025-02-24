@@ -1,0 +1,49 @@
+plugins {
+    id 'application'
+    id 'checkstyle'
+    id 'pmd'
+    alias(libs.plugins.spotbugs)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform
+
+    spotbugsPlugins libs.findsecbugs
+}
+
+compileJava {
+    options.release = {{ apps.java.release }}
+}
+
+application {
+    mainClass = 'com.example.Main'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+ext {
+	toolsIgnoreFailures = Boolean.parseBoolean(project.property('tools.ignorefailures'))
+}
+
+checkstyle {
+    toolVersion = libs.checkstyle.get().version
+    ignoreFailures = toolsIgnoreFailures
+}
+
+pmd {
+    toolVersion = libs.pmd.get().version
+    ignoreFailures = toolsIgnoreFailures
+    consoleOutput = true
+}
+
+spotbugs {
+    toolVersion = libs.spotbugs.get().version
+    ignoreFailures = toolsIgnoreFailures
+}
