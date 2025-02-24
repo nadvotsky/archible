@@ -1,0 +1,35 @@
+{{ dev.templates.editorconfig }}
+
+[*.{c,cc,cxx,cpp,c++,ccm,cxxm,cppm,c++m,h,hh,hxx,hpp}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+[{._}clang-format]
+indent_style = space
+indent_size = 2
+
+[.clang-tidy]
+indent_style = space
+indent_size = 2
+
+[{CMakeLists.txt,CMakePresets.json,CMakeUserPresets.json,compile_commands.json,*.cmake}]
+indent_style = space
+indent_size = 2
+
+[{MODULE.bazel,BUILD,BUILD.bazel,*.bzl}]
+indent_style = space
+indent_size = 4
+
+[meson.build]
+indent_style = space
+indent_size = 2
+
+[conanfile.py]
+indent_style = space
+indent_size = 4
+max_line_length = 80
+
+[{vcpkg,vcpkg-configuration}.json]
+indent_style = space
+indent_size = 2

@@ -21,6 +21,29 @@ apps:
       env: MISE_STATE_DIR
 
   #
+
+  cmake:
+    packages:
+      default: "{{ users.user.home }}/.cmake"
+
+  bazel:
+    cache:
+      default: "{{ users.user.cache }}/bazel"
+
+    rc:
+      default: "{{ users.user.home }}/.bazelrc"
+
+  vcpkg:
+    cache:
+      default: "{{ users.user.cache }}/bazel"
+
+  conan:
+    home:
+      default: "{{ users.user.home }}/.conan2"
+      xdg: "{{ users.user.share }}/conan"
+      env: CONAN_HOME
+
+  #
   # JetBrains IDEs installation.
   #
   jetbrains:
@@ -261,3 +284,189 @@ apps:
       - https://plugins.jetbrains.com/plugin/11058-extra-icons
       - https://plugins.jetbrains.com/plugin/21904-developer-tools
       - https://plugins.jetbrains.com/plugin/13389-conventional-commit
+
+  templates:
+    #
+    # Common gitignore for all templates.
+    #
+    gitignore: |-
+      #
+      # https://git-scm.com/docs/gitignore
+      #
+
+      #
+      # Filesystems.
+      #
+      .DS_Store
+      [Dd]esktop.ini
+      Thumbs.db
+      $RECYCLE.BIN/
+
+      #
+      # VCS.
+      #
+      .snv
+      .bzr
+
+      #
+      # Editors.
+      #
+      #  vim
+      #
+      *.swp
+      *.swo
+      .vim
+      Session.vim
+      #
+      #  Helix.
+      #
+      .helix
+      #
+      #  Emacs.
+      #
+      .dir-locals.el
+      #
+      #  Eclipse.
+      #
+      .cproject
+      .project
+      #
+      #  VSCode.
+      #
+      .vscode
+      *.code-workspace
+      #
+      #  Sublime Text.
+      #
+      *.sublime-workspace
+      #
+      #  JetBrains.
+      #
+      .idea
+      *.iml
+      #
+      #  Zed.
+      #
+      .zed
+      #
+      # Visual Studio.
+      #
+      .settings
+      .vs
+
+      #
+      # Tools.
+      #
+      .valgrindrc
+      *.log
+      .task
+      mise.local.toml
+
+      #
+      # Env
+      #
+      .envrc
+      .direnv
+      .env
+      .env*.local 
+
+      #
+      # Build artifacts.
+      #
+      /[Aa]rtifacts
+      /[Rr]elease
+      /_[Bb]uild
+      /[Oo]ut
+      /[Tt]arget
+      /[Dd]ebug
+      /[Dd]ist
+      /[Dd]l
+      /[Ii]nst
+      /[Oo]bj
+      #
+      #  Executables, libraries, and packages.
+      #
+      *.out
+      *.app
+      *.exe
+      *.so
+      *.dylib
+      *.dll
+      *.app
+      *.zip
+      *.rar
+      *.tgz
+      *.tar.gz
+      *.tar.zst
+
+      #
+      # Caches.
+      #
+      .temp
+      .cache
+
+      #
+      # Lock files.
+      #
+      # Runtime data
+      *.pid
+      *.pid.lock
+
+      #
+      # Vendor.
+      #
+      # vendor
+
+      #
+      # FHS-like.
+      #
+      /var
+      /run
+      /.local
+
+    editorconfig: |-
+      #
+      # https://editorconfig.org/
+      #
+
+      root = true
+
+      [*]
+      end_of_line = lf
+      charset = utf-8
+      insert_final_newline = true
+      trim_trailing_whitespace = true
+
+      [*.{yml,yaml,json}]
+      indent_style = space
+      indent_size = 2
+
+      [*.{xml}]
+      indent_style = space
+      indent_size = 2
+
+      [*.toml]
+      indent_style = space
+      indent_size = 4
+
+      [Makefile]
+      indent_style = tab
+      indent_size = 4
+
+      [*.{bat,cmd}]
+      end_of_line = crlf
+      indent_style = tab
+      indent_size = 4
+
+      [*.ps1]
+      indent_style = spaces
+      indent_size = 4
+
+      [*.{sh,bash,zsh}]
+      indent_style = spaces
+      indent_size = 2
+
+      [*.{nushell,nsh,xonsh,xsh,elvish,esh}]
+      indent_style = spaces
+      indent_size = 4
+
