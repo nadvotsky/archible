@@ -19,6 +19,13 @@ env:
   MYPY_CACHE_DIR: "{{ apps.python.mypy }}"
 
   #
+  #
+  # Go.
+  #
+  GOPATH: "{{ apps.go.packages }}"
+  GOBIN: "{{ apps.go.bin }}"
+
+  #
   # Java.
   #
   GRADLE_USER_HOME: "{{ apps.gradle.home }}"

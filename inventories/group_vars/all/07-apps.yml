@@ -60,6 +60,20 @@ apps:
       env: UV_TOOL_BIN_DIR
 
   #
+  # Go installation.
+  #
+  go:
+    path:
+      default: "{{ users.user.home }}/go"
+      custom: "{{ users.user.home }}/.go"
+      env: GOPATH
+
+    bin:
+      default: "{{ users.user.home }}/go/bin"
+      custom: "{{ users.user.home }}/.go/bin"
+      env: GOBIN
+
+  #
   # Java installation.
   #
   java:
@@ -124,7 +138,7 @@ apps:
     # How many years to cover if using agent.
     #
     years: 10
-    
+
     #
     # Whenever generate scripts and desktop application actions
     #  to run ide with WLToolkit.
@@ -218,7 +232,7 @@ apps:
     #
     # While sometimes they may overlap, they are not interchangeable.
     #
-    # Release Product Code is used in update channels and artifacts downloading. Such 
+    # Release Product Code is used in update channels and artifacts downloading. Such
     #  release product codes include Professional, Community and other special editions
     #  (e.g. Education).
     # Even more confusion is brought by the use of multiple release product codes that point
@@ -239,7 +253,7 @@ apps:
     #  3) PSI => Shared Index (no longer requires separate license and built-in)
     #  4) PDB => Plugin Database Tools and SQL for WebStorm (no longer requires separate license and built-in)
     #  5) PRR => Rust Plugin (deprecated in favor of RustRover)
-    #  6) PWS/PPS/PGO/PPC/PRB/PSW => Unknown built-in plugins, likely integrated in the IDE's main license. 
+    #  6) PWS/PPS/PGO/PPC/PRB/PSW => Unknown built-in plugins, likely integrated in the IDE's main license.
     #
     # Follow these steps to identify license product code:
     #  1) Open the link in the marketplace, e.g. https://plugins.jetbrains.com/plugin/10080-rainbow-brackets
@@ -248,7 +262,7 @@ apps:
     #  3) Parse the `<productCode>` tag from https://plugins.jetbrains.com/plugins/list?pluginId=izhangzhihao.rainbow.brackets
     # To identify via the numeric id:
     #  2) Extract a number from the URL slug, e.g. `10080`
-    #  3) Parse the `purchaseInfo.productCode` from https://plugins.jetbrains.com/api/plugins/10080 
+    #  3) Parse the `purchaseInfo.productCode` from https://plugins.jetbrains.com/api/plugins/10080
     products:
       idea:
         name: IntelliJ IDEA Ultimate Edition
@@ -291,7 +305,7 @@ apps:
         #  01) RS0 => ReSharper
         #  02) RC  => ReSharper C++
         #  03) RSU => ReSharper Ultimate
-        #  04) RRR => ReSharper Ultimate + Rider license 
+        #  04) RRR => ReSharper Ultimate + Rider license
         #  05) RS  => ReSharper ?
         #  06) RSC => ReSharper ?
         #  07) RSF => ReSharper ?
@@ -427,7 +441,7 @@ apps:
       .envrc
       .direnv
       .env
-      .env*.local 
+      .env*.local
 
       #
       # Build artifacts.
@@ -528,4 +542,3 @@ apps:
       [*.{nushell,nsh,xonsh,xsh,elvish,esh}]
       indent_style = spaces
       indent_size = 4
-
