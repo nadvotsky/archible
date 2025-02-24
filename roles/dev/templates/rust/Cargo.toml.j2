@@ -1,0 +1,20 @@
+[package]
+name = "rust-template"
+version = "1.0.0"
+description = "An example rust project"
+keywords = ["template", "example"]
+
+license = "MIT"
+authors = ["{{ users.user.full }} <{{ users.user.email }}>"]
+homepage = "https://www.rust-lang.org/"
+repository = "https://github.com/rust-lang/rust"
+readme = "README.md"
+
+edition = "2021"
+publish = false
+include = ["/src"]
+
+[dependencies]
+
+[profile.release]
+lto = thin

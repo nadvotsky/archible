@@ -1,5 +1,7 @@
 ---
 - name: Install Rust tools and do not use rustup globally
+  tags:
+    - dev-rust-fix
   ansible.builtin.import_role:
     name: common
   vars:
@@ -11,45 +13,119 @@
         - lldb
         - lld
 
+- name: Wipe existing rust directories
+  tags:
+    - dev-dotnet-wipe
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_vm:
+      wipe:
+        - rust
+
     _common_install:
       wipes:
+        #
+        # Default locations.
+        #
         - "{{ users.user.home }}/.rustup"
         - "{{ users.user.home }}/.cargo"
-        - "{{ users.user.state }}/rustup"
-        - "{{ users.user.state }}/cargo"
+        #
+        # Custom locations.
+        #
+        - "{{ apps.rust.rustup }}"
+        - "{{ apps.rust.cargo }}"
 
-- name: Preinstall Rust via mise
-  ansible.builtin.command:
-    argv:
-      - mise
-      - install
-      - rust@nightly
-      - rust@stable
-  environment:
-    MISE_RUSTUP_HOME: "{{ users.user.state }}/rustup"
-    MISE_CARGO_HOME: "{{ users.user.state }}/cargo"
-  register: __mise_rust_invocation
-  changed_when: __mise_rust_invocation.rc == 0
+- name: Configure Python
+  ansible.builtin.import_role:
+    name: common
+  vars:
+    _common_vm:
+      install:
+        - rust@nightly
+        - rust@stable
 
-- name: Render optimized cargo profile for builds via mise env
+- name: Render rust template
   ansible.builtin.import_role:
     name: common
   vars:
     _common_install:
       defaults:
-        base: "{{ users.users.state }}"
+        base: "{{ users.user.home }}/{{ users.user.xdg.templates }}"
+        wipe: true
       targets:
-        cargo/config.toml:
-          content: >-
-            [profile.release]
-            lto = "thin"
+        rust/rust-toolchain.toml:
+          content: |
+            [toolchain]
+            channel = "nightly"
+        rust/Cargo.toml:
+          template: rust/Cargo.toml.j2
+          
+        rust/mise.local.toml:
+          content: |
+            [env]
+            RUSTFLAGS = "-Z threads={{ machine.cores }} -Z linker-features=+lld -C target-cpu=native"
+            #
+            # Rust stable alternative:
+            #
+            # RUSTFLAGS = "-C target-cpu=native -C link-arg=-fuse-ld=lld"
 
-            [target.x86_64-unknown-linux-gnu]
-            linker = "ldd"
-            rustflags = ["-Z", "threads=8", "-C", "target-cpu=native"]
+            _.path = ["{{ apps.rust.cargo_bin }}"]
+
+            [tasks.info]
+            run = """
+            {{
+              [
+                {
+                  "deps": "cargo fetch",
+                  "update": "cargo update",
+                },
+                {
+                  "format": "cargo fmt",
+                  "lint": "(cargo fix) or (cargo clippy)",
+                  "test": "cargo test",
+                },
+                {
+                  "run": "cargo run",
+                  "build": "(cargo build [--release]) or (cargo check)",
+                  "clean": "cargo clean",
+                },
+                {
+                  "cargo global cache": "$CARGO_HOME",
+                  "rust installations": "$RUSTUP_HOME",
+                },
+                {
+                  "cargo workspaces": "https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html",
+                  "cargo commands": "https://doc.rust-lang.org/cargo/commands/index.html",
+                  "cargo profiles": "https://doc.rust-lang.org/cargo/reference/profiles.html",
+                  "cargo toolchain": "https://rust-lang.github.io/rustup/overrides.html",
+                  "cargo variables": "https://doc.rust-lang.org/cargo/reference/environment-variables.html",                  
+                  "cargo manifest": "https://doc.rust-lang.org/cargo/reference/manifest.html",
+                  "rustc flags": "https://doc.rust-lang.org/rustc/codegen-options/index.html",
+                  "rustc unstable flags": "https://doc.rust-lang.org/unstable-book/the-unstable-book.html",
+                  "performance tips": "https://nnethercote.github.io/perf-book/introduction.html",
+                },
+              ] | shellmsg("Rust developement suite")
+            }}
+            """
+
+        rust/.editorconfig:
+          template: rust/editorconfig.j2
+        rust/.gitignore:
+          template: rust/gitignore.j2
+
+        rust/src/util/join.rs:
+          file: rust/src/util/join.rs
+        rust/src/util.rs:
+          file: rust/src/util.rs
+        rust/src/main.rs:
+          file: rust/src/main.rs
+
+        rust/README.md:
+          file: README.md
 
 - name: Configure RustRover IDE
   ansible.builtin.import_tasks:
-    file: jetbrains.yml
+    file: jetbrains/ide.yml
   vars:
     _jetbrains_ide: rustrover

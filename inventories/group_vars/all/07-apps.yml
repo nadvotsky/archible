@@ -60,6 +60,19 @@ apps:
       env: UV_TOOL_BIN_DIR
 
   #
+  # Rust installation.
+  #
+  rust:
+    rustup:
+      default: "{{ users.user.home }}/.rustup"
+
+    cargo:
+      default: "{{ users.user.home }}/.cargo"
+
+    cargo_bin:
+      default: "{{ users.user.home }}/.cargo/bin"
+
+  #
   # Go installation.
   #
   go:

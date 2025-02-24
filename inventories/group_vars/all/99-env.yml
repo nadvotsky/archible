@@ -19,6 +19,14 @@ env:
   MYPY_CACHE_DIR: "{{ apps.python.mypy }}"
 
   #
+
+  #
+  # Rust.
+  #
+  MISE_RUSTUP_HOME: "{{ apps.rust.rustup }}"
+  RUSTUP_HOME: "{{ apps.rust.rustup }}"
+  MISE_CARGO_HOME: "{{ apps.rust.cargo }}"
+  CARGO_HOME: "{{ apps.rust.cargo }}"
   #
   # Go.
   #
