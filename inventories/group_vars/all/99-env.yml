@@ -1,0 +1,19 @@
+---
+#
+# Mapping of global environmental variables. Typically contains
+#  XDG quirks or apps behaviour switches suitable for both
+#  local and global installations. For example, do not switch
+#  DOTNET_ROOT globally as it may interfere with the system
+#  package, but do set DOTNET_SYSTEM_NET_DISABLEIPV6.
+#
+env:
+  #
+  # Python.
+  #
+  PYTHONPYCACHEPREFIX: "{{ apps.python.cache }}"
+  PYTHON_HISTORY: "{{ apps.python.history }}"
+
+  RUFF_CACHE_DIR: "{{ apps.python.ruff }}"
+  IPYTHONDIR: "{{ apps.python.ipython }}"
+  UV_TOOL_BIN_DIR: "{{ apps.python.uv_bin }}"
+  MYPY_CACHE_DIR: "{{ apps.python.mypy }}"

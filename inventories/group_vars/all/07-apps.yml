@@ -21,6 +21,43 @@ apps:
       env: MISE_STATE_DIR
 
   #
+  # Python installation.
+  #
+  python:
+    history:
+      default: "{{ users.user.home }}/.python_history"
+      custom: "{{ users.user.home }}/.python/history"
+      env: PYTHON_HISTORY
+
+    cache:
+      custom: "{{ users.user.cache }}/pycache"
+      env: PYTHONPYCACHEPREFIX
+
+    ruff:
+      custom: "{{ users.user.cache }}/ruff"
+      env: RUFF_CACHE_DIR
+
+    ipython:
+      default: "{{ users.user.home }}/.ipython"
+
+    mypy:
+      custom: "{{ users.user.cache }}/mypy"
+      env: MYPY_CACHE_DIR
+
+    uv_python:
+      default: "{{ users.user.share }}/uv/python"
+      custom: "{{ users.user.home }}/.uv/python"
+      env: UV_PYTHON_INSTALL_DIR
+
+    uv_tools:
+      default: "{{ users.user.share }}/uv/tools"
+      custom: "{{ users.user.home }}/.uv/tools"
+      env: UV_TOOL_DIR
+
+    uv_bin:
+      default: "{{ users.user.share }}/uv/bin"
+      custom: "{{ users.user.home }}/.uv/bin"
+      env: UV_TOOL_BIN_DIR
 
   cmake:
     packages:
