@@ -1,0 +1,62 @@
+{
+  "fmt": {
+    "include": [
+      "src/"
+    ],
+    "useTabs": false,
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "include": [
+      "src/"
+    ],
+    "rules": {
+      "tags": [
+        "recommended"
+      ],
+      "include": [
+        "camelcase",
+        "default-param-last",
+        "eqeqeq",
+        "no-sync-fn-in-async-fn",
+        "no-throw-literal",
+        "no-undef",
+        "prefer-ascii"
+      ],
+      "exclude": []
+    }
+  },
+  "compilerOptions": {
+    "checkJs": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true
+  },
+  "unstable": [
+    "cron",
+    "kv",
+    "webgpu"
+  ],
+  "test": {
+    "exclude": []
+  },
+  "tasks": {
+    "run": "deno run src/main.ts",
+    "watch": "deno run --watch-hmr src/main.ts",
+    "lint": "deno lint",
+    "lint:watch": "deno lint --watch",
+    "test": "deno test",
+    "test:watch": "deno test --watch",
+    "fmt": "deno fmt",
+    "typecheck": "deno check src/"
+  }
+}

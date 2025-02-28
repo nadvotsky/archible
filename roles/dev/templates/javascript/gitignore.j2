@@ -1,0 +1,62 @@
+{{ apps.templates.gitignore }}
+
+#
+# Dependencies and package managers.
+#
+node_modules
+jspm_packages
+bower_components
+web_modules
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+.yarn-integrity
+.npm
+
+#
+# Caches.
+#
+*.tsbuildinfo
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+.node_repl_history
+.lock-wscript
+.docusaurus
+.vitepress
+.serverless
+.fusebox
+.dynamodb
+.tern-port
+.vscode-test
+__snapshots__
+
+#
+# Diagnostic reports (https://nodejs.org/api/report.html).
+#
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+#
+# Coverage
+#
+lib-cov
+coverageweb_modules
+*.lcov
+.nyc_output
+
+#
+# Task runners.
+#
+.grunt
+
+#
+# Frameworks.
+#
+.next
+.nuxt
+.vuepress
+.temp
+.cache

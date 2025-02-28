@@ -27,6 +27,15 @@ env:
   RUSTUP_HOME: "{{ apps.rust.rustup }}"
   MISE_CARGO_HOME: "{{ apps.rust.cargo }}"
   CARGO_HOME: "{{ apps.rust.cargo }}"
+
+  #
+  # JavaScript.
+  #
+  DENO_DIR: "{{ apps.deno.home }}"
+  NODE_REPL_HISTORY: "{{ apps.node.history }}"
+  NPM_CONFIG_CACHE: "{{ apps.npm.cache }}"
+  PNPM_HOME: "{{ apps.pnpm.home }}"
+
   #
   # Go.
   #

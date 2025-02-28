@@ -73,6 +73,79 @@ apps:
       default: "{{ users.user.home }}/.cargo/bin"
 
   #
+  # JavaScript installation.
+  #
+  deno:
+    home:
+      default: "{{ users.user.home }}/.deno"
+
+    bin:
+      default: "{{ users.user.home }}/.deno/bin"
+
+    cache:
+      default: "{{ users.user.cache }}/deno"
+
+  bun:
+    home:
+      default: "{{ users.user.home }}/.bun"
+
+    cache:
+      default: "{{ users.user.home }}/.bun/install/cache"
+      custom: "{{ users.user.cache }}/bun"
+      env: BUN_INSTALL_CACHE_DIR
+
+    bin:
+      default: "{{ users.user.home }}/.bun/bin"
+
+  node:
+    history:
+      default: "{{ users.user.home }}/.node_repl_history"
+      custom: "{{ users.user.home }}/.node/history"
+      env: NODE_REPL_HISTORY
+
+  npm:
+    cache:
+      default: "{{ users.user.home }}/.npm"
+      custom: "{{ users.user.cache }}/npm"
+      env: NPM_CONFIG_CACHE
+
+  pnpm:
+    cache:
+      default: "{{ users.user.cache }}/pnpm"
+
+    home:
+      default: "{{ users.user.home }}/.pnpm"
+      custom: "{{ users.user.home }}/.pnpm"
+      env: PNPM_HOME
+
+    store:
+      default: "{{ users.user.home }}/.pnpm/store"
+
+    global:
+      default: "{{ users.user.home }}/.pnpm/global"
+
+    state:
+      default: "{{ users.user.state }}/pnpm"
+      custom: "{{ users.user.home }}/.pnpm/state"
+      link: true
+
+  yarn:
+    home:
+      default: "{{ users.user.home }}/.yarn"
+
+    cache:
+      default: "{{ users.user.cache }}/yarn"
+
+    bin:
+      default: "{{ users.user.home }}/.yarn/bin"
+
+    berry:
+      default: "{{ users.user.home }}/.yarn/berry"
+
+    rc:
+      default: "{{ users.user.home }}/.yarnrc"
+
+  #
   # Go installation.
   #
   go:

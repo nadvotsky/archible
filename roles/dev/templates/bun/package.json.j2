@@ -1,0 +1,54 @@
+{
+  "name": "bun-template",
+  "version": "1.0.0",
+  "description": "An example bun project",
+  "keywords": [
+    "example",
+    "template"
+  ],
+  "license": "MIT",
+  "private": "true",
+  "author": "{{ users.user.full }} <{{ users.user.email }}>",
+  "homepage": "https://github.com/oven-sh/bun",
+  "bugs": {
+    "url": "https://github.com/oven-sh/bun/issues"
+  },
+  "repository": "github:oven-sh/bun",
+  "files": [
+    "./src/**/*"
+  ],
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "bin": {
+    "bun-example": "./src/main.ts"
+  },
+  "scripts": {
+    "run": "bun run src/main.ts",
+    "watch": "bun run --hot src/main.ts",
+    "check": "bun run biome check --write",
+    "fmt": "bun run biome format --write",
+    "lint": "bun run biome lint --write",
+    "test": "bun test src",
+    "test:watch": "bun test --watch src",
+    "typecheck": "bun run tsc"
+  },
+  "devDependencies": {
+    "typescript": "*",
+    "@types/bun": "*",
+    "@biomejs/biome": "*"
+  },
+  "engines": {
+    "bun": "*"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "bun",
+      "onFail": "warn"
+    },
+    "packageManager": {
+      "name": "bun",
+      "onFail": "warn"
+    }
+  }
+}

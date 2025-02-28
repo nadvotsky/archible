@@ -1,0 +1,77 @@
+{
+  "name": "node-template",
+  "version": "1.0.0",
+  "description": "An example node project",
+  "keywords": [
+    "example",
+    "template"
+  ],
+  "license": "MIT",
+  "private": "true",
+  "author": "{{ users.user.full }} <{{ users.user.email }}>",
+  "homepage": "https://github.com/nodejs/node",
+  "bugs": {
+    "url": "https://github.com/nodejs/node"
+  },
+  "repository": "github:nodejs/node",
+  "files": [
+    "./dist/**/*"
+  ],
+  "exports": {
+    ".": "./dist/main.js"
+  },
+  "bin": {
+    "node-example": "./dist/main.js"
+  },
+  "devDependencies": {
+    "eslint": "*",
+    "@eslint/js": "*",
+    "typescript": "*",
+    "@types/node": "*",
+    "tsx": "*",
+    "typescript-eslint": "*",
+    "@typescript-eslint/utils": "*",
+    "prettier": "*",
+    "vitest": "*",
+    "@vitest/eslint-plugin": "*"
+  },
+  "scripts": {
+    "run": "tsx src/main.ts",
+    "watch": "tsx watch src/main.ts",
+    "fmt": "prettier --write src/",
+    "lint": "eslint --fix",
+    "test": "vitest --watch=false",
+    "test:watch": "vitest --watch",
+    "typecheck": "tsc --noEmit",
+    "typecheck:wathc": "tsc --noEmit --watch",
+    "build": "tsc"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "warn"
+    },
+  },
+  "prettier": {
+    "experimentalTernaries": true,
+    "printWidth": 80,
+    "tabWidth": 2,
+    "useTabs": false,
+    "endOfLine": "lf",
+    "semi": true,
+    "singleQuote": false,
+    "quoteProps": "as-needed",
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "arrowParens": "always",
+    "proseWrap": "preserve",
+    "insertPragma": false,
+    "requirePragma": false,
+    "htmlWhitespaceSensitivity": "strict",
+    "embeddedLanguageFormatting": "auto"
+  }
+}
