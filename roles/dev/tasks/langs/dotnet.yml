@@ -1,0 +1,78 @@
+---
+- name: Wipe .NET
+  tags:
+    - dev-dotnet-wipe
+  common_install:
+    defaults:
+      create: false
+      wipe: true
+    targets: "{{ apps.dotnet | dict2items | map(attribute='value.default') | common_install_list2dirs }}"
+
+- name: Configure .NET
+  block:
+    - name: Install dotnet runtime dependencies
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_packages:
+          install:
+            - icu
+            - krb5
+            - libunwind
+            - zlib
+
+    - name: Create dotnet root
+      common_install:
+        targets:
+          - dir: "{{ apps.dotnet.root.default }}"
+
+    - name: Download dotnet-install.sh
+      ansible.builtin.get_url:
+        url: https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh
+        dest: "{{ apps.dotnet.root.default }}/dotnet-install"
+        mode: "0755"
+
+    - name: Install dotnet via dotnet-install.sh
+      ansible.builtin.command:
+        argv:
+          - "{{ apps.dotnet.root.default }}/dotnet-install"
+          - --channel
+          - STS
+          - --install-dir
+          - "{{ apps.dotnet.root.default }}"
+          - --no-path
+      register: __dotnet_install_invocation
+      changed_when: __dotnet_install_invocation.rc == 0
+
+- name: Render dotnet template
+  common_install:
+    defaults:
+      base: "{{ users.user.home }}/{{ users.user.xdg.templates }}/dotnet"
+      wipe: true
+    targets:
+      - file: .gitignore
+        template: dotnet/gitignore.j2
+      - file: .editorconfig
+        template: dotnet/editorconfig.j2
+      - file: README.md
+        src: README.md
+
+      - file: stylecop.json
+        src: dotnet/stylecop.json
+      - file: src/Template/Utilities/Util.Strings.cs
+        src: dotnet/src/Template/Utilities/Util.Strings.cs
+      - file: src/Template/Program.Template.cs
+        src: dotnet/src/Template/Program.Template.cs
+
+      - file: tests/Template.Tests/Utilities/UtilTests.cs
+        src: dotnet/tests/Template.Tests/Utilities/UtilTests.cs
+
+      - file: mise.local.toml
+        template: dotnet/mise.local.toml.j2
+
+- name: Configure Rider IDE
+  tags: dev-dotnet-rider
+  ansible.builtin.import_tasks:
+    file: jetbrains/ide.yml
+  vars:
+    _jetbrains_ide: rider

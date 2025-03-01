@@ -19,6 +19,17 @@ env:
   MYPY_CACHE_DIR: "{{ apps.python.mypy }}"
 
   #
+  # .NET.
+  #
+  NUGET_HTTP_CACHE_PATH: "{{ apps.dotnet.nuget.http }}"
+  NUGET_PACKAGES: "{{ apps.dotnet.nuget.packages }}"
+  NUGET_PLUGINS_CACHE_PATH: "{{ apps.dotnet.nuget.plugins }}"
+
+  DOTNET_CLI_HOME: "{{ apps.dotnet.tools }}"
+  DOTNET_SYSTEM_NET_DISABLEIPV6: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_GENERATE_ASPNET_CERTIFICATE: "0"
+  DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: "0"
 
   #
   # Rust.

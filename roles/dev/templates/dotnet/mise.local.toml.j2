@@ -1,0 +1,141 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- set _project_patch_common = {
+    "TieredPGO": "true",
+    "AnalysisMode": "All",
+    "GenerateDocumentationFile": true,
+} -%}
+{%- set _projects = {
+    "main": {
+        "dir": "src/Template",
+        "csproj": "src/Template/Template.csproj",
+        "patch": 
+            {
+                "PackageId": "DotnetTemplate",
+                "Version": "1.0.0",
+                "Authors": users.user.full,
+                "PackageLicenseExpression": "MIT",
+                "PackageProjectUrl": "https://github.com/dotnet/runtime",
+            } | ansible.builtin.combine(_project_patch_common),
+    },
+    "test": {
+        "dir": "src/Template",
+        "csproj": "src/Template/Template.csproj",
+        "patch": _project_patch_common,
+    },
+} -%}
+
+{%- macro _project_csprojcli(_project, _command, _args) -%}
+    {%- set _args = [
+        "{}/csprojcli".format(apps.dotnet.tools.default),
+        _command,
+        "-p", _project,
+        _args,
+        "-output", _project,
+        "-allowoverwrite", "true",
+    ] -%}
+    {{ _args | flatten | join(" ") }}
+{%- endmacro -%}
+
+{%- macro _project_properties(_project, _properties) -%}
+    {% for _prop, _value in _properties.items() %}
+        "{{
+            _project_csprojcli(
+                _project,
+                "node.insert",
+                [
+                    "-g", "PropertyGroup",
+                    "-n", _prop,
+                    "-v", _value | squote,
+                ]
+            )
+        }}",
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _project_patch_render(_project) -%}
+    {{ _project_properties(_project.csproj, _project.patch) | relative_indent(times=1, **_indent) }}
+    {#--#}
+    "dotnet add {{ _project }} package StyleCop.Analyzers",
+    "dotnet add {{ _project }} package Roslynator.Analyzers",
+    "dotnet add {{ _project }} package Roslynator.CodeAnalysis.Analyzers",
+    "dotnet add {{ _project }} package Roslynator.Formatting.Analyzers",
+    {#--#}
+    "{{ _project_csprojcli(_project.csproj, "group.insert", ["-g", "ItemGroup"]) }}",
+    "{{
+        _project_csprojcli(
+            _project.csproj,
+            "attribute.insert",
+            [
+                "-g", "ItemGroup",
+                "-n", "AdditionalFiles",
+                "-a", "Include",
+                "-v", "../../stylecop.json" | squote,
+            ],
+        )
+    }}"
+{%- endmacro -%}
+
+[env]
+_.path = [
+    "{{ apps.dotnet.root.default }}",
+    "{{ apps.dotnet.tools.default }}",
+]
+
+[tasks.init]
+description = "Initialize template to a working state."
+run = [
+    "dotnet tool install -g csprojcli",
+
+    "(cd {{ _projects.main.dir }} && dotnet new console)",
+    "(cd {{ _projects.main.dir }} && mv Program.Template.cs Program.cs)",
+    {{ _project_patch_render(_projects.main) | relative_indent(times=1, **_indent) }},
+
+    "(cd {{ _projects.test.dir }} && dotnet new nunit)",
+    "(cd {{ _projects.test.dir }} && rm UnitTest1.cs)",
+    "(cd {{ _projects.test.dir }} && dotnet add reference ../../{{ _projects.main.dir }})",
+    {{ _project_patch_render(_projects.test) | relative_indent(times=1, **_indent) }},
+
+    "dotnet new sln --name Template",
+    "dotnet sln add {{ _projects.main.dir }}",
+    "dotnet sln add {{ _projects.test.dir }}",
+
+    "dotnet clean",
+    "dotnet tool uninstall -g csprojcli",
+]
+
+[tasks.info]
+run = """
+{{
+    [
+        {
+            "deps": "dotnet restore",
+            "update": "via IDE",
+        },
+        {
+            "lint": "dotnet build",
+            "fix": "dotnet format",
+            "test": "dotnet test [--filter UtilTests]",
+        },
+        {
+            "run": "dotnet run [--project {}]".format(_projects.main.csproj),
+            "build": "dotnet publish [-a linux-x64] [-o dist] [--sc] [-p:PublishTrimmed=true] [p:PublishSingleFile=true] [-p:PublishReadyToRun=true]",
+        },
+        {
+            "search templates": "dotnet new search wasmconsole",
+            "sln": "dotnet new sln [--name My.Solution]",
+            "references": "dotnet add reference src/Template.Another",
+        },
+        {
+            "project organization": "https://learn.microsoft.com/en-us/dotnet/core/porting/project-structure",
+            "naming guidelines": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/naming-guidelines",
+            "coding convensions": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions",
+            "nunit usage": "https://docs.nunit.org/articles/nunit/technical-notes/usage/Usage-Notes.html",
+            "dotnet templates": "https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new-sdk-templates",
+            "dotnet tools": "https://github.com/quozd/awesome-dotnet?tab=readme-ov-file#code-analysis-and-metrics",
+            "RID": "https://learn.microsoft.com/en-us/dotnet/core/rid-catalog",
+            "single file publish": "https://github.com/dotnet/designs/blob/main/accepted/2020/single-file/design.md",
+        },
+    ] | shellmsg(".NET developement suite")
+}}
+"""

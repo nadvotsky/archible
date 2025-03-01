@@ -60,6 +60,34 @@ apps:
       env: UV_TOOL_BIN_DIR
 
   #
+  # .NET installation.
+  #
+  dotnet:
+    root:
+      default: "{{ users.user.home }}/.dotnet"
+    
+    tools:
+      default: "{{ users.user.home }}/.dotnet/tools"
+
+    nuget_packages:
+      default: "{{ users.user.home }}/.nuget/packages"
+
+    nuget_cache:
+      default: "{{ users.user.share }}/NuGet/v3-cache"
+      custom: "/tmp/nuget/cache"
+      env: NUGET_HTTP_CACHE_PATH
+
+    nuget_temp:
+      default: "/tmp/NuGetScratch{{ users.user.name }}"
+      custom: "/tmp/nuget/temp"
+      env: NUGET_SCRATCH
+
+    nuget_plugins:
+      default: "{{ users.user.share }}/NuGet/plugins-cache"
+      custom: "{{ users.user.cache }}/nuget/plugins"
+      env: NUGET_PLUGINS_CACHE_PATH
+
+  #
   # Rust installation.
   #
   rust:

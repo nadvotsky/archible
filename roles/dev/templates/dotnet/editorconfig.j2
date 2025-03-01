@@ -1,0 +1,45 @@
+{{ apps.templates.editorconfig }}
+
+[*.{cs,csx}]
+indent_style = space
+indent_size = 4
+max_line_length = 80
+
+roslynator_refactorings.enabled = true
+roslynator_compiler_diagnotic_fixes.enabled = true
+roslynator_max_line_length = 80
+roslynator_new_line_at_end_of_file = true
+
+#
+# Consider making public types internal.
+#
+dotnet_diagnostic.CA1515.severity = none
+
+#
+# A C# code file is missing a standard file header.
+#
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1634.severity = none
+dotnet_diagnostic.SA1635.severity = none
+
+[*Tests.cs]
+#
+# Allow underscores in tests.
+#
+dotnet_diagnostic.CA1707.severity = none
+#
+# Do not enforce comments in tests.
+#
+dotnet_diagnostic.CS1591.severity = none
+#
+# Do not enforce XML comments in tests.
+#
+dotnet_diagnostic.SA1600.severity = none
+
+[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
+indent_style = space
+indent_size = 2
+
+[*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+indent_style = space
+indent_size = 2
