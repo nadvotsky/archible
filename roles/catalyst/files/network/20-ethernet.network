@@ -14,3 +14,7 @@ DuplicateAddressDetection=none
 
 [DHCPV4]
 QuickAck=true
+UseDNS=false
+UseNTP=false
+UseSIP=false
+UseCaptivePortal=false
