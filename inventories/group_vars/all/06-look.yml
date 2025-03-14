@@ -65,8 +65,8 @@ gui:
     package: kvantum-theme-arc
 
 scaling:
-  #code_with
-  # Assuming that virtual perfect monitor has the following DPI.
+  #
+  # Assuming that a virtual perfect monitor has the following DPI.
   # All spacings are based on this value.
   #
   ethalon: 96

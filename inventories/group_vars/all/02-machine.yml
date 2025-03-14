@@ -48,6 +48,7 @@ machine:
     apparmor: "0"
     audit: "0"
     cgroup_disable: "memory"
+    cgroup_no_v1: "all"
     clocksource: "tsc"
     console_msg_format: "syslog"
     cpufreq.default_governor: "performance"
@@ -107,10 +108,10 @@ machine:
     #
     rootfstype: "xfs"
     rootflags: *machine-mountopts-root
-    rw: ~
+    rw: true
     booster.log: "error"
     #
-    # Frequently used.
+    # Verbosity.
     #
-    quiet: ~
-    loglevel: "4"
+    quiet: true
+    loglevel: "5"
