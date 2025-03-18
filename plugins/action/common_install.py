@@ -112,9 +112,7 @@ TARGETS_SPEC = {
     "template_plus": {
         "type": "str",
         "required": False,
-        "description": [
-            "A path to the template-plus (jinja with indent extensions)."
-        ],
+        "description": ["A path to the template-plus (jinja with indent extensions)."],
     },
     "link": {
         "type": "str",
@@ -290,7 +288,7 @@ class Target:
         }
 
     def build_wipe_context(self) -> Context:
-        raw = dict(path=self.directory, state="absent")
+        raw = dict(path=self.directory, state="absent", follow="yes")
         return Context(name="wipe", dest="path", raw=raw)
 
     def build_create_context(self) -> Context:
@@ -314,7 +312,10 @@ class Target:
     def build_template_plus_context(self) -> Context:
         raw = self._build_common_raw(
             dict(
-                src=self.template_plus, dest=self.path, lstrip_blocks=True, trim_blocks=True,
+                src=self.template_plus,
+                dest=self.path,
+                lstrip_blocks=True,
+                trim_blocks=True,
             )
         )
         return Context(name="template-plus", dest="dest", src="src", perm=True, raw=raw)
@@ -355,9 +356,16 @@ class ActionModule(ActionBase):
     def run(self, tmp: None = None, task_vars: TaskVars = None) -> RawResult:
         result = Result()
         args: Arguments = self.validate_argument_spec(self._build_spec(task_vars))[1]
-
         if self._task.check_mode:
             return result
+
+        user = task_vars["users"]["user"]
+        protected = tuple(
+            (
+                self._templar.template(user[directory])
+                for directory in ("home", "config", "cache", "share", "state", "bin")
+            )
+        )
 
         targets = []
         for raw_target in args["targets"]:
@@ -366,7 +374,7 @@ class ActionModule(ActionBase):
             }
             targets.append(Target(**conjuction))
 
-        return self._process_targets(task_vars, result, targets)
+        return self._process_targets(task_vars, protected, result, targets)
 
     def _build_spec(self, task_vars: typing.Mapping[str, typing.Any]):
         def templar(expr):
@@ -400,10 +408,14 @@ class ActionModule(ActionBase):
         }
 
     def _process_targets(
-        self, task_vars: TaskVars, result: Result, targets: typing.Sequence[Target]
+        self,
+        task_vars: TaskVars,
+        protected: typing.Sequence[str],
+        result: Result,
+        targets: typing.Sequence[Target],
     ) -> RawResult:
         for context, raw_result in itertools.chain(
-            self._handle_early_operations(task_vars, targets),
+            self._handle_early_operations(task_vars, protected, targets),
             self._handle_target_operations(task_vars, targets),
         ):
             if raw_result.get("failed") is True:
@@ -428,12 +440,21 @@ class ActionModule(ActionBase):
         return dataclasses.asdict(result)
 
     def _handle_early_operations(
-        self, task_vars: TaskVars, targets: typing.Sequence[Target]
+        self,
+        task_vars: TaskVars,
+        protected: typing.Sequence[str],
+        targets: typing.Sequence[Target],
     ) -> typing.Generator[tuple[Context, RawResult]]:
         wipe_history: set[str] = set()
         create_history: set[str] = set()
         for target in targets:
-            if target.wipe is True and not any(
+            if target.wipe is True and target.directory in protected:
+                self._display.warning(
+                    "Ignoring wiping '{}' as this is the protected directory.".format(
+                        target.directory
+                    )
+                )
+            elif target.wipe is True and not any(
                 (
                     os.path.commonpath((target.directory, hist)) == hist
                     for hist in wipe_history
@@ -453,8 +474,14 @@ class ActionModule(ActionBase):
             fn_dict = {
                 target.link is not None: (self._file, target.build_link_context),
                 target.src is not None: (self._copy, target.build_src_context),
-                target.template is not None: (self._template, target.build_template_context),
-                target.template_plus is not None: (self._template_plus, target.build_template_plus_context),
+                target.template is not None: (
+                    self._template,
+                    target.build_template_context,
+                ),
+                target.template_plus is not None: (
+                    self._template_plus,
+                    target.build_template_plus_context,
+                ),
                 target.content is not None: (self._copy, target.build_content_context),
                 target.touch is not None: (self._file, target.build_touch_context),
             }
