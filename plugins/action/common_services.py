@@ -72,7 +72,7 @@ class DomainState:
                     )
                 )
 
-            domain_val = value
+            domain_val = state_attrs.index(attr) == 0
 
         if domain_val is None:
             return
@@ -157,9 +157,9 @@ class ActionModule(ActionBase):
             if domain_state.autostart is not None:
                 local_module_args["enabled"] = domain_state.autostart
             if domain_state.masking is not None:
-                module_args["masked"] = domain_state.masking
+                local_module_args["masked"] = domain_state.masking
             if domain_state.runtime is not None:
-                module_args["state"] = (
+                local_module_args["state"] = (
                     "restarted" if domain_state.runtime is True else "stopped"
                 )
 
