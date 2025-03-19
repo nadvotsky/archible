@@ -2,7 +2,7 @@ import dataclasses
 import typing
 
 from ansible.plugins.action import ActionBase
-from ansible.constants import COLOR_CHANGED, COLOR_OK, COLOR_ERROR
+from ansible.constants import COLOR_CHANGED, COLOR_OK, COLOR_ERROR, COLOR_SKIP
 
 
 SPEC = {
@@ -29,6 +29,7 @@ SPEC = {
 
 class Result(typing.TypedDict):
     changed: typing.NotRequired[bool]
+    skipped: typing.NotRequired[bool]
     failed: typing.NotRequired[bool]
     msg: typing.NotRequired[str]
 
@@ -47,23 +48,20 @@ class ActionModule(ActionBase):
         args = self._validate_specs()
         result = Result()
 
-        for stage, cmdline in {
-            "remove": self._remove_stage(args),
-            "sync": self._sync_stage(args),
-            "install": self._install_stage(args),
+        for stage, (cmdline, ignore_error) in {
+            "remove": (self._remove_stage(args), True),
+            "sync": (self._sync_stage(args), False),
+            "install": (self._install_stage(args), False),
         }.items():
             if cmdline is None:
                 continue
 
-            color = self._merge_result(result, self._execute_paru(task_vars, cmdline))
+            status, color = self._merge_result(
+                result, self._execute_paru(task_vars, cmdline, ignore_error)
+            )
             if color != COLOR_ERROR:
                 self._display.display(
-                    "{}: ({}) => '{}'".format(
-                        "changed" if color == COLOR_CHANGED else "ok",
-                        stage,
-                        " ".join(cmdline),
-                    ),
-                    color,
+                    "{}: ({}) => '{}'".format(status, stage, " ".join(cmdline)), color
                 )
 
         return result
@@ -93,13 +91,15 @@ class ActionModule(ActionBase):
             return None
 
         cmdline = [] if args.force else ["--needed"]
-        return [*cmdline, *args.install]
+        return ["--sync", *cmdline, *args.install]
 
-    def _execute_paru(self, task_vars: dict, cmdline: typing.Sequence[str]) -> Result:
+    def _execute_paru(
+        self, task_vars: dict, cmdline: typing.Sequence[str], ignore_error: bool = False
+    ) -> Result:
         if self._task.check_mode:
             return Result()
 
-        return self._execute_module(
+        result = self._execute_module(
             module_name="ansible.builtin.command",
             module_args={
                 "argv": [
@@ -113,13 +113,19 @@ class ActionModule(ActionBase):
             },
             task_vars=task_vars,
         )
+        if ignore_error is True:
+            return Result(skipped=True)
 
-    def _merge_result(self, source: Result, overlay: Result) -> str:
+        return result
+
+    def _merge_result(self, source: Result, overlay: Result) -> tuple[str, str]:
         if overlay.get("failed") is True:
             source.update(overlay)
-            return COLOR_ERROR
+            return "failed", COLOR_ERROR
         elif overlay.get("changed") is True:
             source["changed"] = True
-            return COLOR_CHANGED
+            return "changed", COLOR_CHANGED
+        elif overlay.get("skipped") is True:
+            return "skipped", COLOR_SKIP
 
-        return COLOR_OK
+        return "ok", COLOR_OK
