@@ -102,7 +102,7 @@
                 {
                   "run": "deno task run[:watch]",
                   "build": (
-                    "deno compile --target x86_64-unknown-linux-gnu " + 
+                    "deno compile --target x86_64-unknown-linux-gnu " +
                     "--output dist/deno-template src/main.ts"
                   ),
                 },
@@ -116,13 +116,13 @@
             }}
             """
         deno/deno.json:
-          template: deno/deno.json.j2
+          template: javascript-deno/deno.json.j2
         deno/src/main.ts:
           file: javascript/src/main.ts
         deno/src/util/join.ts:
           file: javascript/src/util/join.ts
         deno/src/util/join.test.ts:
-          file: deno/src/util/join.test.ts
+          file: javascript-deno/src/util/join.test.ts
 
         bun/.gitignore:
           template: javascript/gitignore.j2
@@ -163,7 +163,7 @@
                 {
                   "run": "bun task run[:watch]",
                   "build": (
-                    "bun build --compile --target=bun-linux-x64 " + 
+                    "bun build --compile --target=bun-linux-x64 " +
                     "--minify --sourcemap --bytecode ./src/main.ts --outfile dist/bun-template"
                   ),
                 },
@@ -178,17 +178,17 @@
             }}
             """
         bun/package.json:
-          template: bun/package.json.j2
+          template: javascript-bun/package.json.j2
         bun/tsconfig.json:
-          file: bun/tsconfig.json
+          file: javascript-bun/tsconfig.json
         bun/biome.json:
-          file: bun/biome.json
+          file: javascript-bun/biome.json
         bun/src/main.ts:
           file: javascript/src/main.ts
         bun/src/util/join.ts:
           file: javascript/src/util/join.ts
         bun/src/util/join.test.ts:
-          file: bun/src/util/join.test.ts
+          file: javascript-bun/src/util/join.test.ts
 
         node/.gitignore:
           template: javascript/gitignore.j2
@@ -254,19 +254,19 @@
             }}
             """
         node/package.json:
-          template: node/package.json.j2
+          template: javascript-node/package.json.j2
         node/tsconfig.json:
-          file: node/tsconfig.json
+          file: javascript-node/tsconfig.json
         node/eslint.config.mjs:
-          file: node/eslint.config.mjs
+          file: javascript-node/eslint.config.mjs
         node/vitest.config.mts:
-          file: node/vitest.config.mts
+          file: javascript-node/vitest.config.mts
         node/src/main.ts:
-          file: node/src/main.ts
+          file: javascript-node/src/main.ts
         node/src/util/join.ts:
           file: javascript/src/util/join.ts
         node/src/util/join.test.ts:
-          file: node/src/util/join.test.ts
+          file: javascript-node/src/util/join.test.ts
 
 - name: Configure WebStorm IDE
   ansible.builtin.import_tasks:
