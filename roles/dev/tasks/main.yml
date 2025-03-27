@@ -21,6 +21,9 @@
 #  no graalvm
 #  no shell hook
 #  tricky cli, meant to be used interactively
+# aqua
+#  various small github packages, but no big frameworks like Java, dotnet, etc.
+#  native, but still shim, no shell hook
 #
 # Conda-based (Mamba/Pixi)
 #  complicated distribution with its own runtime (such as libc)
@@ -78,11 +81,11 @@
 #  can be comfortably stored in ~/env/examples
 #
 
-# - name: Prepare JetBrains IDEs
-#   tags:
-#     - dev-jetbrains-base
-#   ansible.builtin.import_tasks:
-#     file: jetbrains/base.yml
+- name: Prepare JetBrains IDEs
+  tags:
+    - dev-jetbrains-base
+  ansible.builtin.import_tasks:
+    file: jetbrains/base.yml
 
 - name: Configure C++ developer suite
   tags:
@@ -90,38 +93,50 @@
   ansible.builtin.import_tasks:
     file: langs/cplusplus.yml
 
-# - name: Configure Rust developer suite
-#   tags:
-#     - dev-rust
-#   ansible.builtin.import_tasks:
-#     file: langs/rust.yml
+- name: Configure Rust developer suite
+  tags:
+    - dev-rust
+  ansible.builtin.import_tasks:
+    file: langs/rust.yml
 
-# - name: Configure Go developer suite
-#   tags:
-#     - dev-go
-#   ansible.builtin.import_tasks:
-#     file: langs/go.yml
+- name: Configure Go developer suite
+  tags:
+    - dev-go
+  ansible.builtin.import_tasks:
+    file: langs/go.yml
 
-# - name: Configure Python developer suite
-#   tags:
-#     - dev-python
-#   ansible.builtin.import_tasks:
-#     file: langs/python.yml
+- name: Configure Python developer suite
+  tags:
+    - dev-python
+  ansible.builtin.import_tasks:
+    file: langs/python.yml
 
-# - name: Configure JavaScript developer suite
-#   tags:
-#     - dev-js
-#   ansible.builtin.import_tasks:
-#     file: langs/javascript.yml
+- name: Configure JavaScript developer suite
+  tags:
+    - dev-js
+  ansible.builtin.import_tasks:
+    file: langs/javascript.yml
 
-# - name: Configure Java developer suite
-#   tags:
-#     - dev-java
-#   ansible.builtin.import_tasks:
-#     file: langs/java.yml
+- name: Configure Java developer suite
+  tags:
+    - dev-java
+  ansible.builtin.import_tasks:
+    file: langs/java.yml
 
-# - name: Configure C# developer suite
-#   tags:
-#     - dev-dotnet
-#   ansible.builtin.import_tasks:
-#     file: langs/dotnet.yml
+- name: Configure C# developer suite
+  tags:
+    - dev-dotnet
+  ansible.builtin.import_tasks:
+    file: langs/dotnet.yml
+
+- name: Configure containers
+  tags:
+    - dev-containers
+  ansible.builtin.import_tasks:
+    file: misc/containers.yml
+
+- name: Configure editors
+  tags:
+    - dev-editors
+  ansible.builtin.import_tasks:
+    file: misc/editors.yml

@@ -1,0 +1,40 @@
+{
+  "bridge": "none",
+  "builder": {
+    "gc": {
+      "defaultKeepStorage": "20GB",
+      "enabled": true
+    }
+  },
+  "default-address-pools" : [
+    {
+      "base" : "10.10.10.0/20",
+      "size" : 26
+    }
+  ],
+  "default-runtime": "crun",
+  "default-shm-size": "256M",
+  "experimental": true,
+  "features": {
+    "cdi": true,
+    "containerd-snapshotter": true
+  },
+  "init": true,
+  "ip6tables": false,
+  "ipv6": false,
+  "live-restore": false,
+  "log-driver": "journald",
+  "log-level": "info",
+  "max-concurrent-downloads": 5,
+  "max-concurrent-uploads": 5,
+  "max-download-attempts": 5,
+  "no-new-privileges": true,
+  "runtimes": {
+    "crun": {
+      "path": "/usr/bin/crun"
+    }
+  },
+  "selinux-enabled": false,
+  "shutdown-timeout": 15,
+  "userland-proxy": false
+}

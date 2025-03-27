@@ -1,0 +1,4 @@
+resources:
+  - https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter.yaml
+  - https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+  - ./dashboard.yml

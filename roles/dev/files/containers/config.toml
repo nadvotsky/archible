@@ -1,0 +1,51 @@
+version = 3
+
+disabled_plugins = [
+  "io.containerd.snapshotter.v1.blockfile",
+  "io.containerd.snapshotter.v1.btrfs",
+  "io.containerd.snapshotter.v1.devmapper",
+  "io.containerd.snapshotter.v1.zfs",
+]
+
+[debug]
+  address = ""
+  level = "warn"
+
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri"]
+    disable_tcp_service = true
+    stream_idle_timeout = "0h20m0s"
+
+  [plugins."io.containerd.monitor.v1.cgroups"]
+    no_prometheus = true
+
+  [plugins."io.containerd.cri.v1.images"]
+    snapshotter = "overlayfs"
+    disable_snapshot_annotations = true
+    discard_unpacked_layers = true
+    max_concurrent_downloads = 5
+    image_pull_progress_timeout = "2m0s"
+
+  [plugins."io.containerd.cri.v1.runtime"]
+    tolerate_missing_hugetlb_controller = false
+    disable_hugetlb_controller = false
+    disable_apparmor = true
+    netns_mounts_under_state_dir = true
+
+  [plugins."io.containerd.cri.v1.runtime".containerd]
+    default_runtime_name = "crun"
+
+    [plugins."io.containerd.cri.v1.runtime".containerd.runtimes]
+      [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.crun]
+        runtime_type = "io.containerd.runc.v2"
+
+      [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.crun.options]
+        BinaryName = "/usr/bin/crun"
+        SystemdCgroup = true
+
+      [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runc]
+        runtime_type = "io.containerd.runc.v2"
+
+      [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runc.options]
+        BinaryName = "/usr/bin/runc"
+        SystemdCgroup = true

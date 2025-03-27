@@ -1,0 +1,85 @@
+- name: Install kubernetes cluster and management tools
+  common_packages:
+    install:
+      - kubeadm
+      - kubelet
+      - kubectl
+      - helm
+
+- name: Wipe kubernetes cluster
+  when: policy.destructive is true
+  block:
+    - name: Start kubelet service
+      common_services:
+        services:
+          - kubelet.service
+        state:
+          start: true
+      become: true
+
+    - name: Reset kubernetes cluster
+      ansible.builtin.command:
+        argv:
+          - kubeadm
+          - reset
+          - --force
+          - --cleanup-tmp-dir
+      register: __kubeadm_invocation
+      changed_when: __kubeadm_invocation.rc == 0
+      become: true
+
+    - name: Wipe kubernetes letfovers
+      common_install:
+        defaults:
+          wipe: true
+          create: false
+        targets:
+          - dir: /var/log/containers
+          - dir: /var/log/pods
+          - dir: /var/lib/kube-router
+          - dir: /var/lib/kubelet
+          - dir: /var/lib/etcd
+          - dir: /opt/cni
+          - dir: /etc/cni/net.d
+          #
+          # Written as dir to only wipe the file, not the parent directory.
+          #
+          - dir: /etc/kubernetes/admin.conf
+          - dir: /etc/kubernetes/kubelet.conf
+          - dir: /etc/kubernetes/controller-manager.conf
+          - dir: /etc/kubernetes/scheduler.conf
+          - dir: /etc/kubernetes/super-admin.conf
+          - dir: /etc/kubernetes/pki
+          - dir: "{{ lookup('user_layout', dev.kubectl.home) }}"
+          - dir: "{{ lookup('user_layout', dev.helm.config) }}"
+          - dir: "{{ lookup('user_layout', dev.helm.cache) }}"
+          - dir: "{{ lookup('user_layout', dev.helm.data) }}"
+      become: true
+
+    - name: Cleanup kube-proxy
+      ansible.builtin.command:
+        argv:
+          - ip
+          - link
+          - delete
+          - kube-proxy
+      register: __ip_link_invocation
+      changed_when: __ip_link_invocation.rc == 0
+      failed_when: false
+      become: true
+
+- name: Configure kubelet service
+  common_services:
+    services:
+      - kubelet.service
+      - cni-dhcp.service
+    state:
+      disable: true
+  become: true
+
+- name: Render kubernetes-kubeadm template
+  common_install:
+    defaults:
+      base: "{{ users.user.home }}/{{ users.user.xdg.templates }}/kubernetes-kubeadm"
+      wipe: true
+    targets: "{{ lookup('common_install_targets', 'kubernetes-kubeadm') }}"

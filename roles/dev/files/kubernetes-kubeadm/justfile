@@ -1,0 +1,31 @@
+default:
+    sudo systemctl start containerd kubelet
+    sudo kubeadm init --config kubeadm.yml
+
+    mkdir -p ${KUBECONFIG:-$HOME/.kube}
+    sudo install -m644 -g $USER -o $USER /etc/kubernetes/admin.conf ${KUBECONFIG:-$HOME/.kube}/config
+
+    kubectl apply -k .
+    helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+    helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
+
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+    kubectl get csr -o json \
+        | jq -r '.items | map(select(.spec.signerName == "kubernetes.io/kubelet-serving")) | map(.metadata.name) | .[]' \
+        | xargs kubectl certificate approve
+
+    kubectl get pods --all-namespaces
+
+dashboard:
+    echo $(kubectl get secret admin-user -n kube-system -o jsonpath="{.data.token}" | base64 -d)
+    kubectl -n kube-system port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
+
+clean:
+    sudo kubeadm reset --config kubeadm.yml
+    -sudo ip link delete kube-proxy
+    sudo nft flush ruleset
+    sudo rm -rf /var/lib/kubelet /var/lib/kube-router /var/lib/etcd /opt/cni /etc/cni/net.d
+    sudo systemctl restart containerd
+    sudo systemctl stop kubelet
+    rm -rf $HOME/.cache/helm $HOME/.config/helm ${HELM_DATA_HOME:-$HOME/.local/share/helm}
+    rm -rf ${KUBECONFIG:-$HOME/.kube}
