@@ -21,7 +21,10 @@ class LookupModule(LookupBase):
 
         return_values = []
         for choice in choices:
-            key = layout if layout in choice else "default"
+            key = "default"
+            if choice.get("link") is None:
+                key = choice.get(layout, key)
+
             if key not in choice:
                 raise AnsibleError("Invalid layout choice '{}'.".format(choice))
 
