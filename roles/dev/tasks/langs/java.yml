@@ -66,9 +66,9 @@
         maven/README.md:
           file: README.md
         maven/mise.local.toml:
-          template: maven/mise.toml.j2
+          template: java-maven/mise.toml.j2
         maven/pom.xml:
-          template: maven/pom.xml.j2
+          template: java-maven/pom.xml.j2
         maven/config/checkstyle/checkstyle.xml:
           file: java/config/checkstyle/checkstyle.xml
         maven/src/main/java/com/example/Main.java:
@@ -85,15 +85,15 @@
         gradle/README.md:
           file: README.md
         gradle/mise.local.toml:
-          template: gradle/mise.toml.j2
+          template: java-gradle/mise.toml.j2
         gradle/gradle.properties:
-          file: gradle/gradle.properties
+          file: java-gradle/gradle.properties
         gradle/settings.gradle:
-          file: gradle/settings.gradle
+          file: java-gradle/settings.gradle
         gradle/gradle/libs.versions.toml:
-          file: gradle/gradle/libs.versions.toml
+          file: java-gradle/gradle/libs.versions.toml
         gradle/app/build.gradle:
-          template: gradle/app/build.gradle.j2
+          template: java-gradle/app/build.gradle.j2
         gradle/config/checkstyle/checkstyle.xml:
           file: java/config/checkstyle/checkstyle.xml
         gradle/app/src/main/java/com/example/Main.java:
@@ -103,7 +103,7 @@
         gradle/app/src/test/java/com/example/util/UtilTests.java:
           file: java/src/test/java/com/example/util/UtilTests.java
 
-- name: Configure IntelliJ IDEA 
+- name: Configure IntelliJ IDEA
   ansible.builtin.import_tasks:
     file: jetbrains/ide.yml
   vars:
