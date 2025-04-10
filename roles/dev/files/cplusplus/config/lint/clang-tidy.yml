@@ -1,0 +1,17 @@
+---
+Checks: >-
+    -*,
+    bugprone-*,cert-*,clang-analyzer-*,concurrency-*,cppcoreguidelines-*,
+    google-*,misc-*,modernize-*,performance-*,portability-*,readability-*
+HeaderFileExtensions: [h, hh, hpp, hxx]
+ImplementationFileExtensions: [c, cc, cpp, cxx]
+FormatStyle: google
+ExcludeHeaderFilterRegex: '.'
+SystemHeaders: false
+UseColor: true
+CheckOptions:
+  readability-identifier-naming.LocalVariableCase: lower_case
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.ClassMethodCase: CamelCase
+  readability-identifier-naming.PrivateMemberCase: lower_case
+  readability-identifier-naming.PrivateMemberPrefix: _

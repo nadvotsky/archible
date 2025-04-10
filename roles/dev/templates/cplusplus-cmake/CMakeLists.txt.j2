@@ -1,0 +1,99 @@
+cmake_minimum_required(VERSION 3.31)
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
+
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_COMPONENTS_ALL Runtime)
+set(CMAKE_INSTALL_RPATH "\${ORIGIN}/../lib")
+
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
+cmake_policy(SET CMP0083 NEW)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+
+if (MSVC)
+    add_compile_options(/Wall)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT lto_supported)
+if(lto_supported)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
+
+
+{% if __cplusplus.fetch is true %}
+include(FetchContent)
+FetchContent_Declare(
+    fmt
+    URL https://github.com/fmtlib/fmt/archive/master.zip
+)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/main.zip
+    SYSTEM
+    EXCLUDE_FROM_ALL
+)
+
+
+{% endif %}
+project(
+    {{ __cplusplus.name }}
+    LANGUAGES C CXX
+    VERSION 1.0.0
+    DESCRIPTION "An example cmake template."
+)
+include_directories(src)
+set(SOURCES src/util/util.cc)
+set(TESTS test/util/util_test.cc)
+
+
+add_executable(
+    {{ __cplusplus.name }}
+    src/main.cc
+    ${SOURCES}
+)
+
+{% if __cplusplus.fetch is true %}
+FetchContent_MakeAvailable(fmt)
+{% else %}
+find_package(fmt CONFIG REQUIRED)
+{% endif %}
+target_link_libraries({{ __cplusplus.name }} PRIVATE fmt::fmt)
+
+
+enable_testing()
+add_executable(
+    {{ __cplusplus.name }}-test
+    ${SOURCES}
+    ${TESTS}
+)
+
+{% if __cplusplus.fetch is true %}
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+{% else %}
+find_package(GTest REQUIRED)
+{% endif %}
+target_link_libraries({{ __cplusplus.name }}-test PRIVATE GTest::gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests({{ __cplusplus.name }}-test)
+
+
+{% set _targets = [__cplusplus.name, "fmt" if __cplusplus.fetch is true else none] %}
+install(
+    TARGETS {{ _targets | reject("none") | join(" ") }}
+    RUNTIME_DEPENDENCIES
+        PRE_EXCLUDE_REGEXES
+            [[api-ms-win-.*]] [[ext-ms-.*]] [[kernel32\.dll]]
+        POST_EXCLUDE_REGEXES
+            [[.*(\\|/)system32(\\|/).*\.dll]] [[^/(usr/)?(local/)?lib(64)?/]]
+    RUNTIME COMPONENT Runtime
+    LIBRARY COMPONENT Runtime
+)
+include(CPack)

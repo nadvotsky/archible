@@ -1,13 +1,26 @@
+#include <iterator>
 #include <vector>
+#include <string>
 #include <string_view>
-#include <ranges>
+#include <numeric>
 
 #include "util.h"
 
 namespace {
-    const std::string_view kJoinStringsSep = ", ";
+  const std::string kJoinStringsSep{", "};
 }
 
-std::string Util::JoinStrings(const std::vector<std::string_view>& strings) {
-  return std::ranges::to<std::string>(strings | std::views::join_with(kJoinStringsSep));
+auto Util::JoinStrings(const std::vector<std::string_view>& strings) -> std::string {
+  if (strings.empty()) {
+    return std::string{};
+  }
+
+  return std::accumulate(
+    std::next(strings.begin()),
+    strings.end(),
+    std::string(strings.front()),
+    [](const std::string& acc, const std::string_view& next) {
+      return acc + kJoinStringsSep + std::string{next};
+    }
+  );
 }

@@ -1,0 +1,45 @@
+{%- set _acc = lookup(
+    "ansible.builtin.template", "local_templates/conan_builds.j2",
+) -%}
+{%- for _name, _build in _acc.items() -%}
+    {%- if _build.default is true -%}
+        {%- continue -%}
+    {%- endif -%}
+
+    {%- if _build.conan.conf is defined -%}
+        {%- do _build.conan.conf.pop("tools.build:sharedlinkflags", none) -%}
+        {%- set _exelinkflags = (
+            _build.conan.conf.get("tools.build:exelinkflags", []) | reject("eq", _build.linker.use | default(""))
+        ) -%}
+        {%- if _exelinkflags | length > 0 -%}
+            {%- do _build.conan.conf.__setitem__("tools.build:exelinkflags", _exelinkflags) -%}
+        {%- else -%}
+            {%- do _build.conan.conf.pop("tools.build:exelinkflags", none) -%}
+        {%- endif -%}
+    {%- endif -%}
+
+    {%- do _build.__setitem__("meson", {}) -%}
+    {%- set _meson = {
+        "options": {
+            "prefer_static": (_build.linkage is string and _build.linkage == "static") | ternary(true, none),
+            "b_lto": _build.release is true | ternary(true, none),
+        } | dict2items | rejectattr("value", "none") | items2dict,
+        "binaries": {
+            "c_ld": _build.linker.name | default(none),
+            "cpp_ld": _build.linker.name | default(none),
+        } | dict2items | rejectattr("value", "none") | items2dict,
+    } -%}
+    {%- for _k, _v in _meson.items() -%}
+        {%- if _v.keys() | length > 0 -%}
+            {%- do _build.meson.__setitem__(_k, _v) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- if _build.meson.binaries is defined or _build.meson.options is defined -%}
+        {%- do _build.conan.conf.__setitem__(
+            "tools.meson.mesontoolchain:extra_machine_files", ["../config/natives/{}.ini".format(_name)],
+        ) -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{{ _acc }}

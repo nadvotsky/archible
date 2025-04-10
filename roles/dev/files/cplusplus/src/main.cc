@@ -1,6 +1,6 @@
 #include <vector>
 #include <string_view>
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "util/util.h"
 

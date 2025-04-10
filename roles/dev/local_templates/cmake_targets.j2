@@ -1,0 +1,20 @@
+{%- set _acc = [] -%}
+{%- for _name, _build in __cplusplus.builds.items() -%}
+    {%- if _build.default is true -%}
+        {%- continue -%}
+    {%- endif -%}
+
+    {%- set _lines = [] -%}
+    {%- for _var, _val in _build.cmake.items() -%}
+        {%- do _lines.append('set({} "{}")'.format(
+            _var, _val if _val is string else (_val | join(" ")),
+        )) -%}
+    {%- endfor -%}
+
+    {%- do _acc.append({
+        "file": "config/toolchains/{}.cmake".format(_name),
+        "content": _lines | join("\n") | newline,
+    }) -%}
+{%- endfor -%}
+
+{{ _acc }}
