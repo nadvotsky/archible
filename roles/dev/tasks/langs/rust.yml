@@ -125,6 +125,8 @@
           file: README.md
 
 - name: Configure RustRover IDE
+  tags:
+    - dev-cplusplus-ide
   ansible.builtin.import_tasks:
     file: jetbrains/ide.yml
   vars:

@@ -113,6 +113,8 @@
           file: python/tests/util/test_util.py
 
 - name: Configure PyCharm IDE
+  tags:
+    - dev-python-ide
   ansible.builtin.import_tasks:
     file: jetbrains/ide.yml
   vars:
