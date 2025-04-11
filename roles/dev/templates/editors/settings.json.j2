@@ -1,0 +1,206 @@
+{
+    //
+    // Telemetry, updates, and cloud services.
+    //
+    "telemetry.telemetryLevel": "off",
+    "update.mode": "none",
+    "workbench.enableExperiments": false,
+    "chat.commandCenter.enabled": false,
+    "chat.detectParticipant.enabled": false,
+    "chat.renderRelatedFiles": false,
+    "workbench.settings.enableNaturalLanguageSearch": false,
+
+    //
+    // OS integrations.
+    //
+    "window.dialogStyle": "custom",
+    "editor.experimentalWhitespaceRendering": "font",
+    // "editor.experimentalGpuAcceleration": "off",
+    // "files.simpleDialog.enable": false,
+    // "terminal.integrated.enableImages": false,
+    // "terminal.integrated.gpuAcceleration": "auto",
+    // "files.enableTrash": true,
+
+    //
+    // Animations and responsiveness.
+    //
+    "workbench.reduceMotion": "on",
+    "editor.quickSuggestionsDelay": 0,
+    "editor.hover.delay": 150,
+    "editor.hover.sticky": false,
+    "workbench.hover.delay": 250,
+
+    //
+    // Trusted workspaces and startup.
+    //
+    "security.workspace.trust.enabled": false,
+    "window.restoreWindows": "none",
+
+    //
+    // Color theme and panels.
+    //
+    "workbench.colorTheme": "Nord",
+    "workbench.panel.defaultLocation": "right",
+    "workbench.activityBar.location": "top",
+    "workbench.panel.opensMaximized": "never",
+
+    //
+    // File tree.
+    //
+    "workbench.list.fastScrollSensitivity": 10,
+    "workbench.tree.indent": 12,
+    "workbench.tree.renderIndentGuides": "always",
+    "explorer.compactFolders": false,
+
+    //
+    // Tabs.
+    //
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.excludeDirty": true,
+    "workbench.editor.pinnedTabsOnSeparateRow": true,
+    "workbench.editor.labelFormat": "medium",
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.editor.untitled.labelFormat": "name",
+    "workbench.editor.alwaysShowEditorActions": true,
+    "workbench.editor.highlightModifiedTabs": true,
+    // "workbench.editor.wrapTabs": false,
+
+    //
+    // Minimap.
+    //
+    "editor.minimap.renderCharacters": false,
+
+    //
+    // Search.
+    //
+    "editor.find.autoFindInSelection": "multiline",
+    "search.showLineNumbers": true,
+    "search.exclude": {
+        "**/.git": true,
+        "**/.snv": true,
+        "**/.bzr": true,
+
+        "**/.pixi": true,
+
+        "**/.helix": true,
+        "**/.dir-locals.el": true,
+        "**/.cproject": true,
+        "**/.project": true,
+        "**/.vscode": true,
+        "**/*.code-workspace": true,
+        "**/*.code-search": true,
+        "**/*.sublime-workspace": true,
+        "**/.idea": true,
+        "**/.vs": true,
+        "**/.zed": true,
+
+        "**/artifacts": true,
+        "**/release": true,
+        "**/debug": true,
+        "**/out": true,
+        "**/target": true,
+        "**/dist": true,
+        "**/obj": true,
+
+        "**/.temp": true,
+        "**/.cache": true,
+        "**/tmp": true,
+        "**/var": true,
+        "**/run": true,
+        "**/.local": true,
+
+        "**/*.log": true,
+
+        "**/.venv": true,
+        "**/venv": true,
+        "**/.dotnet": true,
+        "**/.packages": true,
+        "**/vcpkg_installed": true,
+		"**/node_modules": true,
+		"**/bower_components": true
+	},
+
+    //
+    // Diff.
+    //
+    "diffEditor.experimental.showMoves": true,
+	"diffEditor.experimental.useTrueInlineView": true,
+
+    //
+    // Editor limits.
+    //
+    "workbench.localHistory.maxFileSize": 1024,
+
+    //
+    // Editor behavior tweaks.
+    //
+    "editor.multiCursorModifier": "ctrlCmd",
+    "explorer.incrementalNaming": "smart",
+
+    //
+    // Editor general UI.
+    //
+    "editor.folding": false,
+    "editor.dragAndDrop": false,
+    "editor.dropIntoEditor.enabled": false,
+	"editor.fastScrollSensitivity": 10,
+    "editor.scrollbar.vertical": "visible",
+    "editor.inlayHints.padding": true,
+
+    //
+    // Editor code UI.
+    //
+    "editor.rulers": [
+        80, 120
+    ],
+    "editor.renderWhitespace": "trailing",
+    "editor.wordWrap": "on",
+    // "editor.wordWrapColumn": 120,
+
+    //
+    // Editor auto-correction.
+    //
+    // "editor.formatOnSave": false,
+    // "files.insertFinalNewline": false,
+    // "files.trimFinalNewlines": false,
+	// "files.trimTrailingWhitespace": false,
+
+    //
+    // Editor suggestions.
+    //
+    "editor.guides.bracketPairs": "active",
+    "editor.quickSuggestions": {
+		"other": "on",
+		"comments": "on",
+		"strings": "on"
+	},
+    "editor.renderLineHighlight": "all",
+
+    //
+    // Source control.
+    //
+	"scm.alwaysShowActions": true,
+	"scm.alwaysShowRepositories": true,
+    "comments.useRelativeTime": false,
+    "git.blame.editorDecoration.template": "(${hashShort} - ${authorName} ${authorDateAgo}) ${subject}",
+    "git.blame.statusBarItem.template": "${hashShort} ${authorName} (${authorDateAgo})",
+    "git.enableCommitSigning": true,
+    "github.gitProtocol": "ssh",
+
+    //
+    // Debug.
+    //
+    "debug.showBreakpointsInOverviewRuler": true,
+    "debug.showVariableTypes": true,
+    "debug.toolBarLocation": "commandCenter",
+
+    //
+    // Tasks.
+    //
+    "task.saveBeforeRun": "prompt",
+
+    //
+    // Markdown.
+    //
+    "markdown.validate.enabled": true,
+}

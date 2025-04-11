@@ -1,0 +1,90 @@
+{%- set _font_size_absolute = fonts.monospace.sizes.small -%}
+{%- set _font_size_scaled = _font_size_absolute | scale(scaling.real) -%}
+
+{
+  //
+  // Color scheme and font.
+  //
+  "color_scheme": "Mariana.sublime-color-scheme",
+  "font_size": {{ _font_size_scaled }},
+
+  //
+  // Startup.
+  //
+  "hot_exit": "disabled",
+  "remember_workspace": false,
+
+  //
+  // Performance and integrations.
+  //
+  "show_git_status": false,
+  "index_files": false,
+  "update_system_recent_files": false,
+
+  //
+  // Animations and delays.
+  //
+  "animation_enabled": false,
+  "auto_complete_delay": 0,
+
+  //
+  // Minimap.
+  //
+  "draw_minimap_border": true,
+  "always_show_minimap_viewport": true,
+
+  //
+  // UI tweaks.
+  //
+  "auto_complete_trailing_symbols": true,
+  "bold_folder_labels": true,
+  "fold_buttons": false,
+  "highlight_line": true,
+  "caret_extra_top": 0,
+  "caret_extra_bottom": 0,
+  "caret_extra_width": 0,
+  "match_brackets_angle": true,
+  "hide_pointer_while_typing": false,
+  "drag_text": false,
+  "preview_on_click": "only_left",
+
+  //
+  // Status bar tweaks.
+  //
+  "show_encoding": true,
+  "show_line_endings": true,
+  "show_spelling_errors": false,
+
+  //
+  // Rulers.
+  //
+  "rulers": [80, 120],
+  "ruler_style": "stippled",
+
+  //
+  // Spell check.
+  //
+  "spell_check": true,
+
+  //
+  // Word wrapping.
+  //
+  "word_wrap": true,
+  // "wrap_width": 0,
+  // "wrap_width_style": "min",
+
+  //
+  // Whitespace.
+  //
+  "draw_white_space": [
+    "trailing",
+  ],
+  "draw_unicode_white_space": "all",
+
+  //
+  // Auto-format on save.
+  //
+  // "trim_trailing_white_space_on_save": true,
+  // "trim_only_modified_white_space": true,
+  // "ensure_newline_at_eof_on_save": true,
+}

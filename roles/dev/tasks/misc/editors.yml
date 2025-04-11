@@ -1,0 +1,85 @@
+- name: Configure sublime text editor
+  tags:
+    - dev-editors-sublime
+  block:
+    - name: Install sublime text
+      common_packages:
+        install:
+          - sublime-text
+
+    - name: Wipe sublime text
+      common_install:
+        defaults:
+          wipe: true
+        targets:
+          - dir: "{{ users.user.cache }}/sublime-text"
+          - dir: "{{ users.user.config }}/sublime-text"
+          - file: "{{ users.user.config }}/sublime-text/Packages/User/Preferences.sublime-settings"
+            template: editors/Preferences.sublime-settings.j2
+
+- name: Configure visual studio code editor
+  tags:
+    - dev-editors-vscode
+  vars:
+    __vscode:
+      - --user-data-dir {{ lookup('user_layout', dev.vscode.data) }}
+      - --extensions-dir {{ lookup('user_layout', dev.vscode.extensions) }}
+  block:
+    - name: Install visual studio code
+      common_packages:
+        install:
+          - visual-studio-code-bin
+
+    - name: Configure code flags
+      common_install:
+        targets:
+          - file: "{{ users.user.config }}/code-flags.conf"
+            content: "{{ __vscode | join('\n') }}"
+
+    - name: Wipe visual studio code
+      common_install:
+        defaults:
+          wipe: true
+        targets:
+          - dir: "{{ lookup('user_layout', dev.vscode.data) }}"
+          - dir: "{{ lookup('user_layout', dev.vscode.extensions) }}"
+
+    - name: Render visual studio code configuration
+      common_install:
+        targets:
+          - file: "{{ lookup('user_layout', dev.vscode.data) }}/User/settings.json"
+            src: editors/settings.json
+
+    - name: Install or update visual code extensions
+      ansible.builtin.command:
+        cmd: "code {{ __vscode | join(' ') }} --install-extension {{ item }}"
+      register: __code_invocation
+      changed_when: __code_invocation.rc == 0
+      loop:
+        - arcticicestudio.nord-visual-studio-code
+        - davidanson.vscode-markdownlint
+
+- name: Configure zed editor
+  tags:
+    - dev-editors-zed
+  block:
+    - name: Install zed editor
+      common_packages:
+        install:
+          - zed
+
+    - name: Wipe zed
+      common_install:
+        defaults:
+          wipe: true
+          create: false
+        targets:
+          - dir: "{{ lookup('user_layout', dev.zed.cache) }}"
+          - dir: "{{ lookup('user_layout', dev.zed.extensions) }}"
+          - dir: "{{ lookup('user_layout', dev.zed.config) }}"
+
+    - name: Render zed configuration
+      common_install:
+        targets:
+          - file: "{{ lookup('user_layout', dev.zed.config) }}/settings.json"
+            template: editors/zed-settings.json.j2

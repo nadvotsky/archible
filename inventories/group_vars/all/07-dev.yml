@@ -326,6 +326,29 @@ dev:
       dot: "{{ users.user.home }}/.helm"
       env: HELM_DATA_HOME
 
+  vscode:
+    extensions:
+      default: "{{ users.user.home }}/.vscode"
+      dot: "{{ users.user.home }}/.vscode/extensions"
+      xdg: "{{ users.user.cache }}/vscode"
+
+    data:
+      default: "{{ users.user.config }}/Code"
+      dot: "{{ users.user.home }}/.vscode/data"
+      xdg: "{{ users.user.state }}/vscode"
+
+  zed:
+    config:
+      default: "{{ users.user.config }}/zed"
+
+    cache:
+      default: "{{ users.user.cache }}/zed"
+
+    extensions:
+      default: "{{ users.user.share }}/zed"
+      dot: "{{ users.user.home }}/.zed"
+      link: true
+
   #
   # JetBrains IDEs installation.
   #
