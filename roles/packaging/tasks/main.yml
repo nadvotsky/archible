@@ -56,6 +56,7 @@
             gpg-agent-extra@etc-pacman.d-gnupg.socket:
             gpg-agent-ssh@etc-pacman.d-gnupg.socket:
             gpg-agent@etc-pacman.d-gnupg.socket:
+            archlinux-keyring-wkd-sync.timer:
 
     - name: Reset pacman keyring
       when: policy.destructive is true
@@ -83,6 +84,7 @@
         - aria2
         - bsdtar
         - curl
+        - fd
 
     _common_install:
       targets:
