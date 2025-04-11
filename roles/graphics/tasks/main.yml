@@ -65,28 +65,6 @@
             exec "$@" >/dev/null
         ly/wsetup.sh:
           content: *minwm
-        #
-        # While making override.conf is possible, it is easier to simply replace
-        # the entire service definition. It is likely not going to be updated on each update,
-        # so no problem with .pacnew is expected.
-        #
-        /usr/lib/systemd/system/ly.service: |
-          [Unit]
-          Description=TUI display manager
-          After=systemd-user-sessions.service plymouth-quit-wait.service
-          After=getty@tty1.service
-          Conflicts=getty@tty1.service
-
-          [Service]
-          Type=idle
-          ExecStart=/usr/bin/ly-dm
-          StandardInput=tty
-          TTYPath=/dev/tty1
-          TTYReset=yes
-          TTYVHangup=yes
-
-          [Install]
-          Alias=display-manager.service
 
     _common_services:
       targets:
