@@ -1,0 +1,26 @@
+#
+# ACPI buttons.
+#
+SUBSYSTEMS=="acpi", ACTION=="add", DRIVER=="button", \
+	RUN{program}:="/sbin/sh -c 'echo $kernel > $sys/bus/acpi/drivers/$driver/unbind'"
+
+#
+# Fake keyboard device from mouse.
+#
+SUBSYSTEMS=="usb", ACTION=="add", \
+	ENV{PRODUCT}=="4e53/5407/100", ENV{INTERFACE}=="3/1/1" \
+	ATTR{authorized}="0"
+
+#
+# Keyboard system/control device.
+#
+SUBSYSTEMS=="usb", ACTION=="add", \
+	ENV{PRODUCT}=="1a2c/2124/110", ENV{INTERFACE}=="3/0/0" \
+	ATTR{authorized}="0"
+
+#
+# GPU HDMI Audio.
+#
+SUBSYSTEMS=="pci", ACTION=="add", DRIVER=="snd_hda_intel", \
+	ENV{PCI_ID}=="10DE:????", \
+	RUN{program}:="/sbin/sh -c 'echo 1 > $sys$devpath/remove'"

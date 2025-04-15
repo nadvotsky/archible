@@ -45,25 +45,6 @@
     {% endfor %}
 {%- endmacro -%}
 
-{%- macro _wrong_devices_render() -%}
-    {% for _dev in inputs.mask.values() %}
-        {% set _stripped = _dev | lower | replace(" ", "-") %}
-        {% set _duplicate = "{}-1".format(_stripped) %}
-        {##}
-        device {
-            name = {{ _stripped }}
-            enabled = false
-        }
-
-        device {
-            name = {{ _duplicate }}
-            enabled = false
-        }
-        {##}
-        {% if not loop.last %}{{ "\n" }}{% endif %}
-    {% endfor %}
-{%- endmacro -%}
-
 {%- macro _workspaces_render() -%}
     {% for _ws in _ws_map.values() %}
         {% if _ws is mapping %}
@@ -344,8 +325,6 @@ animations {
 #
 # Input configuration.
 #
-{{ _wrong_devices_render() | relative_indent }}
-
 input {
     kb_model = {{ inputs.keyboard.model }}
     kb_layout = {{ inputs.keyboard.layout }}
