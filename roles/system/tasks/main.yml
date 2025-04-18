@@ -38,6 +38,9 @@
         #
         plymouth.enable: "0"
         quotacheck.mode: "skip"
+        #
+        # Modules preload.
+        #
         # modules_load: 
 
     - name: Mask useless services
@@ -169,6 +172,7 @@
           - systemd-timesyncd.service
         state:
           enable: true
+
   become: true
 
 - name: Configure vconsole

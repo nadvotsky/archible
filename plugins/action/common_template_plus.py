@@ -66,7 +66,7 @@ class SetIndentExtension(Extension):
         indent_size = parser.parse_expression()
         if not (0 < indent_size.value <= 8):
             raise TemplateSyntaxError(
-                "Indentation size must be bigger than 0 and less than 5.", lineno
+                "Indentation size must be bigger than 0 and less than 9.", lineno
             )
         self.environment.policies[TemplatePlus.POLICY_SIZE] = indent_size.value
 

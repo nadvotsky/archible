@@ -23,7 +23,6 @@ class ActionModule(ActionBase):
     _CMDLINE_FILE = "/etc/kernel/cmdline"
 
     def run(self, tmp: None = None, task_vars: dict = None) -> Result:
-        self._display.warning(f"{self._connection.become=}")
         args, result = self._process_args(), Result()
         if self._task.check_mode is True:
             return result

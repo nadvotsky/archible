@@ -66,7 +66,7 @@ gpg:
       algo: ecdsa
       hint: nistp256
     subkeys:
-      private_eMisncr_main:
+      private_encr_main:
         type: encr
         algo: ecdh
         hint: nistp256

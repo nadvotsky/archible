@@ -97,7 +97,7 @@ dev:
 
     cargo:
       default: "{{ users.user.home }}/.cargo"
-  
+
     cargo_bin:
       default: "{{ users.user.home }}/.cargo/bin"
 
@@ -232,7 +232,7 @@ dev:
           - default
           - release
         linkage: dynamic
-      
+
       clang:
         intermediate: true
         linker:
@@ -283,6 +283,12 @@ dev:
           - release-dynamic
           - clang
           - clang-release
+
+  # TODO: wipe
+  lldb:
+    history:
+      default: "{{ users.user.home }}/.lldb"
+      xdg: "{{ users.user.state }}/lldb"
 
   cmake:
     packages:
@@ -371,7 +377,7 @@ dev:
     # How many years to cover if using agent.
     #
     years: 10
-    
+
     #
     # Whenever generate scripts and desktop application actions
     #  to run ide with WLToolkit.

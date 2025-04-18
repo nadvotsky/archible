@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# TODO: @deprecated: use README.md instead.
 
 class FilterModule:
     def filters(self):
