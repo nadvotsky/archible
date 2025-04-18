@@ -15,7 +15,9 @@
         # Default locations.
         #
         - "{{ users.user.home }}/go"
+        - "{{ users.user.config }}/go"
         - "{{ users.user.cache }}/go-build"
+        - "{{ users.user.cache }}/golangci-lint"
         #
         # Custom locations.
         #
