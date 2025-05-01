@@ -146,16 +146,6 @@
 
   become: true
 
-- name: Configure transparent hugepage shmem
-  tags:
-    - system-transparent-hugepage
-  common_install:
-    targets:
-      - file: /etc/tmpfiles.d/shmem-transparent-hugepage.conf
-        content:
-          w /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - always
-  become: true
-
 - name: Configure timesyncd
   tags:
     - system-timesyncd
@@ -194,3 +184,28 @@
 
   become: true
 
+- name: Configure transparent hugepage shmem
+  tags:
+    - system-transparent-hugepage
+  block:
+    - name: Render tmpfiles entry to always transparent pages for shmem
+      common_install:
+        targets:
+          - file: /etc/tmpfiles.d/shmem-transparent-hugepage.conf
+            content:
+              w /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - always
+
+  become: true
+
+- name: Configure TRIM
+  tags:
+    - system-trim
+  block:
+    - name: Enable fstrim timer
+      common_services:
+        services:
+          - fstrim.timer
+        state:
+          enable: true
+
+  become: true
