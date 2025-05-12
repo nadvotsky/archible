@@ -1,0 +1,27 @@
+{%- set _indent = {"space": 2} -%}
+
+{%- set _default_command = "echo $kernel > $sys%p/driver/unbind" -%}
+
+{%- macro _group_header_render(_group) -%}
+  SUBSYSTEM=="{{ _group.subsystem }}", ACTION=="add", \
+{%- endmacro -%}
+
+{%- macro _group_body_render(_selector, _group) -%}
+  {% set _command = "/sbin/sh -c {}".format(
+    _group.command | default(_default_command) | squote,
+  ) %}
+  {{ _selector }}, \
+  RUN{program}:="{{ _command }}"
+{%- endmacro -%}
+
+{%- macro _blacklist_render() -%}
+  {% for _group in blacklist %}
+    {% for _selector in _group.selectors %}
+      {{ _group_header_render(_group) | relative_indent(times=3, **_indent) }}
+        {{ _group_body_render(_selector, _group) | relative_indent(times=4, **_indent) }}
+    {% endfor %}
+    {% if not loop.last %}{{ "" | newline }}{% endif %}
+  {% endfor %}
+{%- endmacro -%}
+
+{{ _blacklist_render() | relative_indent() }}

@@ -197,6 +197,18 @@
 
   become: true
 
+- name: Configure udev
+  tags:
+    - system-udev
+  block:
+    - name: Render udev blacklist rules
+      common_install:
+        targets:
+          - file: /etc/udev/rules.d/01-blacklist.rules
+            template: udev/01-blacklist.rules.j2
+
+  become: true
+
 - name: Configure TRIM
   tags:
     - system-trim

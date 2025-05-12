@@ -1,3 +1,0 @@
-SUBSYSTEMS=="usb", ACTION=="add", \
-	ENV{PRODUCT}=="4e53/5407/100", ENV{INTERFACE}=="3/1/1" \
-	ATTR{authorized}="0"

@@ -1,3 +1,0 @@
-SUBSYSTEMS=="pci", ACTION=="add", DRIVER=="snd_hda_intel", \
-	ATTR{vendor}=="NVIDIA", 
-	RUN{program}:="/sbin/sh -c 'echo 1 > $sys$devpath/remove'"
