@@ -1,0 +1,10 @@
+
+  firefox:
+    cache:
+      default: "{{ users.user.cache }}/mozilla"
+
+    data:
+      default: "{{ users.user.home }}/.mozilla"
+      xdg: "{{ users.user.state }}/mozilla"
+      link: true
+

@@ -1,0 +1,70 @@
+---
+- name: Configure firefox browser
+  tags: apps-browsers-firefox
+  block:
+    - name: Install firefox package
+      common_packages:
+        install:
+          - firefox
+
+    # - name: Configure firefox ulayout
+    #   common_ulayout:
+    #     default: "{{ user_home }}/.mozilla"
+    #     xdg: "{{ user_state }}/mozilla"
+    #     dot:
+    #      STABLE: true
+    #   register: _firefox_home
+    - name: "TODO: ulayout stub"
+      ansible.builtin.set_fact:
+        _firefox_home: "/home/test/.mozilla"
+
+    - name: Stat profiles.ini
+      ansible.builtin.stat:
+        path: "{{ _firefox_home }}/firefox/profiles.ini"
+      register: _firefox_profiles_ini_stat
+
+    - name: Create a new profile if none exist
+      when: _firefox_profiles_ini_stat.exists is false
+      ansible.builtin.command:
+        argv:
+          - firefox
+          - -CreateProfile
+          - Default
+      register: _firefox_create_profile_invocation
+      changed_when: _firefox_create_profile_invocation.rc == 0
+
+    - name: Read profiles.ini
+      ansible.builtin.slurp:
+        src: "{{ _firefox_home }}/firefox/profiles.ini"
+      register: _firefox_profiles_ini
+
+    - name: Extract profiles paths from profiles.ini
+      ansible.builtin.set_fact:
+        _firefox_profiles: >-
+          {%- set _acc = [] -%}
+          {%- for _line in (_firefox_profiles_ini.content | b64decode).splitlines() -%}
+            {%- set _matches = _line | regex_search("Path=(.*)", "\\1") -%}
+            {%- if _matches is not none -%}
+              {%- set _ = _acc.append(_matches | first) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ _acc }}
+
+    - name: Render user preferences to user.js
+      ansible.builtin.copy:
+        dest: "{{ _firefox_home }}/firefox/{{ item }}/user.js"
+        mode: "0600"
+        content: >-
+          {%- set _acc = [] -%}
+          {%- for _key, _value in apps_browsers_firefox_prefs.items() -%}
+            {%- set _json = (
+              (_value | tojson | tojson)
+              if _value is mapping else
+              (_value | tojson)
+            ) -%}
+            {%- set _ = _acc.append(
+              "user_pref({}, {});".format(_key | tojson, _json)
+            ) -%}
+          {%- endfor -%}
+          {{ _acc | join("" | newline) }}
+      loop: "{{ _firefox_profiles }}"
