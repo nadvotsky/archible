@@ -1,0 +1,485 @@
+---
+#
+# File managers configuration.
+#
+# There are the following alternatives:
+#
+#  yazi (https://github.com/sxyazi/yazi):
+#   package: pacman
+#   advantages:
+#    + feature (inline-image)
+#    + feature (out of box)
+#
+#  doublecommander (https://doublecmd.sourceforge.io/):
+#   package: pacman
+#   advantages:
+#    + feature (internal editor)
+#    + feature (preview without d-bus)
+#   disadvantages:
+#    - deps (qt)
+#
+#  thunar (https://docs.xfce.org/xfce/thunar/start):
+#   package: pacman
+#   disadvantages:
+#    - deps (tumbler, webp-pixbuf-loader)
+#
+#  Midnight Commander (https://midnight-commander.org/):
+#   package: pacman(mc)
+#   disadvantages:
+#    - feature (commander-like keybinds)
+#    - feature (no previews)
+#
+#   superfile (https://github.com/yorukot/superfile):
+#    package: pacman
+#    disadvantages:
+#     - feature (no inline protocol support, huge cpu spikes)
+#
+#  broot (https://github.com/Canop/broot):
+#   package: pacman
+#   disadvantages:
+#    - feature (manually scripted previews)
+#    - feature (combined directory expansion)
+#    - feature (no keybinds even for copying)
+#
+#  nnn (https://github.com/jarun/nnn):
+#   package: pacman
+#   disadvantages:
+#    - feature (no previews)
+#
+#  ranger (https://github.com/ranger/ranger):
+#  lf (https://github.com/gokcehan/lf):
+#  vifm (https://vifm.info/):
+#   package: pacman
+#   disadvantages:
+#    - feature (no previews)
+#
+- name: Configure file managers
+  tags:
+    # TODO: 01-apps-files?
+    - apps-misc-filemanager
+  block:
+    - name: Install file managers
+      common_packages:
+        install:
+          - yazi
+          - doublecmd-qt6
+          #
+          # Archive.
+          #
+          - peazip-qt-bin
+          #
+          # File usage.
+          #
+          - duf
+          - dua-cli
+          - ncdu
+          - fclones
+          # - bleachbit
+          # - czkawka-gui-bin
+
+    - name: Render yazi configuration
+      common_install:
+        - file: "{{ users.user.config }}/yazi/yazi.toml"
+          content: >-
+            [mgr]
+            ratio = [0, 1, 1]
+            linemode = "size"
+            show_hidden = true
+            show_symlink = true
+
+            image_quality = 70
+            image_filter = "nearest"
+
+- name: Configure file utilities
+  common_package:
+    install:
+      #
+      # File listing.
+      #
+      - bat
+      - lsd
+      #
+      # interactive fuzzy finder
+      #
+      - skim
+      - fd
+      #
+      # searching
+      #
+      - ast-grep
+      - ripgrep
+      - ripgrep-all
+      #
+      # interactive file picker
+      #
+      - xplr
+      #
+      # simplified replace
+      #
+      - sd
+      #
+      # renaming
+      # qmv, qcp, imv
+      # (aur) nomino
+      # (aur) rnr
+      #
+      # - renameutils
+      - gprename
+      - nomino
+      - rnr
+      #
+      # (aur) tre-command
+      #
+      - tre-command
+      #
+      # file watching
+      #
+      - entr
+      - watchexec
+
+- name: Configure various utilities
+  common_install:
+    #
+    # Terminal helpers.
+    #
+    - yank
+    #
+    # HTML pages.
+    #
+    - monolith
+    #
+    # Manual pages.
+    #
+    - tealdeer
+    #
+    # Streams manipulation.
+    #
+    - most
+    - progress
+    - aria2
+    #
+    #
+    #
+    - pastel
+    #
+    # Data processing.
+    #
+    - jq
+    - yq
+    - fx
+    - choose
+    - gron
+    #
+    # Data manipulation.
+    #
+    # - bitwise
+    # - sttr-bin
+    #
+    # Hex editors.
+    #
+    - bless
+    - heh
+    - binwalk
+    #
+    # Network.
+    #
+    - dog
+    - netscanner
+    - rustscan
+    - bandwhich
+    - gping
+    - mtr
+    # - speedtest-go
+
+
+- name: Configure system benchmark and stats utilities
+  tags: apps-misc-system
+  block:
+    - name: Install system benchmark and stats utilities
+      common_packages:
+        install:
+          - sysstat
+          - lshw
+          - pciutils
+          - usbutils
+          #
+          #
+          #
+          - nvtop
+          - s-tui
+          - btop
+          - htop
+          #
+          #
+          #
+          - procs
+          #
+          #
+          #
+          # - pacquery
+          # - pacman-contrib
+          # - topgrade
+
+    - name: Render btop configuration file
+      common_install:
+        - file: "{{ users.user.config }}/btop/btop.conf"
+          content: >-
+            presets = "cpu:1:default,gpu:0:default,mem:0:default,proc:0:default"
+            shown_boxes = "cpu gpu0 mem proc"
+
+            cpu_single_graph = True
+
+            proc_sorting = "cpu lazy"
+            proc_tree = True
+            proc_gradient = False
+            proc_cpu_graphs = False
+            proc_aggregate = False
+
+            disk_free_priv = True
+            show_battery = False
+
+            gpu_mirror_graph = False
+
+- name: Configure databases tools
+  common_packages:
+    install:
+      - dbeaver
+      - sqlitebrowser
+
+- name: Configure fun utilities
+  tags: apps-misc-fun
+  common_install:
+    install:
+      - cmatrix
+      - television
+      - genact
+      - fortune-mod
+
+- name: Configure media utilities
+  tags: apps-misc-media
+  common_install:
+    install:
+      - spotify-launcher
+      #
+      # Video.
+      #
+      - obs-studio
+      - mpv
+      - ffmpeg
+      # - handbrake
+      # - vidcutter
+      #
+      # Images.
+      #
+      - imv
+      - imagemagick
+      # - gimp
+      #
+      # Documents.
+      #
+      - evince
+      # - libreoffice-still
+      #
+      # Metadata.
+      #
+      # - perl-image-exiftool
+      # - mat2
+
+- name: Configure code utilities
+  tags: apps-misc-code
+  common_install:
+    - lazygit
+    - tgit
+    - git-cliff
+    #
+    # TODO: settings
+    #
+    - sublime-merge
+    - clog-bin
+    #
+    # diff
+    #
+    - diffutils
+    - difftastic
+    - diff-so-fancy
+    - git-delta
+    - vbindiff
+    #
+    # Lines of code.
+    #
+    - tokei
+
+- name: Configure llm utilities
+  common_install:
+    install:
+      - tgpt
+      - aichat
+      - goose
+
+- name: Configure build and monitoring tools
+  common_packages:
+    install:
+      - just
+      - pm2
+      - hyperfine
+      # https://github.com/F1bonacc1/process-compose/releases
+
+- name: Configure container utils
+  common_packages:
+    install:
+      - ctop
+      - dive
+      - lazydocker
+      - ducker
+      # - oxker-bin
+
+#
+# API testing utilities
+#
+# There are the following alternatives:
+#
+#  Yaak (https://yaak.app/):
+#   package: aur
+#   advantages:
+#    + deps (tauri, ~50M less size than electron)
+#
+#  apidash
+#   package: aur
+#   advantages:
+#    + perf (dart)
+#   disadvantages:
+#    - feature (only http & graphql)
+#
+#  bruno:
+#   package: aur
+#   disadvantages:
+#    - feature (some stuff is paid-only)
+#
+#  Restfox:
+#    package: aur
+#    disadvantages:
+#     - deps (requires electron from aur)
+#
+
+- name: Configure API utilities
+  common_packages:
+    install:
+      - yaak-bin
+      #
+      #
+      #
+      - httpie
+      - hurl
+      - xh
+      #
+      # Logs viewer.
+      #
+      - tailspin
+      - lnav
+
+# todo: move editors here + add micro theme
+# todo: xdg-mime default chromium.desktop image/avif
+#
+# - name: Configure git
+#   tags:
+#     - apps-git
+#   vars:
+#     __git_opts:
+#       user.name: "{{ users.user.full }}"
+#       user.email: "{{ users.user. }}"
+
+#       commit.gpgSign: "true"
+#       push.gpgSign: "if-asked"
+#       tag.gpgSign: "true"
+
+#       apply.whitespace: fix
+#       core.whitespace: tabwidth=4
+
+#       checkout.workers: -1
+#       #
+#       # split index feature seems to be incompatible
+#       # with feature.manyFiles
+#       #
+#       # core.splitIndex: "true"
+#       core.bigFileThreshold: 256m
+#       fetch.parallel: 0
+#       feature.experimental: "true"
+#       feature.manyFiles: "true"
+#       http.maxRequests: 10
+#       pack.threads: 0
+
+#       grep.lineNumber: "true"
+#       grep.column: "true"
+#       grep.fallbackToNoIndex: "true"
+#       core.notesRef: "true"
+#       log.mailmap: "false"
+#       init.defaultBranch: main
+#   block:
+#     - name: Install and configure git
+#       ansible.builtin.import_role:
+#         name: common
+#       vars:
+#         _common_packages:
+#           install:
+#             - git
+
+#         _common_install:
+#           wipes:
+#             - "{{ users.user.home }}/.gitconfig"
+#           targets:
+#             git/config:
+#               touch: true
+
+#     - name: Get GnuPG primary signing key
+#       ansible.builtin.import_role:
+#         name: common
+#       vars:
+#         _common_gpg: primary_sign
+
+#     - name: Configure git options
+#       ansible.builtin.command:
+#         argv:
+#           - git
+#           - config
+#           - --global
+#           - "{{ item.key }}"
+#           - "{{ item.value }}"
+#       loop: >-
+#         {{
+#           __git_opts | dict2items + [{
+#             'key': 'user.signingkey', 'value': _common_gpg_invocation.fingerprint
+#           }]
+#         }}
+#       register: __git_invocation
+#       changed_when: __git_invocation.rc == 0
+
+# # TODO: clean ntfables in ~/.local/bin
+# # TODO: it used to be env-netns, now it is apps-netns
+# - name: Configure vopono network namespace launcher
+#   tags:
+#     - apps-nets
+#   ansible.builtin.import_role:
+#     name: common
+#   vars:
+#     _common_packages:
+#       install:
+#         - vopono-bin
+#         - nftables
+#         - wireguard-tools
+#         - openvpn
+
+#     _common_install:
+#       targets:
+#         /etc/sudoers.d/10-vopono:
+#           become: true
+#           content: |
+#             %wheel ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/bin/vopono
+#           filemode: "0640"
+#           dirmode: "0750"
+#         vopono/config.toml:
+#           wipe: true
+#           content: |
+#             firewall = "NfTables"
+#             provider = "Custom"
+#             protocol = "openvpn"
+#             config = "{{ users.user.config }}/vopono/custom-config"
