@@ -1,0 +1,370 @@
+---
+#
+# Personal vault/keystore configuration.
+#
+# There are the following solutions:
+#
+#  HashiCorp Vault (https://www.hashicorp.com/en/products/vault):
+#   package: pacman
+#   advantages:
+#    + webui
+#    + cli
+#   disadvantages:
+#    - setup (complicated orchestration)
+#    - ram (>200M)
+#    - service
+#
+#  KeepassXC (https://keepassxc.org/):
+#   package: pacman
+#   advantages:
+#    + gui
+#    + cli
+#   disadvantages:
+#    - cli (lacks additional field)
+#    - ram (GUI >200M)
+#
+#  VaultWarden (https://github.com/dani-garcia/vaultwarden):
+#   package: pacman
+#   advantages:
+#    + cli
+#    + ram (idle 8M, web 36M, possibly can be tuned more)
+#   disadvantages:
+#    - cli (additional package https://archlinux.org/packages/extra/x86_64/rbw/)
+#    - cli (additional sync layer)
+#    - cli (client_api)
+#    - cli (fields are rather inconvenient)
+#    - service
+#
+#  pass (https://www.passwordstore.org/):
+#   package: pacman
+#   advantages:
+#    + layout (directory)
+#    + backend (gpg)
+#    + addon (dmenu integration)
+#    + addon (rofi-pass)
+#    + addon (qtpass)
+#    + addon (ripasso)
+#    + addon (tessen)
+#   disadvantages:
+#    - bash
+#    - otp (bash pass-otp only)
+#
+#  gopass (https://github.com/gopasspw/gopass):
+#   package: pacman
+#   advantages:
+#    + go
+#    + otp
+#    + compat (pass)
+#
+#  prs (https://github.com/timvisee/prs):
+#   package: github-release/aur-source
+#   advantages:
+#    + $EDITOR (for entries editing)
+#    + compat (pass)
+#   disadvantages:
+#    - features (cool alternative, but focused on other aspects)
+#
+#  kbs2 (https://github.com/woodruffw/kbs2):
+#   package: aur
+#   advantages:
+#    + backend (age)
+#   disadvantages:
+#    - cli (www/my is not supported)
+#    - layout (environment + unstructured hierarchy)
+#
+#  kure (https://github.com/GGP1/kure):
+#   package: github-release
+#   advantages:
+#    + feature (2fa, rotation, backup, session)
+#   disadvantages:
+#    - cli (www/my is not supported)
+#
+#  scrt (https://github.com/loderunner/scrt):
+#   package: github-release
+#   disadvantages:
+#    + unmaintained
+#    + docs (including error messages)
+#
+#  rooster (https://github.com/conradkleinespel/rooster):
+#   package: aur-source
+#
+#  hash (https://github.com/hrishiksh/hash):
+#   package: github-release
+#   advantages:
+#    + feature (interactive, but focused on other aspects)
+#   disadvantages:
+#    - layout (no folders)
+#
+- name: Configure vault
+  block:
+    - name: Install vault utilities
+      common_packages:
+        install:
+          - gopass
+          - qtpass
+          - ripasso
+          - xclip
+          - wl-clipboard
+
+    # - name: Resolve password store ulayout
+    #   common_ulayout:
+    #     default: "{{ user_home }}/.password-store"
+    #     #
+    #     # Some of the utility packages such as qtpass
+    #     #  seem to no threat this well
+    #     #
+    #     # xdg:
+    #     #   PASSWORD_STORE_DIR: "{{ user_state }}/password-store"
+    #     #
+    #     # Use link instead
+    #     #
+    #     xdg:  "{{ user_state }}/password-store"
+    #   register: _password_store
+    - name: "TODO: ulayout stub"
+      ansible.builtin.set_fact:
+        _password_store: "/home/xnd/.password-store"
+
+    - name: Stat password store
+      ansible.builtin.stat:
+        path: "{{ _password_store }}"
+      register: _password_store_stat
+
+    - name: Import vault from persist
+      when: _password_store_stat.stat.exists is false
+      common_persist_import:
+        dir: "{{ user_home }}/.password-store"
+        archives:
+          - key: hub/vault
+      register: _password_store_import
+
+    - name: Get GnuPG primary signing key
+      when: _password_store_import is changed
+      ansible.builtin.import_role:
+        name: common
+      vars:
+        _common_gpg: primary_sign
+
+    - name: Render skel of password store if it does not exist
+      when: _password_store_import
+      common_install:
+        - file: "{{ _password_store }}/.gpg-id"
+          content: "{{ _common_gpg_invocation.fingerprint }}"
+
+    - name: Render gopass configuration
+      common_install:
+        - file: "{{ users.user.config }}/gopass/config"
+          content: >-
+            [core]
+              autopush = false
+              autosync = false
+              autoclip = true
+              cliptimeout = 60
+              exportkeys = false
+              usesymbols = false
+              safecontent = false
+
+            [mounts]
+              path = {{ _password_store }}
+
+#
+# Notes and personal knowledge configuration.
+#
+# There are the following solutions:
+#
+#  sublime (https://www.sublimetext.com/):
+#   package: aur/pacman-custom
+#   advantages:
+#    + perf (startup + native)
+#    + config (part of other playbook)
+#    + format (markdown out-of-box)
+#   disadvantages:
+#    - collision (dictionary is not supposed to be enabled)
+#
+#  kate (https://kate-editor.org/):
+#   package: pacman (+aspell-en)
+#   advantages:
+#    + perf (startup + qt)
+#    + format (asciidoc)
+#    + feature (search, terminal, dictionary)
+#   disadvantages:
+#    - deps (kde)
+#    - config (katerc, kate, kde.org, katevirc, kate-externaltoolspluginsrc)
+#
+#  lite-xl (https://lite-xl.com/):
+#    package: pacman
+#    advantages:
+#     + perf (startup + sdl)
+#    disadvantages:
+#     - feature (few code highlighting)
+#     - feature (no dictionary)
+#
+#  obsidian (https://obsidian.md/):
+#   package: pacman
+#   advantages:
+#    + feature (drawing)
+#    + feature (cross-connection, search, dictionary, etc)
+#   disadvantages:
+#    - deps (electron)
+#    - config (requires .obsidian)
+#
+#  org-mode (https://orgmode.org/):
+#   package: pacman
+#   disadvantages:
+#    - deps (emacs stack)
+#
+#  mindforget (https://www.mindforger.com/):
+#   package: manual-build
+#   advantages:
+#    + perf (startup + qt)
+#   disadvantages:
+#    - feature (no 1-to-1 directory mapping)
+#
+#  vnote (https://app.vnote.fun/en_us/):
+#   package: aur
+#   advantages:
+#    + perf (startup + qt)
+#   disadvantages:
+#    - deps (electron + ui freezes)
+#
+#  ReText (https://github.com/retext-project/retext):
+#   package: pacman
+#   disadvantages:
+#    - feature (syntax highlighting, and others)
+#
+#  AsciidocFX (https://asciidocfx.com/):
+#   package: manual-jar
+#   disadvantages:
+#    - perf (slow + java)
+#    - deps (java + wayland complications)
+#
+#  TriliumNext (https://github.com/TriliumNext/Notes):
+#   package: aur
+#   advantages:
+#    + feature (drawing)
+#    + feature (mindmap, geomap, etc)
+#   disadvantages:
+#    - perf (electron)
+#    - feature (no 1-to-1 directory mapping)
+#
+#  logseq (https://logseq.com/):
+#   package: aur
+#   advantages:
+#    + feature (navigation through nested lists workflowy-like)
+#   disadvantages:
+#    - feature (messed-up app navigation with today's note/favorites, ...)
+#
+#  siyuan (https://github.com/siyuan-note/siyuan):
+#  anytype (https://anytype.io/):
+#   package: aur
+#   disadvantages:
+#    - feature (rather fancy like notion)
+#    - feature (no 1-to-1 directory mapping)
+#
+#  Zettlr (https://www.zettlr.com/):
+#   package: pacman
+#   disadvantages:
+#    - deps (electon)
+#    - deps (pandoc with 800M+ deps)
+#    - feature (very basic editing)
+#
+#  Foam (https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode):
+#   package: vscode
+#   disadvantages:
+#    - deps (tinkering around vscode)
+#    - feature (only few cross-connection)
+#
+#  joplin (https://joplinapp.org/):
+#   package: pacman
+#   disadvantages:
+#    - feature (strict notes-subnotes structure)
+#
+
+#
+# Drawing configuration.
+#
+# There are the following solutions:
+#
+#  drawio (https://www.drawio.com/):
+#   package: pacman
+#   disadvantages:
+#    - deps (electron)
+#
+#  yed (https://www.yworks.com/products/yed):
+#   package: aur
+#   disadvantages:
+#    - deps (java, with wayland complications)
+#    - feature (fewer blocks, overall looks like visio 2005)
+#
+- name: Configure time tracking
+  tags: apps-hub-drawing
+  block:
+    - name: Install drawio
+      common_packages:
+        install:
+          - drawio
+
+#
+# Time tracking configuration.
+#
+# There are the following solutions:
+#
+#  klog (https://github.com/kubernetes/klog):
+#   package: aur
+#   advantages:
+#    + feature (1-to-1 directory files, plain format)
+#   disadvantages:
+#    - feature (same task requires copy-paste)
+#    - feature (no advanced processing such as cleanuo, although has json)
+#
+# bartib (https://github.com/nikolassv/bartib):
+#  package: aur
+#  advantages:
+#   - feature (shell completions)
+#   - feature (overall okay and simple)
+#  disadvantages:
+#   - feature (no 1-to-1 directory files)
+#
+#  hours (https://github.com/dhth/hours):
+#   package: aur
+#   advantages:
+#    + feature (tui)
+#   disadvantages:
+#    - feature (locked in tui)
+#
+# timetrace (https://github.com/dominikbraun/timetrace):
+#  package: aur
+#  disadvantages:
+#   - feature (very alike docker cli, at the same time no advanced parseable formatting)
+#
+- name: Configure time tracking
+  tags: apps-hub-timetracking
+  block:
+    - name: Install klog
+      common_packages:
+        install:
+          - klog-time-tracker-bin
+
+    - name: Stat hub store
+      ansible.builtin.stat:
+        path: "{{ _password_store }}"
+      register: _password_store_stat
+
+    # create hub root
+
+    - name: Import vault from persist
+      when: _password_store_stat.stat.exists is false
+      common_persist_import:
+        dir: "{{ user_home }}/.password-store"
+        archives:
+          - key: hub/vault
+
+    - name: Import hub if needed
+      when: _password_store_stat.stat.exists is false
+      common_persist_import:
+        dir: "{{ user_home }}/hub/time"
+        archives:
+          - key: hub/time
+
+
+# navi?
+# knqyf263/pet?
