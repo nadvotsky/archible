@@ -1,3 +1,28 @@
+---
+#
+# External applications configuration.
+#
+# Since the most of the AUR packages use /opt, creating another
+#  directory (e.g. /usr/local or /var/lib) suitable for external
+#  installations only causes unnecessary fragmentation. 
+#
+apps:
+  chromium:
+    cache:
+      #
+      # TODO: does it get affected by profile-dir? Maybe it also works if default.
+      #
+      default: "{{ users.user.cache }}/chromium"
+
+    data:
+      default: "{{ users.user.config }}/chromium"
+      # dot: "{{ users.user.home }}/.chromium"
+      # xdg: "{{ users.user.state }}/chromium"
+      #
+      # TODO: maybe there's a chromium-flags, maybe use .desktop for both
+      # wayland and profile directory switch.
+      #
+      custom: true
 
   firefox:
     cache:
@@ -8,3 +33,6 @@
       xdg: "{{ users.user.state }}/mozilla"
       link: true
 
+  spotify:
+    cache:
+      default: "{{ users.user.cache }}/spotify"

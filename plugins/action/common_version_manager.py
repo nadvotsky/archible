@@ -65,7 +65,7 @@ class WipeTask(Task):
 
     def __init__(self, task_vars: TaskVars, tool: str):
         policy = task_vars["users.user.layout"]
-        share = task_vars["apps.mise.share"]
+        share = task_vars["dev.mise.share"]
         self.path = os.path.join(
             share.get(policy) or share["default"],
             "installs",

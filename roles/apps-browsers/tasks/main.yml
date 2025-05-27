@@ -68,3 +68,62 @@
           {%- endfor -%}
           {{ _acc | join("" | newline) }}
       loop: "{{ _firefox_profiles }}"
+
+- name: Configure chromium browser
+  block:
+    - name: Install chromium package
+      common_packages:
+        install:
+          - chromium
+
+    # - name: Configure chromium ulayout
+    #   common_ulayout:
+    #     default: "{{ user_home }}/.config/chromium"
+    #     xdg: "{{ user_state }}/chromium"
+    #     dot: "{{ user_home }}/.chromium"
+    #   register: _chromium_home
+
+    - name: "TODO: ulayout stub"
+      ansible.builtin.set_fact:
+        # _chromium_home: "/home/test/.chromium"
+        _chromium_home: "/home/test/.config/chromium"
+
+    - name: Find all chromium profiles
+      ansible.builtin.find:
+        paths: "{{ _chromium_home }}"
+        patterns: "Preferences"
+        recurse: true
+      register: _chromium_profiles
+
+    - name: Filter System Profile from results
+      ansible.builtin.set_fact:
+        _chromium_pending_operations: >-
+          {{
+            lookup('chromium_process_profiles', _chromium_home, _chromium_profiles)
+          }}
+
+    - name: Create Default profile if missing
+      when: _chromium_pending_operations.default is true
+      ansible.builtin.file:
+        path: "{{ _chromium_home }}/Default"
+        state: directory
+        mode: "0700"
+
+    - name: Render initial_preferences for each profile
+      ansible.builtin.copy:
+        dest: "{{ item }}/initial_preferences"
+        content: "{{ apps_browsers_chromium_preferences | tojson }}"
+        mode: "0600"
+      loop: "{{ _chromium_pending_operations.creates }}"
+
+    - name: Patch Preferences for non-default profile
+      when: _chromium_profiles | length > 0
+      ansible.builtin.shell:
+        cmd: >-
+          jq -s add
+          "{{ item }}/initial_preferences"
+          "{{ item }}/Preferences"
+          > "{{ item }}/Preferences"
+      register: _chromium_jq_invocation
+      changed_when: _chromium_jq_invocation.rc == 0
+      loop: "{{ _chromium_pending_operations.patches }}"
