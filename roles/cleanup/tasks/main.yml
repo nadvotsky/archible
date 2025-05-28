@@ -1,5 +1,107 @@
 ---
-# TODO: cleanup pacman cache, .cache, .rustup
-# TODO: VACUUM SQLite
-# TODO: fstrim.timer
-# TODO: systemd-tmpfiles --purge
+- name: Configure system drives
+  tags:
+    - cleanup-trim
+  block:
+    - name: Run fstrim on all fstab entries
+      ansible.builtin.command:
+        argv:
+          - fstrim
+          - --fstab
+          - --quiet-unsupported
+      register: __fstrim_invocation
+      changed_when: __fstrim_invocation.rc == 0
+  become: true
+
+- name: Configure package manager
+  tags:
+    - cleanup-package-manager
+  block:
+    - name: Clean paru and pacman cache
+      ansible.builtin.command:
+        argv:
+          - paru
+          - --sync
+          - --clean
+          - --clean
+      register: __paru_clean_invocation
+      changed_when: __paru_clean_invocation.rc == 0
+  become: true
+
+- name: Cleanup /var/cache directory
+  tags:
+    - cleanup-var-cache
+  common_install:
+    targets:
+      - dir: "/var/cache"
+        wipe: true
+  become: true
+
+- name: Configure user cache store
+  tags:
+    - cleanup-user-cache
+  block:
+    - name: Wipe user cache
+      ansible.builtin.file:
+        path: "{{ users.user.cache }}"
+        state: "{{ item }}"
+        mode: "0750"
+      loop:
+        - absent
+        - directory
+
+- name: Cleanup trash
+  tags:
+    - cleanup-trash
+  ansible.builtin.file:
+    path: "{{ users.user.share }}/Trash"
+    state: absent
+
+- name: Cleanup intermediate home files
+  tags:
+    - cleanup-home
+  block:
+    - name: Find intermediate files
+      ansible.builtin.find:
+        paths: "{{ users.user.home }}"
+        patterns:
+          - .java
+          - hs_err_pid*
+          - .xsession-errors
+          - .Xauthority
+          - .wget-hsts
+          - .lesshst
+          - .sqlite_history
+          - .python_history
+          - .zcompdump
+          - .bash_history
+          - .bash_profile
+          - .bash_logout
+          - .redhat
+          - .ts_node_repl_history
+          - .pdbhistory
+          - .fehbg
+          - .nvidia-settings.rc
+          #
+          # TODO: Is it safe?
+          #
+          - .ansible
+          - .ansible.log
+        hidden: true
+        file_type: any
+      register: __intermediates
+
+    - name: Remove intermediate files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ __intermediates.files | map(attribute='path') }}"
+
+- name: Configure nvidia cache
+  tags:
+    - cleanup-nvidia
+  block:
+    - name: Clean nvidia user cache
+      ansible.builtin.file:
+        path: "{{ users.user.cache }}/.nvidia"
+        state: absent
