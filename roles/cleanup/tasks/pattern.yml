@@ -1,0 +1,30 @@
+---
+- name: Ensure target process is not running
+  ansible.builtin.command:
+    argv:
+      - killall
+      - --process-group
+      - --wait
+      - "{{ _cleanup_pattern.process }}"
+  register: __killall_invocation
+  failed_when: false
+  changed_when: __killall_invocation.rc == 0
+
+- name: Find directories to clean
+  ansible.builtin.find:
+    paths: "{{ _cleanup_pattern.path }}"
+    patterns: "{{ _cleanup_pattern.patterns }}"
+    #
+    # Allow going one directory down in case there can be user profiles.
+    #
+    depth: 2
+    file_type: any
+    hidden: true
+    recurse: true
+  register: __dirs
+
+- name: Wipe directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ __dirs.files | map(attribute='path') }}"

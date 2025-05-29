@@ -105,3 +105,39 @@
       ansible.builtin.file:
         path: "{{ users.user.cache }}/.nvidia"
         state: absent
+
+- name: Configure firefox
+  tags:
+    - cleanup-firefox
+  block:
+    - name: Cleanup firefox by pattern
+      ansible.builtin.import_tasks:
+        file: pattern.yml
+      vars:
+        _cleanup_pattern:
+          process: firefox
+          path: "{{ lookup('user_layout', apps.firefox.data) }}/firefox"
+          patterns: "{{ cleanup.gecko }}"
+
+    - name: Wipe explicit firefox cache
+      ansible.builtin.file:
+        path: "{{ lookup('user_layout', apps.firefox.cache) }}"
+        state: absent
+
+    - name: Find sqlite databases to clean
+      ansible.builtin.find:
+        paths: "{{ lookup('user_layout', apps.firefox.data) }}/firefox"
+        patterns: "*.sqlite"
+        hidden: true
+        recurse: true
+      register: __databases
+
+    - name: Vacuum sqlite databases
+      ansible.builtin.command:
+        argv:
+          - sqlite3
+          - "{{ item }}"
+          - VACUUM
+      register: __vacuum_invocation
+      changed_when: __vacuum_invocation.rc == 0
+      loop: "{{ __databases.files | map(attribute='path') }}"
