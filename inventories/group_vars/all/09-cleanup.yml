@@ -175,3 +175,256 @@ cleanup:
     # - prefs.js
     # - xulstore.json
     # - settings
+
+  #
+  # Chromium-based browsers, including electron and CEF.
+  #
+  chromium:
+    #
+    # Generic cache.
+    #
+    - Cache
+    - CachedData
+    #
+    # JS/Wasm cache.
+    #
+    - Code Cache
+    #
+    # GPU Cache.
+    #
+    - GPUCache
+    - DawnWebGPUCache
+    - DawnGraphiteCache
+    - GrShaderCache
+    - SharedCache
+    - VideoDecodeStats
+    #
+    # Version-based compression dictionaries.
+    #
+    - Shared Dictionary
+    #
+    # Crash Reports.
+    #
+    - Crashpad
+    - Crash Reports
+    #
+    # Binary files.
+    #
+    - blob_storage
+    - File System
+    #
+    # Various site data.
+    #
+    - IndexedDB
+    - WebStorage
+    - Local Storage
+    - Session Storage
+    - Service Worker
+    - SharedStorage
+    #
+    # Electron logs.
+    #
+    - chrome_debug.log
+    - logs
+    #
+    # Cross-sites relations (CORS, permissions, data sharing).
+    #
+    - FirstPartySetsPreloaded
+    - first_party_sets.db
+    - first_party_sets.db-journal
+    #
+    # "intelligence and machine learning" for user experience,
+    #  whatever that means.
+    #
+    - segmentation_platform
+    - Segmentation Platform
+    #
+    # Google Cloud Messaging.
+    #
+    - GCM Store
+    #
+    # Experimental APIs enabled by the site.
+    #
+    - OriginTrials
+    - PersistentOriginTrials
+    #
+    # API that allows a provider to store some signed data in browser,
+    #  which can be then verified by another party.
+    #
+    - TrustTokenKeyCommitments
+    - Trust Tokens
+    - Trust Tokens-journal
+    #
+    # Hints and machine learning models received from the remote
+    #  Chrome Optimization Guide Service.
+    #
+    - OptimizationHints
+    - optimization_guide_hint_cache_store
+    #
+    # Commerce and shopping related projects.
+    #
+    - BudgetDatabase
+    - parcel_tracking_db
+    - discounts_db
+    - heavy_ad_intervention_opt_out.db
+    - heavy_ad_intervention_opt_out.db-journal
+    #
+    # Background site tracking, i.e. favicon or page title change.
+    #
+    - Site Characteristics Database
+    #
+    # Sync.
+    #
+    - trusted_vault.pb
+    - Sync Data
+    #
+    # Topics API, instead of tracking user with third-party cookies,
+    #  let the browser provide information about about user topics.
+    #
+    - BrowsingTopicsSiteData
+    - BrowsingTopicsSiteData-journal
+    - BrowsingTopicsState
+    - InterestGroups
+    #
+    # DIPS, a part of BTM(Bounce Tracking Mitigation). Its goal is to
+    #  prevent user tracking via an intermediary link between the user and
+    #  the target website.
+    #
+    - DIPS
+    - DIPS-journal
+    #
+    # Media Device Salt, allows media devices (i.e., microphones and cameras)
+    #  IDs to be unique per origin (so there is no cross-origin tracking),
+    #  yet be mappable back to the real device IDs.
+    #
+    - MediaDeviceSalts
+    - MediaDeviceSalts-journal
+    #
+    # App Service abstraction that connects:
+    #  1) app consumers: permissions or settings pages, handlers for URLs,
+    #     MIME types or intents, etc.
+    #  2) app publishers: built-in apps, extension-backed apps, PWAs.
+    #
+    - PreferredApps
+    #
+    # HTTP/2 and SPDY state.
+    #
+    - Network Persistent State File
+    #
+    # Preload statistics of misses and hits.
+    #
+    - Network Action Predictor
+    - Network Action Predictor-journal
+    #
+    # Favicons.
+    #
+    - Favicons
+    - Favicons-journal
+    #
+    # In-Product Help, i.e. various UI popups such as 'Make Chromium faster'.
+    #
+    - Feature Engagement Tracker
+    #
+    # Safe Browsing, showing warning messages for unsafe sites.
+    #
+    - Safe Browsing
+    - Crowd Deny
+    - Safe Browsing Cookies
+    - Safe Browsing Cookies-journal
+    #
+    # Client-side anti-spoof heuristics, warning for lookalikes based on
+    #  edit distance and skeleton similarity.
+    #
+    - SafetyTips
+    #
+    # SSL ecosystem components, e.g. Certificate Transparency (CT).
+    #
+    - SSLErrorAssistant
+    - PKIMetadata
+    - SCT Auditing Pending Reports
+    - CertificateRevocation
+    #
+    # NEL/Reporting V0/Reporting V1, response header is used to configure
+    #  network request logging.
+    #
+    - Reporting and NEL
+    - Reporting and NEL-journal
+    #
+    # New Tab Page.
+    #
+    - Top Sites
+    - Top Sites-journal
+    #
+    # HTTP Strict Transport Security.
+    #
+    - TransportSecurity
+    #
+    # Generic downloads service.
+    #
+    - Download Service
+    - shared_proto_db
+    #
+    # Links of origin-specific data across multiple origins, for example,
+    #  passwords that should be shared between a website and
+    #  the native application.
+    #
+    - Affiliation Database
+    - Affiliation Database-journal
+    #
+    # Third-Party Cookie Deprecation compat.
+    #
+    - TpcdMetadata
+    #
+    # Privacy Sandbox.
+    #
+    - PrivacySandboxAttestationsPreloaded
+    #
+    # Filtering subsystem, used by internal ad filter and safe browsing.
+    #
+    - Subresource Filter
+    #
+    # Autofill.
+    #
+    - AutofillStates
+    - AutofillStrikeDatabase
+    #
+    # File types database, used in 'This file can harm'.
+    #
+    - FileTypePolicies
+    #
+    # Hyphenation dictionaries.
+    #
+    - hyphen-data
+    #
+    # Media Engagement database, list of whitelisted autoplay sites.
+    #
+    - MEIPreload
+    #
+    # Unsecure passwords database.
+    #
+    # - ZxcvbnData
+    #
+    # Omnibox autocompletion.
+    #
+    - OnDeviceHeadSuggestModel
+    #
+    # Cookies.
+    #
+    # - Cookies
+    #
+    # History.
+    #
+    # - History
+    # - History-journal
+    #
+    # Preferences.
+    #
+    # - Preferences
+    #
+    # Extensions.
+    #
+    # - Extensions
+    - Extension Rules
+    - Extension Scripts
+    - Extension State
+    - component_crx_cache

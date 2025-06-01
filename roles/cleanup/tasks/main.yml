@@ -141,3 +141,48 @@
       register: __vacuum_invocation
       changed_when: __vacuum_invocation.rc == 0
       loop: "{{ __databases.files | map(attribute='path') }}"
+
+- name: Cleanup chromium apps
+  tags:
+    - cleanup-chromium
+  block:
+    - name: Cleanup chromium by pattern
+      ansible.builtin.import_tasks:
+        file: pattern.yml
+      vars:
+        _cleanup_pattern:
+          process: chromium
+          path: "{{ lookup('user_layout', apps.chromium.data) }}"
+          patterns: "{{ cleanup.chromium }}"
+
+    - name: Wipe explicit chromium cache
+      ansible.builtin.file:
+        path: "{{ lookup('user_layout', apps.chromium.cache) }}"
+        state: absent
+
+    - name: Wipe Public Key Infrastructure storage
+      ansible.builtin.file:
+        path: "{{ users.user.home }}/.pki"
+        state: absent
+
+- name: Cleanup spotify
+  tags:
+    - cleanup-spotify
+  ansible.builtin.import_tasks:
+    file: pattern.yml
+  vars:
+    _cleanup_pattern:
+      process: spotify
+      path: "{{ lookup('user_layout', apps.spotify.cache) }}"
+      patterns: "{{ cleanup.chromium + ['Storage'] }}"
+
+- name: Cleanup vscode
+  tags:
+    - cleanup-vscode
+  ansible.builtin.import_tasks:
+    file: pattern.yml
+  vars:
+    _cleanup_pattern:
+      process: code
+      path: "{{ lookup('user_layout', dev.vscode.data) }}"
+      patterns: "{{ cleanup.chromium }}"
