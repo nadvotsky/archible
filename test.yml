@@ -1,0 +1,17 @@
+- name: Tests foundation
+  hosts: debug_local
+  gather_facts: false
+  tasks:
+    #
+    # foundation.files.install
+    #
+    - name: Test foundation.files.install
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: 755:755:{{ ca_name }}:{{ ca_name }}
+      vars:
+        targets:
+          - dir: /something
+          - file: /some
+            content: asd
+            perms: "644"
