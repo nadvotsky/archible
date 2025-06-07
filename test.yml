@@ -15,3 +15,14 @@
           - file: /some
             content: asd
             perms: "644"
+    #
+    # foundation.files.net_archive
+    #
+    - name: Test foundation.files.net_archive
+      foundation.files.net_archive:
+        url: https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-x86_64-unknown-linux-gnu.tar.gz
+        dest: /tmp/kek
+        perms: "owner:group"
+        strip: 1
+        creates:
+          - ./bat
