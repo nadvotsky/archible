@@ -1,0 +1,3 @@
+---
+aa_persist: "{{ playbook_dir }}/persist"
+aa_policy_wipe: always

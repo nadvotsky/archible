@@ -1,0 +1,21 @@
+---
+ba_headless: true
+ba_mount_point: /mnr
+ba_hostname: hostname
+ba_cores: 16
+
+bb_disk_id: ata-SSD_256GB
+bb_schema:
+  - name=TEST-EFI,type=efi,size=1G
+  - name=TEST-ROOT,type=root,fs=xfs,size=85%
+  - name=TEST-SWAP,type=swap,size=8G
+  - name=TEST-VOLT,type=linux,fs=ext4
+
+bc_root_password: test
+bc_locale: en
+bc_keymap: en_US.UTF-8
+bc_timezone: Europe/Berlin
+bc_mountopts_root: async,noatime,auto,dev,exec,noiversion,suid,rw,nouser,dax=always,nodiscard,noquota
+bc_mountopts_efi:
+  "sync,noatime,auto,dev,exec,noiversion,suid,rw,nouser,fmask=0023,dmask=0022,check=s,discard,\
+  errors=remount-ro,iocharset=utf8,tz=UTC,flush,utf8"

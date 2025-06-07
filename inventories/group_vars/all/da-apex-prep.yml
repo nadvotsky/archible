@@ -1,0 +1,106 @@
+---
+dc_cmdline:
+  #
+  # Features.
+  #
+  debugfs: "off"
+  ipv6.disable: "1"
+  audit: "0"
+  console_msg_format: "syslog"
+
+  hibernate: "no"
+  nohibernate: true
+  nosoftlockup: true
+  nowatchdog: true
+  no_timer_check: true
+
+  cgroup_disable: "memory"
+  cgroup_no_v1: "all"
+  kunit.enable: "0"
+  ia32_emulation: "false"
+
+  sysrq_always_enabled: true
+  transparent_hugepage: "always"
+  gbpages: true
+  preempt: "full"
+  #
+  # Boot.
+  #
+  hostname: "{{ ab_machine_hostname }}"
+  logo.nologo: true
+  panic: "0"
+
+  #
+  # Hardware.
+  #
+  iommu: "off"
+  amd_iommu: "off"
+  lp: "0"
+  parport: "0"
+  enable_mtrr_cleanup: true
+  dis_ucode_ldr: true
+  hpet_mmap: "1"
+  io_delay: "none"
+
+  #
+  # Mitigations, security, and integrity.
+  #
+  # mitigations: "off"
+  # nopti: true
+  cryptomgr.notests: true
+  memory_corruption_check: "0"
+  mce: "off"
+  ima_appraise: "off"
+  ima_policy: "critical_data"
+  init_on_alloc: "0"
+  init_on_free: "0"
+  iomem: "relaxed"
+  kmemleak: "off"
+  ras: "cec_disable"
+  split_lock_detect: "off"
+
+  #
+  # Performance.
+  #
+  driver_async_probe: "*"
+  clocksource: "tsc"
+  cpuidle.governor: "teo"
+  cpufreq.default_governor: "performance"
+  pci: "pcie_bus_perf"
+
+  #
+  # Linux Secure Module (LSM)
+  #
+  apparmor: "0"
+  selinux: "0"
+  lsm: "capability,yama,bpf"
+
+  #
+  # Blacklist.
+  #
+  # module_blacklist: "asus_wmi"
+
+  #
+  # sysctl.
+  #
+  sysctl.kernel.stack_erasing: "0"
+  sysctl.fs.dmesg_restrict: "0"
+  sysctl.net.busy_read: "50"
+  sysctl.net.busy_poll: "50"
+  sysctl.vm.swappiness: "30"
+  sysctl.net.ipv4.tcp_fastopen: "3"
+
+  #
+  # initrd.
+  #
+  rootdelay: "0"
+  rootfstype: "xfs"
+  rootflags: "{{ ab_machine_mountopts_root }}"
+  rw: true
+  booster.log: "error"
+
+  #
+  # Verbosity.
+  #
+  quiet: true
+  loglevel: "5"

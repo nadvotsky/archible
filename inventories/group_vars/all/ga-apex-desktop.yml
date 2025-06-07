@@ -1,0 +1,162 @@
+---
+ga_mouse_accel: flat
+ga_mouse_speed: -0.5
+ga_keyboard_model: pc104
+ga_keyboard_layout: us,ua
+ga_keyboard_options: grp:menu_toggle,compose:rctrl,terminate:ctrl_alt_bksp
+
+ga_monitors_stack: horizontal
+ga_monitors:
+  primary:
+    workspaces: 8
+    width: 1920
+    height: 1080
+    refresh: 60
+    x11: DFP-1
+    wayland: HDMI-A-1
+
+    notifications: true
+    scratch: Scratch
+
+  secondary:
+    workspaces: 4
+    width: 1280
+    height: 1024
+    refresh: 75
+    x11: DFP-5
+    wayland: HDMI-A-3
+
+#
+# -10 db output
+#
+gd_volume_output: 0.68
+#
+# -25 db input
+#
+gd_volume_input: 0.56
+
+gd_cards:
+  main:
+    exclusive: true
+    frequency: 48000
+    format: S32LE
+    channels: [FL, FR]
+
+    selectors:
+      device:
+        device.form-factor: internal
+      input:
+        api.alsa.card.name: HDA ATI SB
+        api.alsa.pcm.stream: capture
+      output:
+        api.alsa.card.name: HDA ATI SB
+        api.alsa.pcm.stream: playback
+
+    inputs:
+      jacks:
+        Rear Mic:
+        Line:
+        Front Mic:
+      enumerations:
+        Loopback Mixing:
+        Input Source:
+      elements:
+        Capture,0:
+          type: [switch, volume]
+        Capture,1:
+          type: [switch, volume]
+        Rear Mic:
+          type: [switch, volume]
+          direction: playback
+        Rear Mic Boost:
+          type: [volume]
+        Line:
+          type: [switch, volume]
+          direction: playback
+        Line Boost:
+          type: [volume]
+          direction: playback
+        Front Mic:
+          type: [switch, volume]
+          direction: playback
+        Front Mic Boost:
+          type: [volume]
+
+    outputs:
+      jacks:
+        Line Out Front:
+        Line Out Surround:
+        Line Out CLFE:
+        Line Out Side:
+        Front Headphone:
+        SPDIF Phantom:
+      enumerations:
+        Auto-Mute Mode:
+      elements:
+        Front:
+          type: [switch, volume]
+        PCM:
+          type: [volume]
+        Master:
+          type: [switch, volume]
+        Headphone:
+          type: [switch, volume]
+        Surround:
+          type: [switch, volume]
+        Center:
+          type: [switch, volume]
+        LFE:
+          type: [switch, volume]
+        Side:
+          type: [switch, volume]
+        IEC958:
+          type: [switch]
+        IEC958 Default PCM:
+          type: [switch]
+    acp:
+      output:analog-stereo-headset+input:analog-stereo-headset:
+        type: profile
+        inputs:
+          - analog-stereo-headset
+        outputs:
+          - analog-stereo-headset
+      analog-stereo-headset:
+        type: mapping
+        label: analog-stereo-headset
+        device: front:%f
+        priority: 10
+        inputs:
+          - analog-input-microphone-headset
+        outputs:
+          - analog-output-headphones
+      analog-input-microphone-headset:
+        type: input-path
+        label: analog-input-microphone-headset
+        priority: 10
+        jacks:
+          Rear Mic:
+        elements:
+          Capture,0:
+          Rear Mic:
+          Rear Mic Boost:
+        enumerations:
+          Input Source:
+            option: Rear Mic
+            description: input-microphone
+          Loopback Mixing:
+            option: Disabled
+            description: input
+      analog-output-headphones:
+        type: output-path
+        label: analog-output-headphones
+        priority: 10
+        jacks:
+          Line Out Front:
+        elements:
+          Front:
+          PCM:
+          Master:
+        enumerations:
+          Auto-Mute Mode:
+            option: Disabled
+            description: output-headphones

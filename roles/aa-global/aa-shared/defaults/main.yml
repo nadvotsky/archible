@@ -1,0 +1,37 @@
+---
+#
+# `aa-global` defines global variables for the entire playbook.
+#
+#  Consider the following recommendations:
+#   1) `aa` should define the most basic variables
+#   2) `*a` should define shared variables that are used:
+#       by other subroles (for `ba`, it is `bb`, `bc`, ...)
+#       by roles (for `ba`, it is `db`, `cf`, ...)
+#   3) `*[!a]` should define local variables (for `bc`, only `bc` role uses it)
+#
+
+#
+# A path to the persistance directory on the control node that is used to pull and push data using the
+#  `foundation.persist.*` actions.
+#
+# It follows the simple `key/value` pattern, which physically represented as directory and file on the filesystem level,
+#  respectively.
+#
+# Files may be either raw shell outputs, or tar archives. Its content is not encrypted.
+#
+# This directory must exist. Its ownership is clonned to its elements, even when running as another user (may be handy
+#  in cases such as systemd-nspawn is running as root).
+#
+aa_persist: "{{ omit() }}"
+
+#
+# BE VERY CAUTIOUS WHEN RUNNING THIS FLAG ON EXISTING SYSTEMS WITH NO BACKUPS!
+#
+# An unsafe flag that will forcefully clean installation targets state.
+#
+# This means that for the most of packages, it would entirely clean their configuration, cache and state directories.
+#  It also wipes existing documents, profiles, and so on.
+#
+# Must be either `always` or `never`.
+#
+aa_wipe: "{{ omit() }}"
