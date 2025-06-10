@@ -3,6 +3,86 @@
   gather_facts: false
   tasks:
     #
+    # foundation.user.layout
+    #
+    - name: Test foundation.user.layout
+      ansible.builtin.assert:
+        that:
+          - lookup('foundation.user.layout', 'dot', _ulayout) == '/dot'
+      vars:
+        _ulayout:
+          default: /default
+          dot: /dot
+          xdg:
+            link: /xdg-link
+    #
+    # foundation.user.layout
+    #
+    - name: Test foundation.user.layout
+      foundation.user.layout:
+        wipe: never
+        layout: xdg
+      vars:
+        cache:
+          default: /default
+          wipe: always
+          dot: /dot
+          xdg:
+            link: /xdg-link
+      register: ulayout
+    #
+    # foundation.system.env
+    #
+    - name: Test foundation.system.env
+      foundation.system.env:
+      environment:
+        SYSTEM_VAR: "YES"
+    #
+    # foundation.system.kernel
+    #
+    - name: Test foundation.system.kernel
+      foundation.system.kernel:
+        headless: true
+      environment:
+        flag: true
+        list:
+          - auto
+          - force
+        option: libata
+    #
+    # foundation.system.services
+    #
+    - name: Test foundation.system.services
+      foundation.system.services:
+        headless: true
+      vars:
+        units:
+          - myservice
+        state:
+          disable: true
+    #
+    # foundation.system.stop
+    #
+    - name: Test foundation.system.stop
+      foundation.system.stop:
+        headless: true
+      vars:
+        processes:
+          - myproc
+        services:
+          - kekos
+    #
+    # foundation.system.packages
+    #
+    - name: Test foundation.system.packages
+      foundation.system.packages:
+        sync: false
+        force: false
+      vars:
+        install:
+          - one
+        remove:
+          - two
     # foundation.files.install
     #
     - name: Test foundation.files.install
