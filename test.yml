@@ -31,6 +31,19 @@
             link: /xdg-link
       register: ulayout
     #
+    #
+    # foundation.user.package
+    #
+    - name: Test foundation.user.package
+      foundation.user.packages:
+        wipe: always
+        home: "{{ aa_user_dir_home }}"
+      vars:
+        install:
+          - one
+        remove:
+          - two
+    #
     # foundation.system.env
     #
     - name: Test foundation.system.env
