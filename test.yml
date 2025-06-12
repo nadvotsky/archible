@@ -31,6 +31,16 @@
             link: /xdg-link
       register: ulayout
     #
+    # foundation.user.env
+    #
+    - name: Test foundation.user.env
+      foundation.user.env:
+        section: test
+        home: /home/myuser
+        subs:
+          XDG_CONFIG_HOME: /home/myuser/.config
+      environment:
+        MYAPP_CONFIG: "/home/myuser/.config/myapp"
     #
     # foundation.user.package
     #
