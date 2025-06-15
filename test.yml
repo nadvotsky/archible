@@ -106,6 +106,51 @@
           - one
         remove:
           - two
+    #
+    # foundation.persist.from
+    #
+    - name: Test foundation.persist.from
+      foundation.persist.from:
+        base: /mydir
+        persist: "{{ aa_persist }}"
+      vars:
+        shells:
+          - key: mykey/arche
+            dir: ./my-dir
+            cmd: echo 123
+        archives:
+          - key: some/another
+            dir: /tmp
+            perms: "owner:group"
+    #
+    # foundation.persist.to
+    #
+    - name: Test foundation.persist.to
+      foundation.persist.to:
+        base: /mydir
+        persist: "{{ aa_persist }}"
+      vars:
+        shells:
+          - key: some/path
+            dir: ./kek
+            cmd: echo 123
+        archives:
+          - key: some/another
+            dir: /tmp
+            include:
+              - asd
+    #
+    # foundation.persist.gpg
+    #
+    - name: Test foundation.persist.gpg
+      foundation.persist.gpg:
+        home: /home/xnd
+        layout: dot
+      vars:
+        keys:
+          - sas
+      register: gpg
+
     # foundation.files.install
     #
     - name: Test foundation.files.install
