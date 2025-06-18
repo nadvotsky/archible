@@ -1,13 +1,24 @@
 ---
 - name: Perform initial preparation of the system
-  hosts: prelude
+  hosts: main_prelude
+  gather_facts: false
   roles:
-    - { role: prelude, tags: prelude }
+    - { role: aa-global/aa-shared }
+    - { role: ba-prelude/ba-shared }
+
+    - { role: ba-prelude/bb-partition, tags: prelude-partition }
+    - { role: ba-prelude/bc-bootstrap, tags: prelude-bootstrap }
 
 - name: Perform early preparation of the system
-  hosts: catalyst
+  hosts: main_catalyst
+  gather_facts: false
   roles:
-    - { role: catalyst, tags: catalyst }
+    - { role: aa-global/aa-shared }
+    - { role: ba-prelude/ba-shared }
+    - { role: ca-catalyst/ca-shared }
+
+    - { role: ca-catalyst/cb-network, tags: catalyst-network }
+    - { role: ca-catalyst/cc-user, tags: catalyst-user }
 
 - name: Perform main provisioning of the system
   hosts: apex

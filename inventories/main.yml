@@ -1,45 +1,25 @@
 ---
-debug_local:
+main:
   hosts:
-    localhost:
-      ansible_connection: local
-      ansible_user: test
-      ansible_become_password: test
-
-debug_remote:
-  hosts:
-    192.168.0.100:
-      ansible_connection: ssh
-      ansible_user: test
-      ansible_become_password: "test"
-
-prelude:
-  hosts:
-    live:
+    main_prelude:
       ansible_connection: local
 
-catalyst:
-  hosts:
-    container:
-      ansible_connection: nspawn
-      ansible_nspawn_root: "{{ machine.mount }}"
-      ansible_nspawn_args: >-
-        --quiet
-        --register=no
-        --as-pid2 --pipe
-        --hostname={{ machine.hostname }} --machine={{ machine.hostname }}
+    main_catalyst:
+      ansible_connection: foundation.connection.nspawn
+      foundation_nspawn_root: "{{ ba_mount_point }}"
+      foundation_nspawn_args: >-
+        --quiet --register=no --as-pid2 --pipe
+        --hostname={{ ba_hostname }} --machine={{ ba_hostname }}
         --resolv-conf=off --timezone=off --link-journal=no
 
-apex:
-  hosts:
-    container:
-      ansible_connection: nspawn
-      ansible_nspawn_user: "{{ users.user.name }}"
-      ansible_become_password: "{{ users.user.password }}"
-      ansible_nspawn_root: "{{ machine.mount }}"
-      ansible_nspawn_args: >-
-        --quiet
-        --register=no
-        --as-pid2 --pipe
-        --hostname={{ machine.hostname }} --machine={{ machine.hostname }}
+    main_apex: &main-apex
+      ansible_user: "{{ ca_name }}"
+      ansible_become_password: "{{ ca_password }}"
+      ansible_connection: foundation.connection.nspawn
+      foundation_nspawn_root: "{{ ba_mount_point }}"
+      foundation_nspawn_args: >-
+        --quiet --register=no --as-pid2 --pipe
+        --hostname={{ ba_hostname }} --machine={{ ba_hostname }}
         --resolv-conf=bind-host --timezone=off --link-journal=no
+
+    main_extra: *main-apex
