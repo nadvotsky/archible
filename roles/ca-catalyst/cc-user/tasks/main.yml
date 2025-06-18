@@ -1,0 +1,29 @@
+---
+- name: Configure privilege escalation
+  tags: catalyst-user-privilege
+  become: true
+  block:
+    - name: Render sudo configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: /etc/sudoers.d
+        perms: 750:640:root:root
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./70-overrides
+            copy: sudo/70-overrides
+
+- name: Configure user skeleton
+  tags: catalyst-user-skel
+  block:
+    - name: Create user skeleton
+      ansible.builtin.user:
+        name: "{{ ca_name }}"
+        groups: "{{ ca_groups }}"
+        comment: "{{ cc_comment }}"
+        expires: -1
+        create_home: true
+        password: "{{ ca_password }}"

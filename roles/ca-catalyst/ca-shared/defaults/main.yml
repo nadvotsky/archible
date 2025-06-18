@@ -1,0 +1,33 @@
+---
+#
+# Basic user information.
+#
+ca_name: "{{ omit() }}"
+ca_password: "{{ omit() }}"
+
+ca_info_short: "{{ omit() }}"
+ca_info_full: "{{ omit() }}"
+ca_info_alt: "{{ omit() }}"
+ca_info_mail: "{{ omit() }}"
+
+ca_groups:
+  #
+  # Admin access.
+  #
+  - adm
+  - wheel
+  #
+  # Logging access.
+  #
+  - systemd-journal
+  - log
+  #
+  # Devices access.
+  #
+  # - audio
+  # - input
+  - kvm
+  - video
+
+ca_dns_ip: 1.1.1.1
+ca_dns_sni: cloudflare-dns.com

@@ -1,0 +1,48 @@
+---
+- name: Configure network
+  become: true
+  tags: catalyst-network-main
+  block:
+    - name: Render systemd-networkd configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: /etc/systemd/network
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - file: ./20-ethernet.network
+            copy: network/20-ethernet.network
+
+          - file: ./20-dns-over-tls.conf
+            template: network/20-dns-over-tls.conf.j2
+
+    - name: Enable systemd-networkd service
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - systemd-networkd.service
+        state:
+          enable: true
+
+- name: Configure DNS resolver and cache
+  tags: catalyst-network-dns
+  become: true
+  block:
+    - name: Render systemd-resolved configuration
+      foundation.files.install:
+        wipe: never
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - file: /etc/resolv.conf
+            link: /run/systemd/resolve/stub-resolv.conf
+
+    - name: Enable systemd-resolved service
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - systemd-resolved.service
+        state:
+          enable: true
