@@ -1,0 +1,12 @@
+---
+#
+# Disk identifier as listed in the `/dev/disk/by-id`.
+#
+bb_disk_id: "{{ omit() }}"
+
+#
+# Refer to the files/apart/README.md for more info.
+#
+bb_schema:
+  - name=EFI,type=efi,size=1G
+  - name=ROOT,type=root,fs=ext4

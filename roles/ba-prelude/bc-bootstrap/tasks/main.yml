@@ -1,0 +1,98 @@
+---
+- name: Configure bootstrap dependencies
+  tags: prelude-bootstap-deps
+  become: true
+  block:
+    - name: Install bootstrap prelude dependencies
+      ansible.builtin.package:
+        name:
+          - arch-install-scripts
+          - whois
+        state: present
+
+- name: Configure base system
+  tags: prelude-bootstap-pacstrap
+  become: true
+  block:
+    - name: Bootstrap base system with pacstrap
+      ansible.builtin.command:
+        argv:
+          - pacstrap
+          - -M
+          - -K
+          - "{{ ba_mount_point }}"
+          - base
+          - linux
+          - linux-firmware
+          - sudo
+      register: _bc_pacstrap_invocation
+      changed_when: _bc_pacstrap_invocation.rc == 0
+
+- name: Configure fstab
+  tags: prelude-bootstrap-fstab
+  become: true
+  block:
+    - name: Generate fstab via genfstab
+      ansible.builtin.shell:
+        cmd: >-
+          genfstab -t PARTUUID "{{ ba_mount_point }}" > "{{ ba_mount_point }}/etc/fstab"
+      register: _bc_genfstab_invocation
+      changed_when: _bc_genfstab_invocation.rc == 0
+
+    - name: Modify mount options
+      ansible.builtin.replace:
+        path: "{{ ba_mount_point }}/etc/fstab"
+        regexp: "\
+          (?P<spec>[^\\s]+)\\s+\
+          (?P<file>{{ item.file }})\\s+\
+          (?P<vfstype>\\w+)\\s+\
+          (?P<mntops>[\\w=,-]+)\\s+\
+          (?P<freq>[01])\\s+\
+          (?P<passno>\\d+)\\s*\
+          "
+        replace: >
+          \g<spec>
+          \g<file>
+          \g<vfstype>
+          {{ item.mntops }}
+          \g<freq>
+          \g<passno>
+        mode: "0644"
+        owner: 0
+        group: 0
+      loop:
+        - file: /
+          mntops: "{{ bc_mountsopts_root }}"
+        - file: /boot
+          mntops: "{{ bc_mountopts_efi }}"
+      register: _bc_replace_invocation
+      failed_when: _bc_replace_invocation is not changed
+
+- name: Configure systemd-firstboot
+  tags: prelude-bootstrap-firstboot
+  block:
+    - name: Process user password via the yescrypt KDF
+      ansible.builtin.command:
+        argv:
+          - mkpasswd
+          - --method=yescrypt
+          - --stdin
+        stdin: "{{ bc_root_password }}"
+      register: _bc_mkpasswd_invocation
+      changed_when: _bc_mkpasswd_invocation.rc == 0
+
+    - name: Prepare system via systemd-firstboot
+      become: true
+      ansible.builtin.command:
+        argv:
+          - systemd-firstboot
+          - --root={{ ba_mount_point }}
+          - --locale={{ bc_locale }}
+          - --keymap={{ bc_keymap }}
+          - --timezone={{ bc_timezone }}
+          - --hostname={{ ba_hostname }}
+          - --setup-machine-id
+          - --root-password-hashed={{ _bc_mkpasswd_invocation.stdout }}
+          - --force
+      register: _bc_firstboot_invocation
+      changed_when: _bc_firstboot_invocation.rc == 0

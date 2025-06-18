@@ -1,0 +1,9 @@
+---
+bc_root_password: "123"
+
+bc_mountopts_root: defaults,noatime
+bc_mountopts_efi: fmask=0137,dmask=0027,noatime
+
+bc_locale: en
+bc_keymap: en_US.UTF-8
+bc_timezone: UTC

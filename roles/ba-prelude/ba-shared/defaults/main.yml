@@ -1,0 +1,32 @@
+---
+#
+# Headless installation flag is important for tasks that need to know whether machine is actually booted, i.e. in the
+#  consitent and defined state.
+#
+# This flag is used in:
+#  - service management
+#  - temporary files creation
+#  - initramrd creation
+#  - and others.
+#
+ba_headless: "{{ omit() }}"
+
+#
+# Mount point to do partitioning and bootstrapping.
+#
+ba_mount_point: "{{ aa_machine_mount }}"
+
+#
+# Machine hostname.
+#
+ba_hostname: "{{ omit() }}"
+
+#
+# Number of cores the target machine has.
+#
+ba_cores: "{{ omit() }}"
+
+#
+# Machine arch.
+#
+ba_arch: "x86_64_v3"
