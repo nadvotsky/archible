@@ -1,0 +1,2 @@
+---
+db_build_jobs: "{{ (ba_cores / 2) | round | int }}"

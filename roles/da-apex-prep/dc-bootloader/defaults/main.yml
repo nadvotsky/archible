@@ -1,0 +1,11 @@
+---
+#
+# List of kernel command-line parameters:
+#  - boolean values are treated as flags, i.e. `key: true` results in `key`
+#  - list values are merged and rendered with comma separator, i.e. `key: [val, val2]` results in `key=val,val2`
+#  - string values are rendered with equals sign, i.e. `key: val` results in `key=val`
+#
+# Refer to the `foundation.system.kernel` action plugin for more information and implmentation details.
+#
+dc_cmdline:
+  - quiet: true

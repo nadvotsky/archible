@@ -1,0 +1,117 @@
+---
+- name: Configure initramfs generator
+  tags: apex-prep-bootloader-initrd
+  block:
+    - name: Install booster
+      foundation.system.packages:
+      vars:
+        install:
+          - booster
+
+    - name: Render booster configuration
+      become: true
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/booster.yaml
+            perm: 644:root:root
+            copy: booster/booster.yaml
+
+    - name: Remove built-in pacman hooks
+      become: true
+      foundation.files.install:
+        wipe: never
+        base: /usr/share/libalpm/hooks
+      vars:
+        targets:
+          - file: ./60-booster-remove.hook
+            link: /dev/null
+
+          - file: ./90-booster-install.hook
+            link: /dev/null
+
+- name: Configure kernel installer
+  tags: apex-prep-bootloader-kernel
+  block:
+    - name: Render kernel-install configuration
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: /etc/kernel
+        create: true
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - dir: ./
+          - file: ./install.conf
+            copy: kernel-install/install.conf
+
+          - dir: ./install.d
+          - file: ./install.d/60-booster.install
+            copy: kernel-install/60-booster.install
+
+    - name: Install kernel-install pacman hook
+      foundation.system.packages:
+      vars:
+        install:
+          - pacman-hook-kernel-install
+
+    - name: Render kernel cmdline and install initrd
+      become: true
+      foundation.system.kernel:
+        headless: "{{ ba_headless }}"
+      environment: "{{ dc_cmdline }}"
+
+    - name: Remove mkinitcpio packages, i.e. default initramfs generator
+      when: aa_wipe == 'always'
+      foundation.system.packages:
+      vars:
+        remove:
+          - mkinitcpio
+
+    - name: List previous kernels and initrd images
+      when: aa_wipe == 'always'
+      ansible.builtin.find:
+        paths: /boot
+        patterns: "*.img,vmlinuz*"
+        hidden: true
+      register: _dc_kernels
+
+    - name: Remove previous kernels and initrd images
+      when: aa_wipe == 'always'
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ _dc_kernels.files }}"
+
+- name: Configure bootloader
+  tags: apex-prep-bootloader-main
+  become: true
+  block:
+    - name: Invoke systemd-boot
+      ansible.builtin.command:
+        argv:
+          - bootctl
+          - install
+          - --no-variables
+      register: _db_bootctl_invocation
+      changed_when: _db_bootctl_invocation.rc == 0
+
+    - name: Render systemd-boot configuration
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /boot/loader/loader.conf
+            perms: 777:root:root
+            copy: systemd-boot/loader.conf
+
+    - name: Remove systemd-boot directories that have no use
+      when: aa_wipe == 'always'
+      ansible.builtin.file:
+        path: "/boot/EFI/{{ item }}"
+        state: absent
+      loop:
+        - systemd
+        - Linux

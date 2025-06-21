@@ -21,9 +21,17 @@
     - { role: ca-catalyst/cc-user, tags: catalyst-user }
 
 - name: Perform main provisioning of the system
-  hosts: apex
-  gather_facts: no
+  hosts: main_apex
+  gather_facts: false
   roles:
+    - { role: aa-global/aa-shared }
+    - { role: ba-prelude/ba-shared }
+    - { role: ca-catalyst/ca-shared }
+    - { role: da-apex-prep/da-shared }
+
+    - { role: da-apex-prep/db-packaging, tags: apex-prep-packaging }
+    - { role: da-apex-prep/dc-bootloader, tags: apex-prep-bootloader }
+
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }
     - { role: system, tags: system }

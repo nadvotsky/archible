@@ -48,7 +48,7 @@ LTOFLAGS="-flto=auto"
 #
 # parallelize make
 #
-MAKEFLAGS="-j8"
+MAKEFLAGS="-j{{ db_build_jobs }}"
 
 #
 # use colors when building

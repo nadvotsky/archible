@@ -1,0 +1,105 @@
+---
+- name: Configure mirrors
+  tags: apex-prep-packaging-mirrors
+  become: true
+  block:
+    - name: Install chaotic-aur mirrorlist package
+      community.general.pacman:
+        name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst
+        state: present
+
+    - name: Install reflector
+      community.general.pacman:
+        name: https://archlinux.org/packages/extra/any/reflector/download
+        state: present
+
+    - name: Populate mirrorlist with reflector
+      ansible.builtin.command:
+        argv:
+          - reflector
+          - --connection-timeout=2
+          - --download-timeout=2
+          - --save=/etc/pacman.d/mirrorlist
+          - --sort=rate
+          - --score=10
+      register: _db_reflector_invocation
+      changed_when: _db_reflector_invocation.rc == 0
+
+- name: Configure packaging
+  tags: apex-prep-packaging-main
+  become: true
+  block:
+    - name: Render pacman configuration
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/pacman.conf
+            perms: 644:root:root
+            copy: pacman/pacman.conf
+
+    - name: Disable GnuPG services for pacman
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - dirmngr@etc-pacman.d-gnupg.socket
+          - keyboxd@etc-pacman.d-gnupg.socket
+          - gpg-agent-browser@etc-pacman.d-gnupg.socket
+          - gpg-agent-extra@etc-pacman.d-gnupg.socket
+          - gpg-agent-ssh@etc-pacman.d-gnupg.socket
+          - gpg-agent@etc-pacman.d-gnupg.socket
+          - archlinux-keyring-wkd-sync.timer
+        state:
+          mask: true
+
+    - name: Reset pacman keyring
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /etc/pacman.d/gnupg
+
+    - name: Sync pacman database
+      community.general.pacman:
+        update_cache: true
+
+- name: Configure packaging build system
+  tags: apex-prep-packaging-build
+  become: true
+  block:
+    - name: Install developer packages
+      community.general.pacman:
+        name:
+          - base-devel
+          - aria2
+          - bsdtar
+          - curl
+        state: installed
+
+    - name: Render makepkg config
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/makepkg.conf.d/makepkg.conf
+            perms: 644:root:root
+            template: makepkg/makepkg.conf.j2
+
+- name: Configure additional repositories
+  tags: apex-prep-packaging-addons
+  become: true
+  block:
+    - name: Install paru
+      community.general.pacman:
+        name: paru
+        state: installed
+
+    - name: Render paru configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - file: /etc/paru.conf
+            perms: 644:root:root
+            copy: paru/paru.conf
