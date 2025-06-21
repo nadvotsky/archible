@@ -1,0 +1,104 @@
+---
+- name: Configure session manager
+  tags: apex-system-core-session
+  become: true
+  block:
+    - name: Render logind configuration file
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/systemd/logind.conf
+            perms: 644:root:root
+            copy: logind/logind.conf
+
+    - name: Enable logind service
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - systemd-logind.service
+        state:
+          enable: true
+
+- name: Configure logging
+  tags: apex-system-core-log
+  become: true
+  block:
+    - name: Render journald configuration file
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/systemd/journald.conf
+            perms: 644:root:root
+            copy: journald/journald.conf
+
+    - name: Wipe previous journals
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /var/log/journal
+
+    - name: Disable useless journald services and sockets
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - systemd-journald-audit.socket
+          - systemd-journal-gatewayd.service
+          - systemd-journal-gatewayd.socket
+          - systemd-journal-remote.service
+          - systemd-journal-remote.socket
+          - systemd-journal-upload.service
+        state:
+          disable: true
+
+    - name: Modify kernel command line
+      foundation.system.kernel:
+        headless: "{{ ba_headless }}"
+      environment:
+        systemd.journald.max_level_store: "info"
+
+- name: Configure dump
+  tags: apex-system-core-dump
+  become: true
+  block:
+    - name: Render coredump configuration
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/systemd/coredump.conf
+            perms: 644:root:root
+            copy: coredump/coredump.conf
+
+    - name: Wipe previous coredumps
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /var/lib/systemd/coredump
+
+- name: Configure time sync
+  tags: apex-system-core-timesync
+  become: true
+  block:
+    - name: Render timesyncd configuration
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/systemd/timesyncd.conf
+            perms: 644:root:root
+            copy: timesyncd/timesyncd.conf
+
+    - name: Enable timesyncd service
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - systemd-timesyncd.service
+        state:
+          enable: true

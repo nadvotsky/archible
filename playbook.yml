@@ -28,9 +28,15 @@
     - { role: ba-prelude/ba-shared }
     - { role: ca-catalyst/ca-shared }
     - { role: da-apex-prep/da-shared }
+    - { role: ea-apex-system/ea-shared }
 
     - { role: da-apex-prep/db-packaging, tags: apex-prep-packaging }
     - { role: da-apex-prep/dc-bootloader, tags: apex-prep-bootloader }
+
+    - { role: ea-apex-system/eb-init, tags: apex-system-init }
+    - { role: ea-apex-system/ec-core, tags: apex-system-core }
+    - { role: ea-apex-system/ed-devices, tags: apex-system-devices }
+    - { role: ea-apex-system/ee-stubs, tags: apex-system-stubs }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

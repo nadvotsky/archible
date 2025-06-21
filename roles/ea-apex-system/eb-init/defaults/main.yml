@@ -1,0 +1,31 @@
+---
+eb_cmdline:
+  #
+  # Daemon.
+  #
+  systemd.log_level: "notice"
+  systemd.log_target: "journal"
+  systemd.service_watchdogs: "false"
+  #
+  # Generators.
+  #
+  luks: "no"
+  noresume: true
+  systemd.verity: "no"
+  systemd.gpt_auto: "0"
+  systemd.firstboot: "off"
+  systemd.getty_auto: "no"
+  systemd.ssh_auto: "disable"
+  systemd.restore_state: "false"
+  systemd.battery_check: "false"
+  systemd.tpm2_wait: "false"
+  net.ifnames: "0"
+  #
+  # Misc.
+  #
+  plymouth.enable: "0"
+  quotacheck.mode: "skip"
+  #
+  # Modules preload.
+  #
+  # modules_load:

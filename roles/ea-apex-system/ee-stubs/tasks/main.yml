@@ -1,0 +1,12 @@
+---
+- name: Configure system stubs
+  tags: apex-system-stubs-main
+  block:
+    - name: Create system binary stubs directory
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ ea_dir_stubs }}"
+            perm: 755:root:root
+            create: true

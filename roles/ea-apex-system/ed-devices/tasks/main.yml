@@ -1,0 +1,31 @@
+---
+- name: Configure blacklist
+  tags: apex-system-devices-blacklist
+  when: ed_blacklist is defined
+  become: true
+  block:
+    - name: Render udev blacklist rules
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: /etc/udev/rules.d
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./01-blacklist.rules
+            template: udev/01-blacklist.rules.j2
+
+- name: Configure TRIM
+  tags: apex-system-devices-trim
+  become: true
+  block:
+    - name: Enable fstrim timer
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - fstrim.timer
+        state:
+          enable: true

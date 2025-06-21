@@ -1,0 +1,88 @@
+---
+- name: Configure init
+  tags: apex-system-init-main
+  become: true
+  block:
+    - name: Render systemd configuration files
+      foundation.files.install:
+        wipe: never
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - file: /etc/systemd/system.conf
+            src: systemd/system.conf
+          - file: /etc/systemd/sleep.conf
+            src: systemd/sleep.conf
+
+    - name: Modify kernel command line
+      foundation.system.kernel:
+        headless: "{{ ba_headless }}"
+      environment: "{{ eb_cmdline }}"
+
+    - name: Mask useless services
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - systemd-rfkill.service
+          - systemd-binfmt.service
+          - systemd-repart.service
+          - systemd-confext.service
+          - systemd-sysext.service
+          - systemd-tpm2-setup-early.service
+          - systemd-tpm2-setup.service
+          - systemd-update-utmp.service
+
+          - sys-kernel-debug.mount
+          - sys-kernel-tracing.mount
+        state:
+          mask: true
+
+    - name: Disable useless services
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - systemd-oomd.service
+          - systemd-homed-firstboot.service
+          - systemd-homed.service
+
+          - avahi-daemon.socket
+          - avahi-daemon.service
+        state:
+          disable: true
+
+- name: Configure virtual console
+  tags: apex-system-init-console
+  block:
+    - name: Install console fonts
+      foundation.system.packages:
+      vars:
+        install:
+          - terminus-font
+
+    - name: Render vconsole configuration file
+      become: true
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/vconsole.conf
+            perms: 644:root:root
+            content: >-
+              KEYMAP=us
+              FONT=ter-u18n
+
+- name: Configure huge pages
+  tags: apex-system-init-hugepage
+  become: true
+  block:
+    - name: Render tmpfiles entry to always transparent pages for shmem
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/tmpfiles.d/shmem-transparent-hugepage.conf
+            perms: 644:root:root
+            content:
+              w /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - always

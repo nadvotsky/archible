@@ -1,0 +1,36 @@
+---
+#
+# List of devices to blacklist.
+#
+# Blacklisting is done via udev, part of systemd suite. As an introduction into udev, the following pages are
+#  recommended:
+#  - https://www.freedesktop.org/software/systemd/man/latest/udev.html
+#  - https://www.freedesktop.org/software/systemd/man/latest/udevadm.html
+#
+# Note that manual testing with `udevadm` may not always have the same effect as the actual udev boot stage. Most
+#  remarkably, it is adviced to manually examine sysfs in case of attributes lookup (for example,
+#  `cat /sys/bus/pci/devices/0000:00:00.0/class`), instead of using `udevadm info`, as the latter may have variables
+#  that are added post factum.
+#
+# In order to blacklist device, variable must be defined as list of dictionaries with the following fields:
+#  - `subsystem`
+#    Subsystem identifier, such as `pci` or `acpi`.
+#  - `selectors`
+#    List of udev keys to test.
+#  - `command`
+#    A command to run when device is present. A default value should be sufficient for many linux devices:
+#     `/sbin/sh -c 'echo $kernel > $sys%p/driver/unbind'`
+#
+#    However, it also can be set manually. This may be especially useful in the following cases:
+#     1) Some drivers explicitly export removal pseudofiles, instead of using the generic unbind.
+#     2) Not every device selector sets useful information such as serial number, and requires additional subsystems
+#        to be activated (disk, input). In that case, an extra traversal (i.e. ./device/driver) to the driver is also
+#        required.
+#
+# Example: blacklist PCI HDA (HDMI audio)
+#  - subsystem: pci
+#    command: echo 1 > $sys%p/remove
+#    selectors:
+#      - ENV{PCI_CLASS}=="40300"
+#
+ed_blacklist: "{{ omit() }}"

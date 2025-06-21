@@ -15,12 +15,12 @@
 {%- endmacro -%}
 
 {%- macro _blacklist_render() -%}
-  {% for _group in blacklist %}
+  {% for _group in ed_blacklist %}
     {% for _selector in _group.selectors %}
       {{ _group_header_render(_group) | relative_indent(times=3, **_indent) }}
         {{ _group_body_render(_selector, _group) | relative_indent(times=4, **_indent) }}
     {% endfor %}
-    {% if not loop.last %}{{ "" | newline }}{% endif %}
+    {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
   {% endfor %}
 {%- endmacro -%}
 
