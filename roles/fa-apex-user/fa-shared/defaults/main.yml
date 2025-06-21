@@ -1,0 +1,59 @@
+---
+#
+# Preferred user layout. Can be either `dot` or `xdg`.
+#
+# XDG layout tries to create as much XDG compliant HOME directory as possible:
+#  - XDG_CONFIG_HOME (~/.config) - plain user configuration files
+#  - XDG_CACHE_HOME (~/.cache) - long lived cache data
+#  - /tmp - short lived cache data
+#  - XDG_DATA_HOME (~/.local/share) - main application data
+#  - XDG_STATE_HOME (~/.local/state) - application state
+#  - ~/.<app> - unsupported applications
+#
+# As can be seen, xdg is imperfect, as not every application supports redefining its directories (firefox, yarn, etc),
+#  as well as does not implement proper functional splitting (configuration, cache, data, and state).
+#
+# DOT layout tries to force a consistent style across all of the applications:
+#  - ~/.config - plain user configuration files
+#  - ~/.cache - any intermediate data
+#  - ~/.<app> - entire application data, including both state (e.g., sessions,
+#    locks), and the main data
+#  - ~/.local/share/<app>, ~/.local/state/<app> - a soft link to the ~/.<app>
+#    that resolves compatibility issues when directory cannot be changed
+#
+# Unlike XDG layout, this allows having a single entry point (HOME directory) for both compliant and non-compliant
+#  applications.
+#
+fa_layout: "{{ omit() }}"
+
+#
+# Base directories.
+#
+fa_dir_home: "{{ omit() }}"
+fa_dir_config: "{{ omit() }}"
+fa_dir_cache: "{{ omit() }}"
+fa_dir_share: "{{ omit() }}"
+fa_dir_state: "{{ omit() }}"
+fa_dir_bin: "{{ omit() }}"
+
+#
+# XDG base directories, useful with 'foundation.user.env'.
+#
+fa_dir_subs:
+  XDG_CONFIG_HOME: "{{ omit() }}"
+  XDG_CACHE_HOME: "{{ omit() }}"
+  XDG_DATA_HOME: "{{ omit() }}"
+  XDG_STATE_HOME: "{{ omit() }}"
+
+#
+# XDG user directories.
+#
+fa_dir_xdg:
+  downloads: "{{ omit() }}"
+  documents: "{{ omit() }}"
+  pictures: "{{ omit() }}"
+  videos: "{{ omit() }}"
+  music: "{{ omit() }}"
+  templates: "{{ omit() }}"
+  publicshare: "{{ omit() }}"
+  desktop: "{{ omit() }}"

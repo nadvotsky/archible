@@ -1,0 +1,87 @@
+---
+- name: Configure user authentication
+  tags: apex-user-skel-auth
+  become: true
+  block:
+    - name: Render pam_faillock configuration
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/security/faillock.conf
+            perms: 644:root:root
+            copy: files/faillock/faillock.conf
+
+    - name: Add nodelay to pam_unix in system-auth
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/system-auth
+        regexp: ^(?P<prep>auth\s+.*\s+pam_unix\.so\s+)(?P<flags>[\w ]+)(?<!nodelay)$
+        line: \g<prep>\g<flags> nodelay
+        backrefs: true
+        mode: "0644"
+        owner: root
+        group: root
+
+- name: Configure user environment
+  tags: apex-user-skel-env
+  become: true
+  block:
+    - name: Render default pam_env
+      when: aa_wipe == 'always'
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/security/pam_env.conf
+            perms: 644:root:root
+            content: >-
+              #
+              # This is the configuration file for pam_env, a PAM module to load in
+              # a configurable list of environment variables.
+              #
+              # This module does not support shell features (subshells) other than
+              # variable substitution.
+              #
+              # It is supposed to be managed by the 'foundation.user.env' ansible action plugin.
+              #
+
+    - name: Commit env change
+      foundation.user.env:
+        section: "!important"
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        PATH: "{{ fa_dir_bin }}:/usr/local/sbin:/usr/local/bin:/usr/bin"
+
+- name: Configure base directories
+  tags: apex-user-skel-base
+  become: true
+  block:
+    - name: Create XDG base directories
+      foundation.files.install:
+        wipe: never
+        create: true
+        perms: "750:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        #
+        # By default, ansible will create parent directories with default umask.
+        # Because of that, using the lookup plugin to extract every directory,
+        #  including intermediate ones (e.g. .local).
+        #
+        targets: >-
+          {{
+            query('fa_homedirs', fa_dir_home, [fa_dir_config, fa_dir_cache, fa_dir_share, fa_dir_state, fa_dir_bin])
+          }}
+
+- name: Configure user profile
+  tags: apex-user-skel-profile
+  block:
+    - name: Wipe bash user profile files
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: "{{ fa_dir_home }}/.profile"
+            perms: "644:{{ ca_name }}:{{ ca_name }}"
+            content: >-
+              unset HISTFILE

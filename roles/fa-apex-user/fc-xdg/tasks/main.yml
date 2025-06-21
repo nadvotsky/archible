@@ -1,0 +1,68 @@
+---
+- name: Configure user directories
+  tags: apex-user-xdg-dirs
+  block:
+    - name: Install XDG utilities
+      foundation.system.packages:
+      vars:
+        install:
+          - xdg-user-dirs
+          - dex
+
+    - name: Create XDG user directories
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        create: true
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        #
+        # Extracting intermediate directories to not violate perms.
+        #
+        targets: "{{ query('fa_homedirs', fa_dir_home, fa_dir_xdg.values() | list) }}"
+
+    - name: Reset XDG user dirs
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}"
+      vars:
+        targets:
+          - file: ./user-dirs.dirs
+          - file: ./user-dirs.locale
+
+    - name: Set XDG user directories via xdg-user-dirs
+      ansible.builtin.command:
+        argv:
+          - xdg-user-dirs-update
+          - --set
+          - "{{ item.key | upper }}"
+          - "{{ item.value }}"
+      register: _fc_set_invocation
+      changed_when: _fc_set_invocation.rc == 0
+      loop: "{{ fa_dir_xdg | dict2items }}"
+
+    - name: Run finalizing xdg-user-dirs-update
+      ansible.builtin.command:
+        argv:
+          - xdg-user-dirs-update
+      register: _fc_update_invocation
+      changed_when: _fc_update_invocation.rc == 0
+
+- name: Configure XDG mime applications
+  tags: apex-user-xdg-mime
+  become: true
+  block:
+    - name: Reset XDG Mime Applications
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - file: "{{ fa_dir_config }}/mimeapps.list"
+          - file: /usr/share/applications/mimeinfo.cache
+          - file: /usr/local/share/applications/mimeinfo.cache
+
+    - name: Update XDG desktop database
+      ansible.builtin.command:
+        argv:
+          - update-desktop-database
+      register: _fc_database_invocation
+      changed_when: _fc_database_invocation.rc == 0
