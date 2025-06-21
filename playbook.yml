@@ -30,6 +30,7 @@
     - { role: da-apex-prep/da-shared }
     - { role: ea-apex-system/ea-shared }
     - { role: fa-apex-user/fa-shared }
+    - { role: ga-apex-desktop/ga-shared }
 
     - { role: da-apex-prep/db-packaging, tags: apex-prep-packaging }
     - { role: da-apex-prep/dc-bootloader, tags: apex-prep-bootloader }
@@ -41,6 +42,9 @@
 
     - { role: fa-apex-user/fb-skel, tags: apex-user-skel }
     - { role: fa-apex-user/fc-xdg, tags: apex-user-xdg }
+
+    - { role: ga-apex-desktop/gb-login, tags: apex-desktop-login }
+    - { role: ga-apex-desktop/gc-graphics, tags: apex-desktop-graphics }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

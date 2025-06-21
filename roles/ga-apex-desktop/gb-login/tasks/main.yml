@@ -1,0 +1,38 @@
+---
+- name: Configure login manager
+  tags: apex-desktop-login-main
+  block:
+    - name: Install ly
+      foundation.system.packages:
+      vars:
+        install:
+          - ly
+
+    - name: Render ly configuration
+      become: true
+      foundation.files.install:
+        wipe: never
+        base: /etc/ly
+      vars:
+        targets:
+          - file: ./xsetup.sh
+            perms: 755:root:root
+            copy: ly/minwm.sh
+
+          - file: ./wsetup.sh
+            perms: 755:root:root
+            copy: ly/minwm.sh
+
+          - file: ./config.ini
+            perms: 644:root:root
+            copy: ly/config.ini
+
+    - name: Enable ly service
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - ly.service
+        state:
+          enable: true
