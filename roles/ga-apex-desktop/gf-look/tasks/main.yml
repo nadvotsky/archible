@@ -1,0 +1,180 @@
+---
+- name: Configure fonts
+  tags: apex-look-fonts
+  block:
+    - name: Install fonts packages
+      foundation.system.packages:
+      vars:
+        install:
+          - fontconfig
+          - freetype2
+          - "{{ ga_fonts_mono_package }}"
+          - "{{ ga_fonts_serif_package }}"
+          - "{{ ga_fonts_sans_package }}"
+          - "{{ ga_fonts_emoji_package }}"
+          - "{{ ga_fonts_icon_package }}"
+
+    - name: Render fontconfig configuration file
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./fontconfig
+            create: true
+          - file: ./fontconfig/fonts.conf
+            template: fontconfig/fonts.conf.j2
+
+    - name: Wipe fontconfig state
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_cache }}/fontconfig"
+
+- name: Configure icons
+  tags: apex-look-icons
+  block:
+    - name: Install icons packages
+      foundation.system.packages:
+      vars:
+        install: "{{ ['hicolor-icon-theme'] + [ga_icons_main_package, ga_icons_launcher_package] | select('defined') }}"
+
+    - name: Install icons from direct link
+      foundation.files.net_archive:
+        url: "{{ item }}"
+        dest: /usr/share/icons
+        perms: root:root
+        creates:
+          - ./
+      loop: "{{ [ga_icons_main_url, ga_icons_launcher_url] | select('defined') }}"
+
+- name: Configure Qt
+  tags: apex-look-qt
+  block:
+    - name: Install Qt packages
+      foundation.system.packages:
+      vars:
+        install:
+          - qt6-wayland
+          - qt5-wayland
+          - kvantum
+          - kvantum-qt5
+          - qt6ct
+          - qt5ct
+          - "{{ gf_kvantum_package }}"
+
+    - name: Set Qt environment variables
+      become: true
+      foundation.user.env:
+        section: desktop
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        #
+        # qt5ct is read by both qt5ct and qt6ct
+        #
+        QT_QPA_PLATFORMTHEME: "qt5ct"
+        #
+        # Disabling auto dpi detection, which should play with
+        #  x11: xft.dpi
+        #  wayland: QT_SCALE_FACTOR (blurry, not recommended) and QT_FONT_DPI
+        #
+        QT_AUTO_SCREEN_SCALE_FACTOR: "0"
+        QT_ENABLE_HIGHDPI_SCALING: "0"
+
+    - name: Render kvantum configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./Kvantum
+            create: true
+          - file: Kvantum/kvantum.kvconfig
+            content: |
+              theme={{ gf_kvantum }}
+
+          - dir: ./qt5ct
+            create: true
+          - file: ./qt5ct/qt5ct.conf
+            template: qtct/qtct.conf.j2
+
+          - dir: ./qt6ct
+            create: true
+          - file: ./qt6ct/qt6ct.conf
+            template: qtct/qtct.conf.j2
+
+    - name: List Qt shader caches
+      when: aa_wipe == 'always'
+      ansible.builtin.find:
+        paths: "{{ fa_dir_cache }}"
+        file_type: directory
+        patterns: "qtshadercache-*"
+        hidden: true
+      register: _ga_qt_shadercache
+
+    - name: Remove Qt shader caches
+      when: aa_wipe == 'always'
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ _ga_qt_shadercache.files }}"
+
+- name: Configure GTK
+  tags: apex-desktop-look-gtk
+  block:
+    - name: Install GTK packages
+      foundation.system.packages:
+      vars:
+        install:
+          - gtk3
+          - gtk4
+          - "{{ gf_gtk_package }}"
+
+    - name: Set GTK environment variables
+      become: true
+      foundation.user.env:
+        section: desktop
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        #
+        # GTK settings priority (also refer to the gtk/gtk/gtksettings.c):
+        # x11:
+        #  1) XSettings (xsettingsd)
+        #  2) settings.ini
+        # wayland:
+        #  1) portals (unless GIO_USE_PORTALS=0 and GTK_USE_PORTAL=0)
+        #  2) gsettings
+        #  3) settings.ini
+        #
+        GSETTINGS_BACKEND: keyfile
+
+    - name: Render GTK configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./dconf
+
+          - dir: ./glib-2.0
+            create: true
+          - dir: ./glib-2.0/settings
+            create: true
+          - file: ./glib-2.0/settings/keyfile
+            template: glib/keyfile.j2
+
+          - dir: ./gtk-3.0
+            create: true
+          - file: ./gtk-3.0/settings.ini
+            template: gtk/gsettings.ini.j2
+
+          - dir: ./gtk-4.0
+            create: true
+          - file: ./gtk-4.0/settings.ini
+            template: gtk/gsettings.ini.j2

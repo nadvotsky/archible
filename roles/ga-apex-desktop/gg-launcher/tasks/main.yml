@@ -1,0 +1,43 @@
+---
+- name: Configure rofi app launcher
+  tags: apex-desktop-launcher-main
+  block:
+    - name: Install rofi packages
+      foundation.system.packages:
+      vars:
+        install:
+          - rofi-wayland
+          #
+          # rofi-wayland follows rofi git version, while may rofi-emoji follows rofi stable. Therefor, ABI version
+          #  may occur. If rofi prints such error, build in manually with rofi-emoji-git.
+          #
+          - rofi-emoji
+
+    - name: Render rofi configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/rofi"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config.rasi
+            template: rofi/config.rasi.j2
+
+    - name: List rofi caches
+      when: aa_wipe == 'always'
+      ansible.builtin.find:
+        paths: "{{ fa_dir_cache }}"
+        file_type: any
+        patterns: "rofi-*"
+        hidden: true
+      register: _gg_caches
+
+    - name: Wipe rofi caches
+      when: aa_wipe == 'always'
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ _gg_caches.files }}"

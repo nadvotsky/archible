@@ -1,0 +1,29 @@
+---
+- name: Configure XDG Desktop Portal
+  tags: apex-desktop-portal-main
+  block:
+    - name: Install XDG Desktop Portal packages
+      foundation.system.packages:
+      vars:
+        install:
+          - xdg-desktop-portal
+          - xdg-desktop-portal-gtk
+
+    - name: Prepare xdg-desktop-portal directory
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_config }}/xdg-desktop-portal"
+            perms: "755:{{ ca_name }}:{{ ca_name }}"
+            create: true
+
+    - name: Enable XDG Desktop Portal services
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - xdg-desktop-portal.service
+          - xdg-desktop-portal-gtk.service
+        state:
+          unmask: true

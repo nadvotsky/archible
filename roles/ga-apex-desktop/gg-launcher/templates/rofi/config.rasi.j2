@@ -1,13 +1,13 @@
-{%- set _spacing_thin = "{}px".format(spacing.thin | scale(scaling.real)) -%}
+{%- set _spacing_thin = "{}px".format(ga_space_thin | ga_scale(ga_scaling)) -%}
 
-{%- set _spacing_small = "{}px".format(spacing.small | scale(scaling.real)) -%}
+{%- set _spacing_small = "{}px".format(ga_space_small | ga_scale(ga_scaling)) -%}
 {%- set _spacing_small_left = "0 0 0 {}".format(_spacing_small) -%}
 
-{%- set _spacing_medium = "{}px".format(spacing.medium | scale(scaling.real)) -%}
+{%- set _spacing_medium = "{}px".format(ga_space_medium | ga_scale(ga_scaling)) -%}
 {%- set _spacing_medium_left = "0 0 0 {}".format(_spacing_medium) -%}
 {%- set _spacing_medium_top_right_bottom = "{0} {0} {0} 0".format(_spacing_medium) -%}
 
-{%- set _spacing_big = "{}px".format(spacing.big | scale(scaling.real)) -%}
+{%- set _spacing_big = "{}px".format(ga_space_big | ga_scale(ga_scaling)) -%}
 
 {#
     Spacing is basically calculated as:
@@ -18,7 +18,7 @@
 #}
 {%- set _spacing_listview = "{0} {0} {0} {1}px".format(
     _spacing_medium,
-    (spacing.medium + spacing.medium + (fonts.monospace.sizes.big / 2) + spacing.medium) | scale(scaling.real)
+    (ga_space_medium + ga_space_medium + (ga_fonts_mono_sz_big / 2) + ga_space_medium) | ga_scale(ga_scaling)
 ) -%}
 
 
@@ -61,11 +61,11 @@ configuration {
 
 window {
     padding: {{ _spacing_big }};
-    background-color: {{ preset.inactive }};
-    border-color: {{ preset.active }};
+    background-color: {{ ga_preset.inactive }};
+    border-color: {{ ga_preset.active }};
     border: {{ _spacing_medium }};
 
-    font: "monospace {{ fonts.monospace.sizes.big | scale(scaling.real) }}px";
+    font: "monospace {{ ga_fonts_mono_sz_big | ga_scale(ga_scaling) }}px";
 }
 
 mainbox {
@@ -78,18 +78,18 @@ mode-switcher {
 
 button {
     cursor: pointer;
-    text-color: {{ preset.accent }};
+    text-color: {{ ga_preset.accent }};
 }
 
 button selected {
-    background-color: {{ preset.accent }};
-    text-color: {{ preset.inactive }};
+    background-color: {{ ga_preset.accent }};
+    text-color: {{ ga_preset.inactive }};
 }
 
 inputbar {
     padding: {{ _spacing_medium }};
     spacing: 0px ;
-    text-color: {{ preset.accent }};
+    text-color: {{ ga_preset.accent }};
     children: [ "textbox-prompt-colon", "entry" ];
 }
 
@@ -99,19 +99,19 @@ textbox-prompt-colon {
     expand: false;
     str: "";
     text-transform: bold;
-    text-color: {{ preset.accent }};
+    text-color: {{ ga_preset.accent }};
 }
 
 entry {
     cursor: text;
-    
-    text-color: {{ preset.accent }};
+
+    text-color: {{ ga_preset.accent }};
 
     padding: {{ _spacing_medium }};
-    border-color: {{ preset.accent }};
+    border-color: {{ ga_preset.accent }};
     border: {{ _spacing_thin }};
 
-    placeholder-color: {{ preset.unimportant }};
+    placeholder-color: {{ ga_preset.unimportant }};
     placeholder: "Type to filter";
 }
 
@@ -129,7 +129,7 @@ listview {
 
 scrollbar {
     width: {{ _spacing_big }};
-    handle-color: {{ preset.accent }};
+    handle-color: {{ ga_preset.accent }};
     margin: {{ _spacing_medium_left }};
 }
 
@@ -148,31 +148,31 @@ element-icon {
 }
 
 element normal.normal, element alternate.normal {
-    background-color: {{ preset.inactive }};
-    text-color: {{ preset.accent }};
+    background-color: {{ ga_preset.inactive }};
+    text-color: {{ ga_preset.accent }};
 }
 
 element normal.urgent, element alternate.urgent {
-    background-color: {{ preset.inactive }};
-    text-color: {{ preset.important }};
+    background-color: {{ ga_preset.inactive }};
+    text-color: {{ ga_preset.important }};
 }
 
 element normal.active, element alternate.active {
-    background-color: {{ preset.inactive }};
-    text-color: {{ preset.foreground }};
+    background-color: {{ ga_preset.inactive }};
+    text-color: {{ ga_preset.foreground }};
 }
 
 element selected.normal {
-    background-color: {{ preset.accent }};
-    text-color: {{ preset.inactive }};
+    background-color: {{ ga_preset.accent }};
+    text-color: {{ ga_preset.inactive }};
 }
 
 element selected.urgent {
-    background-color: {{ preset.accent }};
-    text-color: {{ preset.important }};
+    background-color: {{ ga_preset.accent }};
+    text-color: {{ ga_preset.important }};
 }
 
 element selected.active {
-    background-color: {{ preset.accent }};
-    text-color: {{ preset.foreground }};
+    background-color: {{ ga_preset.accent }};
+    text-color: {{ ga_preset.foreground }};
 }
