@@ -30,7 +30,7 @@
         paths-input = {{ _mapping.outputs | join(" ") }}
         paths-output = {{ _mapping.inputs | join(" ") }}
         {##}
-        {% if not loop.last %}{{ "" | newline }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 
@@ -41,7 +41,7 @@
         output-mappings = {{ _profile.outputs | join(" ") }}
         skip-probe = no
         {##}
-        {% if not loop.last %}{{ "" | newline }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 

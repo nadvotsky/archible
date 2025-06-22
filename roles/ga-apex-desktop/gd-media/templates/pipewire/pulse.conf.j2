@@ -5,7 +5,7 @@
 # PipeWire PulseAudio configuration.
 #
 context.properties = {
-    {{ __context_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_context | relative_indent(times=1, **_indent) }}
 }
 
 context.spa-libs = {
@@ -14,7 +14,7 @@ context.spa-libs = {
 }
 
 context.modules = [
-    {{ __realtime_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_realtime | relative_indent(times=1, **_indent) }}
 
     { name = libpipewire-module-protocol-native }
     { name = libpipewire-module-client-node }
@@ -26,7 +26,7 @@ context.modules = [
 
 pulse.cmd = [
     { cmd = "load-module" args = "module-always-sink" flags = [ ] }
-{% if media.features.save is true %}
+{% if gd_save is true %}
     { cmd = "load-module" args = "module-device-manager" flags = [ ] }
     { cmd = "load-module" args = "module-device-restore" flags = [ ] }
     { cmd = "load-module" args = "module-stream-restore" flags = [ ] }
@@ -34,7 +34,7 @@ pulse.cmd = [
 ]
 
 stream.properties = {
-    {{ __stream_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_stream | relative_indent(times=1, **_indent) }}
 }
 
 pulse.properties = {
@@ -44,30 +44,17 @@ pulse.properties = {
 
     pulse.idle.timeout = 1
 
-    pulse.min.req = {{ media.quantum.min }}/48000
-    pulse.min.frag = {{ media.quantum.min }}/48000
-    pulse.min.quantum = {{ media.quantum.min }}/48000
-    pulse.default.req = {{ media.quantum.default }}/48000
+    pulse.min.req = {{ gd_quantum_min }}/48000
+    pulse.min.frag = {{ gd_quantum_min }}/48000
+    pulse.min.quantum = {{ gd_quantum_min }}/48000
+    pulse.default.req = {{ gd_quantum_default }}/48000
 
-{% if media.cards | dict2items | map(attribute='value.format') | unique | length == 1 %}
-    pulse.default.format = {{ (media.cards | dict2items | first).value.format }}
+{% if gd_cards | dict2items | map(attribute='value.format') | unique | length == 1 %}
+    pulse.default.format = {{ (gd_cards | dict2items | first).value.format }}
 {% endif %}
 }
 
 pulse.rules = [
-
-    #
-    # Skype does not want to use devices that don't have an S16 sample format.
-    #
-    {
-        matches = [
-            { application.process.binary = "teams" }
-            { application.process.binary = "teams-insiders" }
-            { application.process.binary = "skypeforlinux" }
-        ]
-        actions = { quirks = [ force-s16-info ] }
-    }
-
     #
     # Firefox marks the capture streams as 'do not move'.
     #
@@ -80,7 +67,7 @@ pulse.rules = [
     }
 
     #
-    # Seech dispatcher asks for too small latency and then underruns.
+    # Speech dispatcher asks for too small latency and then underruns.
     #
     {
         matches = [
@@ -101,7 +88,7 @@ pulse.rules = [
     {
         matches = [
             {
-            {% for _app in media.whitelist %}
+            {% for _app in gd_whitelist %}
                 application.process.binary = "!{{ _app }}"
             {% endfor %}
             }

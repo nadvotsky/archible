@@ -21,7 +21,7 @@
         [Jack {{ _jack_name }}]
         required = any
         {##}
-        {% if not loop.last %}{{ "" | newline }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 
@@ -31,7 +31,7 @@
         required = any
         state.unplugged = yes
         {##}
-        {% if not loop.last %}{{ "" | newline }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 
@@ -67,7 +67,7 @@
         {{ _key }} = {{ _value }}
         {% endmacro %}
         {##}
-        {% if not loop.last %}{{ "" | newline }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 
@@ -78,7 +78,7 @@
         direction = {{ _element.direction | default(_direction) }}
         direction-try-other = no
         {##}
-        {% if not loop.last %}{{ "" | newline }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 
@@ -94,7 +94,7 @@
         required = enumeration
         name = {{ _enum.description }}
         {##}
-        {% if not loop.last %}{{ "" | newline }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 

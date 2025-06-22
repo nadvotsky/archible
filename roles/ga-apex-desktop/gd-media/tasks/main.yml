@@ -1,0 +1,206 @@
+---
+- name: Configure ALSA
+  tags: apex-desktop-media-driver
+  become: true
+  block:
+    #
+    # alsa-utils contains alsa-restore.service and alsa-state.service that are not recommended to be used with
+    #  sound server. It is possible to mask these services, but why would one need these utilities, since:
+    #  1) sound server injects itself into arecord/aplay
+    #  2) tricky user/system behavior; it is recommended to omit 'audio' group, as it may cause issues between ttyswitch
+    #
+    - name: Remove alsa-utils package
+      when: aa_wipe == 'always'
+      foundation.system.packages:
+      vars:
+        remove:
+          - alsa-utils
+
+    - name: Remove persistent alsa configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - file: /var/lib/alsa/asound.state
+          - file: /etc/alsa/state-daemon.conf
+
+- name: Configure media framework
+  tags: apex-desktop-media-framework
+  vars:
+    _gd_context: |-
+      clock.power-of-two-quantum = true
+      cpu.zero.denormals = true
+
+      default.clock.rate = {{
+        (gd_cards | dict2items | map(attribute='value.frequency') | min) if gd_cards is defined else 48000
+      }}
+      default.clock.allowed-rates = []
+
+      default.video.width = 1280
+      default.video.height = 720
+      default.video.rate.num = 30
+      default.video.rate.denom = 1
+
+      default.clock.min-quantum = {{ gd_quantum_min }}
+      default.clock.quantum-floor = {{ gd_quantum_min }}
+      default.clock.quantum = {{ gd_quantum_default }}
+      default.clock.max-quantum = {{ gd_quantum_max }}
+      default.clock.quantum-limit = {{ gd_quantum_max }}
+
+      settings.check-quantum = false
+      settings.check-rate = false
+
+      link.max-buffers = 32
+      log.level = 0
+
+      mem.allow-mlock = true
+      mem.warn-mlock = true
+      mem.mlock-all = false
+
+    _gd_realtime: |-
+      {
+          name = libpipewire-module-rt
+          args = {
+              nice.level = {{ gd_realtime_nice }}
+              rt.prio = {{ gd_realtime_priority }}
+              rlimits.enabled = true
+              rtportal.enabled = true
+              rtkit.enabled = true
+          }
+          flags = [ ifexists nofail ]
+      }
+
+    _gd_stream: |-
+      resample.quality = {{ (14 * gd_resampling) | round | int }}
+
+      channelmix.mix-lfe = true
+      channelmix.upmix = false
+  block:
+    - name: Install PipeWire packages
+      foundation.system.packages:
+      vars:
+        install: >-
+          {{
+            [
+              "pipewire", "pipewire-pulse", "wireplumber", "pavucontrol",
+              "noise-suppression-for-voice" if gd_rnnoise is true else none,
+              "pipewire-jack" if gd_jack is true else none,
+              "bluez" if gd_bluetooth is true else none,
+              "pipewire-v4l2" if gd_video_v4l2 is true else none,
+              "pipewire-libcamera" if gd_video_libcamera is true else none,
+            ] | reject("none")
+          }}
+
+    - name: Add user to the rtkit group
+      become: true
+      ansible.builtin.user:
+        name: "{{ ca_name }}"
+        groups: rtkit
+        append: true
+
+    - name: Assert that the frequency is supported by rnnoise
+      when: gd_rnnoise is true
+      ansible.builtin.assert:
+        that: item == 48000
+        fail_msg: "'gd_cards.<card>.frequency' must be set to 48000 if 'gd_rnnoise' is requested"
+      loop: "{{ gd_cards | dict2items | map(attribute='value.frequency') }}"
+
+    - name: Render PipeWire config
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/pipewire"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - file: ./pipewire.conf
+            template: pipewire/pipewire.conf.j2
+          - file: ./client.conf
+            template: pipewire/client.conf.j2
+          - file: ./client-rt.conf
+            template: pipewire/client.conf.j2
+          - file: ./pipewire-pulse.conf
+            template: pipewire/pulse.conf.j2
+
+    - name: Render WirePlumber configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/wireplumber"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        #
+        # Unlike daemon and clients, wireplumber loads tons of lua scripts, which is hard to replicate, using drop-in
+        #  instead.
+        #
+        # It also has some handy switches so most of the unnecessary stuff still can be omited.
+        #
+        targets:
+          - dir: ./
+            create: true
+          - dir: ./wireplumber.conf.d
+            create: true
+          - file: ./wireplumber.conf.d/10-config.conf
+            template: wireplumber/10-config.conf.j2
+
+          - dir: "{{ fa_dir_state }}/wireplumber"
+
+- name: Configure ALSA card profiles
+  tags: apex-desktop-media-cards
+  block:
+    - name: Prepare ALSA card profiles directories
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/alsa-card-profile"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets:
+          - dir: ./
+          - dir: ./profile-sets
+          - dir: ./paths
+
+    - name: Render profile-sets for ALSA card profiles
+      ansible.builtin.template:
+        src: acp/profile-set.j2
+        dest: "{{ fa_dir_config }}/alsa-card-profile/profile-sets/{{ item.key }}.conf"
+        mode: "0644"
+        owner: "{{ ca_name }}"
+        group: "{{ ca_name }}"
+        lstrip_blocks: true
+        trim_blocks: true
+      loop: "{{ gd_cards | dict2items }}"
+
+    - name: Render alsa card profile paths
+      ansible.builtin.template:
+        src: acp/path.j2
+        dest: "{{ fa_dir_config }}/alsa-card-profile/paths/{{ item.key }}.conf"
+        mode: "0644"
+        owner: "{{ ca_name }}"
+        group: "{{ ca_name }}"
+        lstrip_blocks: true
+        trim_blocks: true
+      loop: >-
+        {%- set _items = [] -%}
+        {%- for _card_name, _card in gd_cards.items() -%}
+          {%- for _path in _card.acp | dict2items | selectattr("value.type", "in", ["input-path", "output-path"]) -%}
+            {%- set _ = _items.append({"key": _path.key, "value": _path.value, "card": _card}) -%}
+          {%- endfor -%}
+        {%- endfor -%}
+        {{ _items }}
+
+- name: Configure media framework state
+  tags: apex-desktop-media-framework
+  block:
+    - name: Enable user services
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - pipewire.service
+          - pipewire.socket
+          - pipewire-pulse.service
+          - pipewire-pulse.socket
+          - wireplumber.service
+        state:
+          enable: true

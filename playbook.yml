@@ -45,6 +45,7 @@
 
     - { role: ga-apex-desktop/gb-login, tags: apex-desktop-login }
     - { role: ga-apex-desktop/gc-graphics, tags: apex-desktop-graphics }
+    - { role: ga-apex-desktop/gd-media, tags: apex-desktop-media }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

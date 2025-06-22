@@ -5,7 +5,7 @@
 {%- endmacro -%}
 
 {%- macro _exclusive_render() -%}
-    {% set _cards = media.cards | dict2items | selectattr("value.exclusive", "true") | items2dict %}
+    {% set _cards = gd_cards | dict2items | selectattr("value.exclusive", "true") | items2dict %}
     {% for _card_name, _card in _cards.items() %}
         {
             matches = [
@@ -75,7 +75,7 @@
 {%- endmacro -%}
 
 {%- macro _devices_render() -%}
-    {% for _card_name, _card in media.cards.items() %}
+    {% for _card_name, _card in gd_cards.items() %}
         {{ _device_render(_card_name, _card) | relative_indent(times=2, **_indent) }}
 
         {{ _node_render("input", _card_name, _card) | relative_indent(times=2, **_indent) }}
@@ -91,18 +91,18 @@ wireplumber.profiles = {
 
         hardware.audio = required
         monitor.alsa = required
-        monitor.alsa-midi = {{ _feature_state(media.features.midi) }}
+        monitor.alsa-midi = {{ _feature_state(gd_midi) }}
 
-        hardware.bluetooth = {{ _feature_state(media.features.bluetooth) }}
-        monitor.bluez = {{ _feature_state(media.features.bluetooth) }}
-        monitor.bluez.seat-monitoring = {{ _feature_state(media.features.bluetooth) }}
-        monitor.bluez-midi = {{ _feature_state(media.features.midi) }}
+        hardware.bluetooth = {{ _feature_state(gd_bluetooth) }}
+        monitor.bluez = {{ _feature_state(gd_bluetooth) }}
+        monitor.bluez.seat-monitoring = {{ _feature_state(gd_bluetooth) }}
+        monitor.bluez-midi = {{ _feature_state(gd_midi) }}
 
         hardware.video-capture = {{
-            _feature_state(media.features.video_v4l2 is true or media.features.video_libcamera is true)
+            _feature_state(gd_video_v4l2 is true or gd_video_libcamera is true)
         }}
-        monitor.v4l2 = {{ _feature_state(media.features.video_v4l2) }}
-        monitor.libcamera = {{ _feature_state(media.features.video_libcamera) }}
+        monitor.v4l2 = {{ _feature_state(gd_video_v4l2) }}
+        monitor.libcamera = {{ _feature_state(gd_video_libcamera) }}
 
         support.dbus = required
         support.logind = required
@@ -118,8 +118,8 @@ wireplumber.profiles = {
 wireplumber.settings = {
     device.restore-profile = false
     device.restore-routes = false
-    device.routes.default-sink-volume = {{ media.volume.output }}
-    device.routes.default-source-volume = {{ media.volume.input }}
+    device.routes.default-sink-volume = {{ gd_volume_output }}
+    device.routes.default-source-volume = {{ gd_volume_input }}
 
     linking.allow-moving-streams = true
     linking.follow-default-target = true
@@ -128,13 +128,13 @@ wireplumber.settings = {
     node.features.audio.monitor-ports = false
     node.features.audio.control-port = false
 
-    node.stream.restore-props = {{ media.features.save is true | ternary("true", "false") }}
+    node.stream.restore-props = {{ gd_save is true | ternary("true", "false") }}
     node.stream.restore-target = true
-    node.stream.default-playback-volume = {{ media.volume.output }}
-    node.stream.default-capture-volume = {{ media.volume.input }}
+    node.stream.default-playback-volume = {{ gd_volume_output }}
+    node.stream.default-capture-volume = {{ gd_volume_input }}
 
     node.filter.forward-format = true
-    node.restore-default-targets = {{ media.features.save is true | ternary("true", "false") }}
+    node.restore-default-targets = {{ gd_save is true | ternary("true", "false") }}
 }
 
 monitor.alsa.properties = {
@@ -159,7 +159,7 @@ access.rules = [
         matches = [
             {
                 pipewire.sec.socket = "pipewire-0"
-                {% for _app in media.whitelist %}
+                {% for _app in gd_whitelist %}
                 application.process.binary = "!{{ _app }}"
                 {% endfor %}
             }

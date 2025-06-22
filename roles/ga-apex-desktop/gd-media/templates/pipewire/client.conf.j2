@@ -4,7 +4,7 @@
 # PipeWire client configuration.
 #
 context.properties = {
-    {{ __context_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_context | relative_indent(times=1, **_indent) }}
 }
 
 context.spa-libs = {
@@ -13,7 +13,7 @@ context.spa-libs = {
 }
 
 context.modules = [
-    {{ __realtime_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_realtime | relative_indent(times=1, **_indent) }}
 
     { name = libpipewire-module-protocol-native }
 
@@ -27,5 +27,5 @@ context.modules = [
 ]
 
 stream.properties = {
-    {{ __stream_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_stream | relative_indent(times=1, **_indent) }}
 }

@@ -1,12 +1,11 @@
 #!/usr/bin/env nu
 
 #
-# This is a simple script that allows to remove
-#  the snd_hda_intel kernel module.
+# This is a simple script that allows to remove the snd_hda_intel kernel module.
 #
-# It is mainly useful for testing various module parameters,
-#  such as `model`, `position_fix`, `enable_msi`, and others,
-#  without the need to reboot the machine.
+# It is mainly useful for testing various module parameters, such as `model`,
+#  `position_fix`, `enable_msi`, and others, without the need to reboot the
+#  machine.
 #
 # Note that under usual conditions, the use of `rmmod snd_hda_intel`
 #  is prohibited due to the devices that are using this driver.
@@ -17,8 +16,8 @@
 #     Device is still visible to the system, and the next driver reload
 #     will bind them automatically.
 #  2) it calls `remove` for all devices that are not meant to be utilized
-#     any further (i.e. not listed in the `DEV_UNBIND` variable),
-#     so the driver will be able to be unloaded.
+#     any further (i.e. not listed in the `DEV_UNBIND` variable), so the driver
+#     will be able to be unloaded.
 #     Device is completely removed from the sysfs and kernel.
 #     Particulary useful for NVIDIA cards with HDMI Audio.
 #

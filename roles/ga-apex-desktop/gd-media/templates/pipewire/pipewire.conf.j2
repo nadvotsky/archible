@@ -1,12 +1,12 @@
 {%- set _indent = {"space": 4} -%}
 
 {%- macro _channels_render() -%}
-    {{ media.cards | dict2items | map(attribute="value.channels") | map("length") | min() }}
+    {{ gd_cards | dict2items | map(attribute="value.channels") | map("length") | min() }}
 {%- endmacro -%}
 
 {%- macro _position_render() -%}
     {% set _min_pos = [] %}
-    {% for _card in media.cards.values() %}
+    {% for _card in gd_cards.values() %}
         {% set _ = _min_pos.append({
             "length": _card.channels | length,
             "position": _card.channels,
@@ -27,20 +27,20 @@ context.properties = {
     loop.rt-prio = -1
     context.num-data-loops = 1
 
-    {{ __context_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_context | relative_indent(times=1, **_indent) }}
 }
 
 context.spa-libs = {
-{% if media.features.video_v4l2 is true %}
+{% if gd_video_v4l2 is true %}
     api.v4l2.* = v4l2/libspa-v4l2
 {% endif %}
-{% if media.features.video_libcamera is true %}
+{% if gd_video_libcamera is true %}
     api.libcamera.* = libcamera/libspa-libcamera
 {% endif %}
-{% if media.features.bluetooth is true %}
+{% if gd_bluetooth is true %}
     api.bluez5.* = bluez5/libspa-bluez5
 {% endif %}
-{% if media.features.jack is true %}
+{% if gd_jack is true %}
     api.jack.* = jack/libspa-jack
 {% endif %}
     api.alsa.* = alsa/libspa-alsa
@@ -54,7 +54,7 @@ context.spa-libs = {
 
 context.modules = [
 
-    {{ __realtime_properties | relative_indent(times=1, **_indent) }}
+    {{ _gd_realtime | relative_indent(times=1, **_indent) }}
 
     {
         name = libpipewire-module-protocol-native
@@ -78,7 +78,7 @@ context.modules = [
     { name = libpipewire-module-session-manager }
     { name = libpipewire-module-portal }
 
-{% if media.features.video_v4l2 is true or media.features.video_libcamera is true %}
+{% if gd_video_v4l2 is true or gd_video_libcamera is true %}
     { name = libpipewire-module-spa-device-factory }
     { name = libpipewire-module-spa-node-factory }
 
@@ -94,7 +94,7 @@ context.modules = [
         }
     }
 
-{% if media.features.loopback is true %}
+{% if gd_loopback is true %}
     {
         name = libpipewire-module-loopback
         args = {
@@ -115,7 +115,7 @@ context.modules = [
     }
 
 {% endif %}
-{% if media.features.rnnoise is true %}
+{% if gd_rnnoise is true %}
     {
         name = libpipewire-module-filter-chain
         args = {
@@ -128,7 +128,7 @@ context.modules = [
                         label = noise_suppressor_mono
                         plugin = /usr/lib/ladspa/librnnoise_ladspa.so
                         control = {
-                            "VAD Threshold (%)" = {{ media.rnnoise_threshold }}
+                            "VAD Threshold (%)" = {{ gd_rnnoise_threshold }}
                             "VAD Grace Period (ms)" = 300
                             "Retroactive VAD Grace (ms)" = 0
                         }
@@ -155,7 +155,7 @@ context.modules = [
     }
 
 {% endif %}
-{% if media.features.jack is true %}
+{% if gd_jack is true %}
     {
         name = libpipewire-module-jackdbus-detect
         args = {
@@ -165,12 +165,12 @@ context.modules = [
             source.props = {
                 audio.channels = {{ _channels_render() | relative_indent }}
                 audio.position = {{ _position_render() | relative_indent }}
-                midi.ports = {{ media.features.midi is true | ternary(1, 0) }}
+                midi.ports = {{ gd_midi is true | ternary(1, 0) }}
             }
             sink.props = {
                 audio.channels = {{ _channels_render() | relative_indent }}
                 audio.position = {{ _position_render() | relative_indent }}
-                midi.ports = {{ media.features.midi is true | ternary(1, 0) }}
+                midi.ports = {{ gd_midi is true | ternary(1, 0) }}
             }
         }
         flags = [ ifexists nofail ]

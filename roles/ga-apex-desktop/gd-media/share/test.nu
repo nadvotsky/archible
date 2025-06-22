@@ -1,10 +1,9 @@
 #!/usr/bin/env nu
 
 #
-# This is a simple script that parses the current parameters
-#  of the snd_hda_intel driver and according to these values
-#  formats the name of the output of the following `amixer`
-#  and `arecord` invocations.
+# This is a simple script that parses the current parameters of the
+#  `snd_hda_intel` driver and according to these values formats the name of the
+#  output of the following `amixer` and `arecord` invocations.
 #
 
 let parameters = [
