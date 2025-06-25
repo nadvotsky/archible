@@ -1,25 +1,25 @@
-{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
-{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
-{%- set _gap = (spacing.big * 2) | scale(scaling.real) -%}
+{%- set _spacing_medium = ga_space_medium | ga_scale(ga_scaling) -%}
+{%- set _spacing_big = ga_space_big | ga_scale(ga_scaling) -%}
+{%- set _gap = (ga_space_big * 2) | ga_scale(ga_scaling) -%}
 
-{%- set _preset_accent = "rgb({})".format(preset.accent[1:]) -%}
-{%- set _preset_background = "rgb({})".format(preset.background[1:]) -%}
-{%- set _preset_foreground = "rgb({})".format(preset.foreground[1:]) -%}
-{%- set _preset_active = "rgb({})".format(preset.active[1:]) -%}
-{%- set _preset_inactive = "rgb({})".format(preset.inactive[1:]) -%}
+{%- set _preset_accent = "rgb({})".format(ga_preset.accent[1:]) -%}
+{%- set _preset_background = "rgb({})".format(ga_preset.background[1:]) -%}
+{%- set _preset_foreground = "rgb({})".format(ga_preset.foreground[1:]) -%}
+{%- set _preset_active = "rgb({})".format(ga_preset.active[1:]) -%}
+{%- set _preset_inactive = "rgb({})".format(ga_preset.inactive[1:]) -%}
 
-{%- set _dpi = scaling.ethalon | scale(scaling.real) -%}
-{%- set _monitor = monitors.outputs.values() | first -%}
+{%- set _dpi = ga_scaling_ethalon | ga_scale(ga_scaling) -%}
+{%- set _monitor = ga_monitors.values() | first -%}
 
-{%- set _font_pango = "{} SemiBold".format(fonts.sans_serif.name) -%}
-{%- set _font_size_px = (fonts.sans_serif.sizes.medium - fonts.sans_serif.offsets.medium) | scale(scaling.real) -%}
-{%- set _font_size_pt = (_font_size_px / (scaling.ethalon / 72)) | round | int -%}
+{%- set _font_pango = "{} SemiBold".format(ga_fonts_sans) -%}
+{%- set _font_size_px = (ga_fonts_sans_sz_medium - ga_fonts_sans_off_medium) | ga_scale(ga_scaling) -%}
+{%- set _font_size_pt = (_font_size_px / (ga_scaling_ethalon / 72)) | round | int -%}
 {%- set _groupbar_size = _font_size_px + _spacing_medium * 2 -%}
 
 {%- set _ws_map = {"index": 0} %}
 {%- set _ws_cycle_map = {} -%}
-{%- for _mon_name, _mon in monitors.outputs.items() -%}
-    {% set _prefix = _mon_name | workspace_prefix(loop.first) %}
+{%- for _mon_name, _mon in ga_monitors.items() -%}
+    {% set _prefix = _mon_name | ga_workspace_prefix(loop.first) %}
     {% for _ in range(_mon.workspaces) %}
         {% set _ws_name = "{}{}".format(_prefix, loop.index) %}
         {% set _ = _ws_map.update({
@@ -39,8 +39,8 @@
 {%- endfor -%}
 
 {%- macro _monitors_render() -%}
-    {% set _orient =  "auto-right" if monitors.stack == "horizontal" else "down" %}
-    {% for _mon in monitors.outputs.values() %}
+    {% set _orient =  "auto-right" if ga_monitors_stack == "horizontal" else "down" %}
+    {% for _mon in ga_monitors.values() %}
         monitor = {{ _mon.wayland }}, {{ _mon.width }}x{{ _mon.height }}@{{ _mon.refresh }}, {{ _orient }}, 1
     {% endfor %}
 {%- endmacro -%}
@@ -72,22 +72,26 @@
 ) -%}
 
 {%- macro _workspaces_keybinds_render() -%}
-    {% for _bind in keys
-        | parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
-        | selectattr("mode_name", "eq", "wm")
+    {% for _bind in (
+        keys
+            | ga_parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
+            | selectattr("mode_name", "eq", "wm")
+    )[:_ws_map.index]
     %}
         bind = {{ _bind.line }}, workspace, {{ _ws_map[loop.index0].name }}
     {% endfor %}
 
-    {% for _bind in keys
-        | parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
-        | selectattr("mode_name", "eq", "wm")
+    {% for _bind in (
+        keys
+            | ga_parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
+            | selectattr("mode_name", "eq", "wm")
+    )[:_ws_map.index]
     %}
         bind = {{ _bind.line }}, movetoworkspacesilent, {{ _ws_map[loop.index0].name }}
     {% endfor %}
 
     {% for _bind in keys
-        | parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
+        | ga_parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
         bind = {{ _bind.line }}, changegroupactive, {{ loop.index }}
@@ -126,7 +130,7 @@
     (
         "screenshot_file",
         "execr, grim -g \"$(slurp -d)\" \"{}/{}/shot-$(date +%s).png\"".format(
-            users.user.home, users.user.xdg.pictures
+            fa_dir_xdg.pictures
         ),
     ),
 
@@ -145,27 +149,21 @@
 
     ("output_next", "focusmonitor, +1"),
     ("output_prev", "focusmonitor, -1"),
-    ("workspace_next", _workspace_cycle_keybind("next") | relative_indent),
-    ("workspace_prev", _workspace_cycle_keybind("prev") | relative_indent),
+    ("workspace_next", _workspace_cycle_keybind("next") | ga_relindent()),
+    ("workspace_prev", _workspace_cycle_keybind("prev") | ga_relindent()),
     ("group_next", "cyclenext, next tiled"),
     ("group_prev", "cyclenext, prev tiled"),
     ("tab_next", "changegroupactive, f"),
     ("tab_prev", "changegroupactive, b"),
-] + ["graphics-rofi", "graphics-app-launcher"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+] + gi_compositor_launcher is true | ternary(
     [("run", "execr, rofi -show drun"), ("windows", "execr, rofi -show window")], [],
-) + ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
-    [(
-        "netns",
-        "execr, rofi -show drun -display-drun 'drun (network namespaced)' -run-command 'vopono exec -- {cmd}'"
-    )],
-    [],
-) + ["graphics-notifications", "graphics-x11-dunst"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+) + gi_compositor_notify is true | ternary(
     [("notifications", "execr, makoctl restore")], [],
 ) -%}
 
 {%- macro _keybinds_render() -%}
     {% for _bind in keys
-        | parse_binds(actions_map=_keybinds, **_parse_kwargs)
+        | ga_parse_binds(actions_map=_keybinds, **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
         {% set _action = _bind.action.subs %}
@@ -186,7 +184,7 @@
 
 {%- macro _special_keybinds_render() -%}
     {% for _bind in keys
-        | parse_binds(actions_map=_special_keybindings, **_parse_kwargs)
+        | ga_parse_binds(actions_map=_special_keybindings, **_parse_kwargs)
         | selectattr("mode_name", "in", ["wm", "bare"])
     %}
         {{ _bind.action.subs.format(_bind.line) }}
@@ -199,12 +197,12 @@
 #
 monitor = Unknown-1, disabled
 
-{{ _monitors_render() | relative_indent }}
+{{ _monitors_render() | ga_relindent() }}
 
 #
 # Workspaces configuration.
 #
-{{ _workspaces_render() | relative_indent }}
+{{ _workspaces_render() | ga_relindent() }}
 
 #
 # Enviromental variables.
@@ -223,10 +221,10 @@ env = _JAVA_AWT_WM_NONREPARENTING, 1
 #
 # Autostart before scaling is set.
 #
-{% if ["graphics-bar", "graphics-wayland-waybar"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+{% if gi_compositor_bar is true %}
 exec-once = waybar --log-level off
 {% endif %}
-{% if ["graphics-notifications", "graphics-wayland-mako"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
+{% if gi_compositor_notify is true %}
 exec-once = mako
 {% endif %}
 
@@ -239,8 +237,8 @@ exec-once = mako
 # QT_SCALE_FACTOR with fractions such as 0.9, 1.5 results in blurry icons
 #
 env = QT_FONT_DPI, {{ _dpi }}
-env = GDK_DPI_SCALE, {{ scaling.real }}
-env = ELM_SCALE, {{ scaling.real }}
+env = GDK_DPI_SCALE, {{ ga_scaling }}
+env = ELM_SCALE, {{ ga_scaling }}
 
 
 #
@@ -326,9 +324,9 @@ animations {
 # Input configuration.
 #
 input {
-    kb_model = {{ inputs.keyboard.model }}
-    kb_layout = {{ inputs.keyboard.layout }}
-    kb_options = {{ inputs.keyboard.options }}
+    kb_model = {{ ga_keyboard_model }}
+    kb_layout = {{ ga_keyboard_layout }}
+    kb_options = {{ ga_keyboard_options }}
     # kb_variant =
     # kb_rules =
     # kb_file =
@@ -338,8 +336,8 @@ input {
     repeat_rate = 25
     repeat_delay = 600
 
-    accel_profile = {{ inputs.mouse.accel }}
-    sensitivity = {{ inputs.mouse.speed }}
+    accel_profile = {{ ga_mouse_accel }}
+    sensitivity = {{ ga_mouse_speed }}
     force_no_accel = false
     left_handed = false
 
@@ -517,11 +515,11 @@ master {
 #
 # Keybinds.
 #
-{{ _workspaces_keybinds_render() | relative_indent }}
+{{ _workspaces_keybinds_render() | ga_relindent() }}
 
-{{ _keybinds_render() | relative_indent }}
+{{ _keybinds_render() | ga_relindent() }}
 
-{{ _special_keybinds_render() | relative_indent }}
+{{ _special_keybinds_render() | ga_relindent() }}
 
 
 #

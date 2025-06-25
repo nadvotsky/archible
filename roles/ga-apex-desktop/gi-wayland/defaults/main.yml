@@ -1,0 +1,4 @@
+---
+gi_compositor_launcher: true
+gi_compositor_notify: true
+gi_compositor_bar: true

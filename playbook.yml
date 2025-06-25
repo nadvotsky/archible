@@ -50,6 +50,7 @@
     - { role: ga-apex-desktop/gf-look, tags: apex-desktop-look }
     - { role: ga-apex-desktop/gg-launcher, tags: apex-desktop-launcher }
     - { role: ga-apex-desktop/gh-x11, tags: apex-desktop-x11 }
+    - { role: ga-apex-desktop/gi-wayland, tags: apex-desktop-wayland }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

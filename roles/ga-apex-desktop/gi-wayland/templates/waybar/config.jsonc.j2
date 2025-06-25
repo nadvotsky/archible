@@ -19,10 +19,7 @@
 {%- set _output_name = monitors.outputs.values() | map(attribute="wayland") | first -%}
 {%- set _modules_left = ["cpu", "memory#ram", "memory#swap", "disk", "custom/uptime"] -%}
 {%- set _modules_center = ["clock"] -%}
-{%- set _modules_right = ["mpris", "wireplumber", "hyprland/language"]
-    + ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(["custom/netns"], [])
-    + ["tray"]
--%}
+{%- set _modules_right = ["mpris", "wireplumber", "hyprland/language", "custom/netns", "tray"] -%}
 
 {%- macro _modules_render() -%}
     "modules-left": {{ _modules_left | tojson }},
@@ -223,7 +220,7 @@
     "custom/uptime": {
         "tooltip": false,
         "interval": 60,
-        "exec": "{{ execs.uptime }}",
+        "exec": "{{ ga_uptime }}",
 
         {{ _section_render(_icon="f1ae1", _content="{}") | relative_indent }}
     },
@@ -261,21 +258,20 @@
 
     "hyprland/language": {
         "format-en": "English (US)",
+        "format-ru": "Russian",
+        "format-ua": "Ukrainian",
 
         {{ _section_render(_icon="f11c", _content="{}") | relative_indent }}
     },
 
-    {% if ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) %}
     "custom/netns": {
         "interval": 5,
         "tooltip": false,
-        "exec": "{{ execs.netns }} || (echo default)",
+        "exec": "{{ ga_netns }} || (echo default)",
 
         {{ _section_render(_icon="f0484", _content="{}") | relative_indent }}
     },
 
-    {% endif %}
-    {##}
     "tray": {
         "icon-size": {{ _icon_size }},
         "show-passive-items": true,
