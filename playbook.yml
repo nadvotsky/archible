@@ -49,6 +49,7 @@
     - { role: ga-apex-desktop/ge-portal, tags: apex-desktop-portal }
     - { role: ga-apex-desktop/gf-look, tags: apex-desktop-look }
     - { role: ga-apex-desktop/gg-launcher, tags: apex-desktop-launcher }
+    - { role: ga-apex-desktop/gh-x11, tags: apex-desktop-x11 }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

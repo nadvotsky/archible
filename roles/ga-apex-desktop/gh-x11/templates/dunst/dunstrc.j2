@@ -1,37 +1,44 @@
 {%- set _font_family = "monospace" -%}
-{%- set _font_size = fonts[_font_family].sizes.big | scale(scaling.real) -%}
+{%- set _font_size = ga_fonts_mono_sz_big | ga_scale(ga_scaling) -%}
 
-{%- set _bar_fonts = [fonts.sans_serif, fonts.icon] -%}
+{%- set _monitor = ga_monitors | selectattr("notifications", "true") | first -%}
 
-{%- set _monitor = monitors.outputs[notifications.monitor] -%}
-
-{%- set _width = (_monitor.width * notifications.width) | scale(scaling.real) -%}
-{%- set _height = (_monitor.height * notifications.height) | scale(scaling.real)-%}
+{%- set _width = (_monitor.width * ga_popup_width) | ga_scale(ga_scaling) -%}
+{%- set _height = (_monitor.height * ga_popup_height) | ga_scale(ga_scaling)-%}
 {%- set _limit = (_monitor.height / _height) | round | int -%}
-{%- set _icon_size = (_monitor.width * notifications.icon) | scale(scaling.real) -%}
+{%- set _icon_size = (_monitor.width * ga_popup_icon) | ga_scale(ga_scaling) -%}
 
-{%- set _gap = (spacing.big * 2) | scale(scaling.real) -%}
+{%- set _gap = (ga_space_big * 2) | ga_scale(ga_scaling) -%}
+{%- set _bar_fonts_sizes = [ga_fonts_sans_sz_medium, ga_fonts_icon_sz_medium] -%}
 {%- set _bar_size =
     [
-        spacing.medium,
-        spacing.medium / 2,
-        _bar_fonts | map(attribute="sizes.medium") | max,
-        spacing.medium / 2,
-        spacing.medium,
-    ] | sum | scale(scaling.real)
+        ga_space_medium,
+        ga_space_medium / 2,
+        _bar_fonts_sizes | max,
+        ga_space_medium / 2,
+        ga_space_medium,
+    ] | sum | ga_scale(ga_scaling)
 -%}
 
-{%- set _spacing_small = spacing.small | scale(scaling.real) -%}
-{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
-{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
+{%- set _spacing_small = ga_space_small | ga_scale(ga_scaling) -%}
+{%- set _spacing_medium = ga_space_medium | ga_scale(ga_scaling) -%}
+{%- set _spacing_big = ga_space_big | ga_scale(ga_scaling) -%}
 
 {%- macro _format_render(color) -%}
 <span weight='bold' color='{{ color }}'>%a</span>\n<b>%s</b>\n%b
 {%- endmacro -%}
 
+{%- macro _monitor_index() -%}
+    {%- for _mon in ga_monitors -%}
+        {%- if _mon.notifications is true -%}
+            {{ loop.index0 }}
+        {%- endif -%} 
+    {%- endfor -%}
+{%- endmacro -%}
+
 
 [global]
-monitor = {{ (monitors.outputs.keys() | list).index(notifications.monitor) }}
+monitor = {{ _monitor_index() }}
 scale = 1
 follow = none
 transparency = 0
@@ -60,7 +67,7 @@ min_icon_size = {{ _icon_size }}
 max_icon_size = {{ _icon_size }}
 enable_recursive_icon_lookup = true
 icon_theme = {{ icons.launcher.name }}
-default_icon = /usr/share/icons/{{ icons.launcher.name }}/categories/32/applications-other.svg
+default_icon = /usr/share/icons/{{ ga_icons_launcher }}/categories/32/applications-other.svg
 # icon_path
 
 padding = {{ _spacing_big }}
@@ -71,7 +78,7 @@ gap_size = {{ _spacing_big }}
 corner_radius = 0
 font = "{{ _font_family }} {{ _font_size }}px"
 line_height = {{ _spacing_medium }}
-format = "{{ _format_render(preset.foreground) }}"
+format = "{{ _format_render(ga_preset.foreground) }}"
 vertical_alignment = center
 
 mouse_left_click = "do_action"
@@ -102,19 +109,19 @@ dmenu = "/usr/bin/rofi -dmenu"
 
 
 [global]
-background = "{{ preset.inactive }}"
-foreground = "{{ preset.foreground }}"
-frame_color = "{{ preset.active }}"
-highlight = "{{ preset.active }}"
+background = "{{ ga_preset.inactive }}"
+foreground = "{{ ga_preset.foreground }}"
+frame_color = "{{ ga_preset.active }}"
+highlight = "{{ ga_preset.active }}"
 
 
 [urgency_normal]
-frame_color = "{{ preset.accent }}"
-highlight = "{{ preset.accent }}"
-format = "{{ _format_render(preset.accent) }}"
+frame_color = "{{ ga_preset.accent }}"
+highlight = "{{ ga_preset.accent }}"
+format = "{{ _format_render(ga_preset.accent) }}"
 
 
 [urgency_critical]
-frame_color = "{{ preset.important }}"
-highlight = "{{ preset.important }}"
-format = "{{ _format_render(preset.important) }}"
+frame_color = "{{ ga_preset.important }}"
+highlight = "{{ ga_preset.important }}"
+format = "{{ _format_render(ga_preset.important) }}"

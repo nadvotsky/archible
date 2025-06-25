@@ -1,12 +1,12 @@
-{%- set _monitors = monitors.outputs.values() | map(attribute="x11") | join(", ") -%}
-{%- set _dpi = scaling.ethalon | scale(scaling.real) -%}
+{%- set _monitors = ga_monitors.values() | map(attribute="x11") | join(", ") -%}
+{%- set _dpi = ga_scaling_ethalon | ga_scale(ga_scaling) -%}
 
 {%- macro _metamodes_render() %}
-    {%- set _is_hor = monitors.stack == "horizontal" -%}
+    {%- set _is_hor = ga_monitors_stack == "horizontal" -%}
     {%- set _panning_dim = "height" if _is_hor else "width" -%}
-    {%- set _panning_val = monitors.outputs.values() | map(attribute=_panning_dim) | max -%}
+    {%- set _panning_val = ga_monitors.values() | map(attribute=_panning_dim) | max -%}
 
-    {%- for _mon in monitors.outputs.values() -%}
+    {%- for _mon in ga_monitors.values() -%}
         {{ _mon.x11 }}: {{ _mon.width }}x{{ _mon.height }}_{{ _mon.refresh }}
         {%- if _mon[_panning_dim] < _panning_val -%}
             {{ " " }}@{{ _mon.width if _is_hor else _panning_val }}x{{ _panning_val if _is_hor else _mon.height }}
@@ -16,10 +16,10 @@
 {%- endmacro -%}
 
 {%- macro _metamode_orientation_render() -%}
-   {%- for mon in monitors.outputs.values() -%}
-        {{ mon.x11 }}
+   {%- for _mon in ga_monitors.values() -%}
+        {{ _mon.x11 }}
         {%- if not loop.last -%}
-            {{ " LeftOf " if monitors.stack == "horizontal" else " Bottom " }}
+            {{ " LeftOf " if ga_monitors_stack == "horizontal" else " Bottom " }}
         {%- endif %}
     {%- endfor -%}
 {%- endmacro -%}

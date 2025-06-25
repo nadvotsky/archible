@@ -1,0 +1,5 @@
+---
+hg_wm_compositor: true
+hg_wm_bar: true
+hg_wm_notify: true
+hg_wm_launcher: true

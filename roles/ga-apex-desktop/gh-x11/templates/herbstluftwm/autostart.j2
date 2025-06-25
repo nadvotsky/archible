@@ -1,38 +1,33 @@
 {%- set _indent = {"space": 4} -%}
 
-{%- set _dpi = scaling.ethalon | scale(scaling.real) -%}
+{%- set _scratch_name = (ga_monitors | selectattr("scratch", "defined") | first).scratch -%}
 
-{%- set _spacing_thin = [spacing.thin | scale(scaling.real), 1] | max -%}
-{%- set _spacing_small = spacing.small | scale(scaling.real) -%}
-{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
-{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
-{%- set _spacing_gap = (spacing.big * 2) | scale(scaling.real) -%}
+{%- set _dpi = ga_scaling_ethalon | ga_scale(ga_scaling) -%}
 
-{%- set _font = fonts.sans_serif -%}
-{%- set _font_size = _font.sizes.medium | scale(scaling.real) -%}
-{%- set _font_offset = _font.offsets.medium | scale(scaling.real) -%}
+{%- set _spacing_thin = [ga_space_thin | ga_scale(ga_scaling), 1] | max -%}
+{%- set _spacing_small = ga_space_small | ga_scale(ga_scaling) -%}
+{%- set _spacing_medium = ga_space_medium | ga_scale(ga_scaling) -%}
+{%- set _spacing_big = ga_space_big | ga_scale(ga_scaling) -%}
+{%- set _spacing_gap = (ga_space_big * 2) | ga_scale(ga_scaling) -%}
+
+{%- set _font_size = ga_fonts_sans_sz_medium | ga_scale(ga_scaling) -%}
+{%- set _font_offset = ga_fonts_sans_off_medium | ga_scale(ga_scaling) -%}
 {%- set _font_fontconfig = "sans-serif:style=semibold:pixelsize={}".format(_font_size) | quote -%}
 
-{%- set _preset_accent = preset.accent | quote -%}
-{%- set _preset_foreground = preset.foreground | quote -%}
-{%- set _preset_background = preset.background | quote -%}
-{%- set _preset_important = preset.important | quote -%}
-{%- set _preset_active = preset.active | quote -%}
-{%- set _preset_inactive = preset.inactive | quote -%}
-{%- set _preset_border = preset.border | quote -%}
+{%- set _preset_accent = ga_preset.accent | quote -%}
+{%- set _preset_foreground = ga_preset.foreground | quote -%}
+{%- set _preset_background = ga_preset.background | quote -%}
+{%- set _preset_important = ga_preset.important | quote -%}
+{%- set _preset_active = ga_preset.active | quote -%}
+{%- set _preset_inactive = ga_preset.inactive | quote -%}
+{%- set _preset_border = ga_preset.border | quote -%}
 
 {%- set _extras = [
-    ["graphics-x11-picom", "graphics-x11-compositor"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
-        ["picom", "--daemon"], false,
-    ),
-    ["hsetroot", "-solid", "'{}'".format(preset.background)],
+    hg_wm_compositor is true | ternary(["picom", "--daemon"], false),
+    ["hsetroot", "-solid", "'{}'".format(ga_preset.background)],
     ["xsetroot", "-cursor_name", "left_ptr"],
-    ["graphics-bar", "graphics-x11-polybar"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
-        ["polybar", "--quiet", "&"], false,
-    ),
-    ["graphics-x11-dunst", "graphics-notifications"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
-        ["dunst", "&"], false,
-    ),
+    hg_wm_bar is true | ternary(["polybar", "--quiet", "&"], false),
+    hg_wm_notify is true | ternary(["dunst", "&"], false),
     ["numlockx", "on"],
 ] -%}
 {# ["/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"] #}
@@ -44,9 +39,9 @@
 
 {%- macro _monitors_render() -%}
     {% set _acc = {"width": 0, "height": 0} -%}
-    {% set _dim = "width" if monitors.stack == "horizontal" else "height" -%}
+    {% set _dim = "width" if ga_monitors_stack == "horizontal" else "height" -%}
     {##}
-    {% for _mon_name, _mon in monitors.outputs.items() %}
+    {% for _mon_name, _mon in ga_monitors.items() %}
         {
             name = "{{ _mon_name }}",
             index = {{ loop.index0 }},
@@ -59,9 +54,9 @@
 
 {%- set _tags_map = {"index": 0} %}
 {%- macro _tags_render() -%}
-    {% for _mon_name, _mon in monitors.outputs.items() %}
+    {% for _mon_name, _mon in ga_monitors.items() %}
         {% set _is_first = loop.first %}
-        {% set _prefix = _mon_name | workspace_prefix(_is_first) %}
+        {% set _prefix = _mon_name | ga_workspace_prefix(_is_first) %}
         {% for _ in range(_mon.workspaces) %}
             {% set _name = "{}{}".format(_prefix, loop.index) %}
             {##}
@@ -76,8 +71,8 @@
             {name = {{ _name | quote }}, next = {{ _next | quote }}, prev = {{ _prev | quote }}},
         {% endfor %}
         {##}
-        {% if _is_first %}
-            {name = "{{ wms.scratch }}"},
+        {% if _mon.scratch is defined %}
+            {name = "{{ _mon.scratch }}"},
         {% endif %}
     {% endfor %}
 {%- endmacro -%}
@@ -105,13 +100,15 @@
 
 {%- macro _tags_keybinds_render() -%}
     {% set _index_to_mon = [] %}
-    {% for _mon_name, _mon in monitors.outputs.items() %}
+    {% for _mon_name, _mon in ga_monitors.items() %}
         {% set _ = _index_to_mon.extend([_mon_name] * _mon.workspaces) %}
     {% endfor %}
     {##}
-    {% for _bind in keys
-        | parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
+    {% for _bind in (
+        keys
+        | ga_parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
+    )[:_tags_map.index]
     %}
         [{{ _bind.line | quote }}] = {
             "and",
@@ -120,15 +117,17 @@
         },
     {% endfor %}
 
-    {% for _bind in keys
-        | parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
-        | selectattr("mode_name", "eq", "wm")
+    {% for _bind in (
+        keys
+            | ga_parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
+            | selectattr("mode_name", "eq", "wm")
+    )[:_tags_map.index]
     %}
         [{{ _bind.line | quote }}] = {"move", "{{ _tags_map[loop.index0].name }}"},
     {% endfor %}
 
     {% for _bind in keys
-        | parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
+        | ga_parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
         [{{ _bind.line | quote }}] = {"focus_nth", "{{ loop.index0 }}"},
@@ -138,16 +137,9 @@
 {%- macro _scratch() -%}
     "or",
         "OR", "and",
-            "AND", "compare", "tags.focus.name", "=", "{{ wms.scratch }}",
+            "AND", "compare", "tags.focus.name", "=", "{{ _scratch_name }}",
             "AND", "use_previous",
-        "OR", "use", "{{ wms.scratch }}",
-{%- endmacro -%}
-
-{%- macro _netns() -%}
-    "spawn", "rofi",
-        "-show", "drun",
-        "-display-drun", "drun (network namespaced)",
-        "-run-command", "vopono exec -- {cmd}",
+        "OR", "use", "{{ _scratch_name }}",
 {%- endmacro -%}
 
 {%- macro _screenshot_clip() %}
@@ -156,9 +148,8 @@
 {%- endmacro -%}
 
 {%- macro _screenshot_file() -%}
-    {% set _xdg_pictures = "{}/{}".format(users.user.home, users.user.xdg.pictures) %}
     "spawn", "bash", "-c",
-        "shotgun -f png -g $(hacksaw) '{{ _xdg_pictures }}/shot-$(date +%s).png'",
+        "shotgun -f png -g $(hacksaw) '{{ fa_dir_xdg.pictures }}/shot-$(date +%s).png'",
 {%- endmacro -%}
 
 {%- macro _cut() -%}
@@ -255,11 +246,12 @@
     ("move", "move"),
     ("zoom", "zoom"),
     ("resize", "resize"),
-] + ["graphics-rofi", "graphics-app-launcher"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+     | ternary(
+        ["picom", "--daemon"], false,
+    ),
+] + hg_wm_launcher is true | ternary(
     [("run", "spawn rofi -show drun"), ("windows", "spawn rofi -show window")], [],
-) + ["env-netns", "env-vopono"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
-    [("netns", _netns)], [],
-) + ["graphics-notifications", "graphics-x11-dunst"] | is_tagged(ansible_run_tags, ansible_skip_tags) | ternary(
+) + hg_wm_notify is true | ternary(
     [("notifications", _notifications)], [],
 ) -%}
 
@@ -283,7 +275,7 @@
             }},
         {% else %}
             [{{ _line }}] = {
-                {{ _action() | relative_indent(times=5, **_indent) }}
+                {{ _action() | aa_relindent(times=5, **_indent) }}
             },
         {% endif %}
     {% endfor %}
@@ -295,7 +287,7 @@ local config = {
     debug = nil,
 
     extra = {
-        {{ _extras_render() | relative_indent(times=2, **_indent) }}
+        {{ _extras_render() | aa_relindent(times=2, **_indent) }}
     },
 
     xresources = {
@@ -316,17 +308,17 @@ local config = {
     },
 
     monitors = {
-        {{ _monitors_render() | relative_indent(times=2, **_indent) }}
+        {{ _monitors_render() | aa_relindent(times=2, **_indent) }}
     },
 
     tags = {
-        {{ _tags_render() | relative_indent(times=2, **_indent) }}
+        {{ _tags_render() | aa_relindent(times=2, **_indent) }}
     },
 
     settings = {
         auto_detect_monitors = false,
         auto_detect_panels = true,
-        
+
         default_direction_external_only = true,
         default_frame_layout = "max",
         focus_crosses_monitor_boundaries = false,
@@ -400,15 +392,15 @@ local config = {
         --
         -- Tags bindings
         --
-        {{ _tags_keybinds_render() | relative_indent(times=2, **_indent) }}
+        {{ _tags_keybinds_render() | aa_relindent(times=2, **_indent) }}
         --
         -- Other bindings
         --
-        {{ _keybinds_render(_common_keybinds, ["wm"]) | relative_indent(times=2, **_indent) }}
+        {{ _keybinds_render(_common_keybinds, ["wm"]) | aa_relindent(times=2, **_indent) }}
         --
         -- Extra (bare) bindings
         --
-        {{ _keybinds_render(_extra_keybinds, ["bare"]) | relative_indent(times=2, **_indent) }}
+        {{ _keybinds_render(_extra_keybinds, ["bare"]) | aa_relindent(times=2, **_indent) }}
     },
 
     rules = {

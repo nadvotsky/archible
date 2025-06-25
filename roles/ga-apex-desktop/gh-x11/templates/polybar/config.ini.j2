@@ -1,0 +1,296 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- set _fonts = [
+    {
+        "name": "sans-serif:style=semibold",
+        "size": ga_fonts_sans_sz_medium | ga_scale(ga_scaling),
+        "offset": ga_fonts_sans_off_medium | ga_scale(ga_scaling),
+    },
+    {
+        "name": ga_fonts_icon,
+        "size": ga_fonts_icon_sz_medium | ga_scale(ga_scaling),
+        "offset": ga_fonts_icon_off_medium | ga_scale(ga_scaling),
+    }
+] -%}
+
+{%- set _modules_left = ["cpu", "ram", "swap", "fs", "uptime"] -%}
+{%- set _modules_center = ["time"] -%}
+{%- set _modules_right = ["player", "volume", "keyboard", "netns", "tray"] -%}
+
+{#
+    A bug workaround when format-prefix-padding is set to pixels or points,
+    then border-size pixels are drawn to the left.
+
+    Therefore, spacing is used instead. It is not precise though.
+#}
+{%- set _spacing_text = ga_space_small | ga_scale(ga_scaling) -%}
+{%- set _spacing_icon = (ga_space_small * 2) | ga_scale(ga_scaling) -%}
+
+{%- set _spacing_border = "{}px".format([ga_space_thin | ga_scale(ga_scaling), 1] | max) -%}
+{%- set _spacing_medium = "{}px".format(ga_space_medium | ga_scale(ga_scaling)) -%}
+
+{%- set _bar_height = "{}px".format(
+    (_fonts | map(attribute="size") | max) + (ga_space_medium | ga_scale(ga_scaling))
+) -%}
+
+{#
+    Zero-width space.
+#}
+{%- set _icon_empty = "\u200B" -%}
+{%- set _icon_warn = "\uf071" -%}
+{%- set _icon_scratch = "\uf044" -%}
+
+{%- macro _fonts_render() -%}
+    {% for _font in _fonts %}
+        font-{{ loop.index0 }} = "{{ _font.name }}:pixelsize={{ _font.size }};{{ _font.offset }}"
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _modules_render() -%}
+    modules-left = {{ _modules_left | join(" ") }}
+    {##}
+    {% set _ws = [] %}
+    {% for _mon_name in ga_monitors %}
+        {% set _ = _ws.append("workspaces-{}".format(_mon_name)) %}
+        {% if loop.first %}
+            {% set _ = _ws.extend(_modules_center) %}
+        {% endif %}
+    {% endfor %}
+    modules-center = {{ _ws | join(" ") }}
+    {##}
+    modules-right = {{ _modules_right | join(" ") }}
+{%- endmacro -%}
+
+{%- macro _section_warn(_warn, _format_prefix, _color) %}
+    {% if _warn %}
+        {{ _format_prefix }}-suffix = "{{ _icon_warn }}"
+        {{ _format_prefix }}-suffix-background = "{{ _color }}"
+        {{ _format_prefix }}-suffix-padding = {{ _spacing_icon }}
+    {% else %}
+        {{ _format_prefix }}-suffix = "{{ _icon_empty }}"
+        {{ _format_prefix }}-suffix-background = "{{ _color }}"
+        {{ _format_prefix }}-suffix-padding-left = {{ _spacing_border }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _section_render(_icon, _ns = "", _important = false, _warn = false, _mini = false) -%}
+    {% set _literal = "\\U" + _icon.rjust(8, "0") %}
+    {% set _character = _literal.encode().decode("unicode-escape") %}
+    {##}
+    {% set _format_prefix = ["format", _ns] | select("ne", "") | join("-") %}
+    {% set _label_prefix = ["label", _ns] | select("ne", "") | join("-") %}
+    {% set _color = ga_preset.important if _important else ga_preset.active %}
+    {##}
+    {% if _mini %}
+        {{ _format_prefix }} = "{{ _character }}"
+        {{ _format_prefix }}-background = "{{ _color }}"
+        {{ _format_prefix }}-padding = {{ _spacing_icon }}
+    {% else %}
+        {{ _format_prefix }}-prefix = "{{ _character }}"
+        {{ _format_prefix }}-prefix-background = "{{ _color }}"
+        {{ _format_prefix }}-prefix-padding = {{ _spacing_icon }}
+        {{ _format_prefix }}-underline = "{{ _color }}"
+        {{ _format_prefix }}-overline = "{{ _color }}"
+        {##}
+        {{ _section_warn(_warn, _format_prefix, _color) | aa_relindent(times=2, **_indent) }}
+        {##}
+        {{ _label_prefix }}-padding = {{ _spacing_text }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _workspaces_icons(_primary, _mon_name, _ws) -%}
+    {% set _ns = namespace() %}
+    {% for _i in range(_ws) %}
+        icon-{{ _i }} = {{ _mon_name | workspace_prefix(_primary) }}{{ _i + 1 }};{{ _i + 1 }}
+        {% set _ns.i = _i %}
+    {% endfor %}
+    {##}
+    {% if _primary %}
+        icon-{{ _ns.i + 1 }} = {{ wms.scratch }};{{ _icon_scratch }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _workspaces_monitors(_primary, _mon_name, _ws) -%}
+    {{ _section_render(_icon="f1104" if _primary else "f0ddc") | aa_relindent(times=1, **_indent) }}
+
+    {{ _workspaces_icons(_primary, _mon_name, _ws) | aa_relindent(times=1, **_indent) }}
+{%- endmacro -%}
+
+{%- macro _workspaces_styles() %}
+    {% for i in ["active", "empty", "occupied", "urgent"] %}
+        label-{{ i }} = "%icon%"
+        label-{{ i }}-padding = {{ _spacing_text }}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _workspaces_render() -%}
+    {% for _mon_name, _mon in monitors.outputs.items() %}
+        [module/workspaces-{{ _mon_name }}]
+        type = internal/xworkspaces
+
+        {{ _workspaces_monitors(loop.first, _mon_name, _mon.workspaces) | aa_relindent(times=2, **_indent) }}
+        icon-default = ""
+
+        label-active-foreground = "{{ ga_preset.accent }}"
+        {{ _workspaces_styles() | aa_relindent(times=2, **_indent) }}
+        label-urgent-foreground = "{{ ga_preset.important }}"
+        {##}
+        {% if not loop.last %}{{ "\n\n" }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+[bar/mybar]
+wm-name = POLYBAR
+bottom = false
+
+fixed-center = false
+
+height = {{ _bar_height }}
+border-size = {{ _spacing_medium }}
+padding = {{ _spacing_medium }}
+module-margin = {{ _spacing_medium }}
+line-size = {{ _spacing_border }}
+
+background = "{{ ga_preset.inactive }}"
+border-color = "{{ ga_preset.inactive }}"
+foreground = "{{ ga_preset.foreground }}"
+
+{#
+    Setting dpi to 72 to prevent polybar from scaling font sizes.
+#}
+dpi-x = 72
+dpi-y = 72
+
+{{ _fonts_render() | aa_relindent() }}
+
+{{ _modules_render() | aa_relindent() }}
+
+
+[module/cpu]
+type = internal/cpu
+
+{{ _section_render(_icon="f4bc", _mini=true) | aa_relindent() }}
+
+{{ _section_render(_icon="f4bc", _ns="warn", _important=true, _mini=true) | aa_relindent() }}
+
+warn-percentage = 90
+interval = 10
+
+
+[module/ram]
+type = internal/memory
+
+{{ _section_render(_icon="efc5") | aa_relindent() }}
+
+{{ _section_render(_icon="efc5", _ns="warn", _important=true, _warn=true) | aa_relindent() }}
+
+format = <label>
+format-warn = <label-warn>
+label = %gb_used%
+label-warn = %gb_used%
+warn-percentage = 90
+interval = 10
+
+
+[module/swap]
+type = internal/memory
+
+{{ _section_render(_icon="f0fb7") | aa_relindent() }}
+
+{{ _section_render(_icon="f0fb7", _ns="warn", _important=true, _warn=true) | aa_relindent() }}
+
+format = <label>
+label = %gb_swap_used%
+interval = 20
+
+
+[module/fs]
+type = internal/fs
+
+{{ _section_render(_icon="f413", _ns="mounted") | aa_relindent() }}
+
+mount-0 = /
+label-mounted = %used% / %total%
+interval = 60
+
+
+[module/uptime]
+type = custom/script
+
+{{ _section_render(_icon="f1ae1") | aa_relindent() }}
+
+exec = "{{ ga_uptime }}"
+interval = 60
+
+
+[module/time]
+type = internal/date
+
+{{ _section_render(_icon="e383") | aa_relindent() }}
+
+date = "%a %b %d %r"
+date-alt = "%F %r %Z"
+
+
+{{ _workspaces_render() | aa_relindent() }}
+
+
+[module/player]
+type = custom/script
+
+{{ _section_render(_icon="ec1b") | aa_relindent() }}
+
+exec = "playerctl metadata --format='{{ ["{{artist}}", "\u2012", "{{trunc(title, 10)}}"] | join(" ") }}'"
+click-left = "playerctl next"
+click-right = "playerctl previous"
+double-click-left = "playerctl play-pause"
+interval = 1
+
+
+[module/volume]
+type = internal/pulseaudio
+
+{{ _section_render(_icon="f0580", _ns="volume") | aa_relindent() }}
+
+{{ _section_render(_icon="f0581", _ns="muted", _important=true) | aa_relindent() }}
+
+format-volume = "<label-volume>"
+label-muted = "Muted"
+use-ui-max = true
+interval = 2
+
+
+[module/keyboard]
+type = internal/xkeyboard
+
+{{ _section_render(_icon="f11c") | aa_relindent() }}
+
+format = "<label-indicator><label-layout>"
+label-indicator-on = "%icon%"
+label-indicator-on-padding-left = {{ _spacing_text }}
+label-indicator-on-foreground = "{{ ga_preset.accent }}"
+indicator-icon-0 = caps lock;;{{ "\U000f0632" }}
+indicator-icon-1 = num lock;;{{ "\uf4f7" }}
+label-layout = %layout%
+label-layout-padding = {{ _spacing_text }}
+
+
+[module/netns]
+type = custom/script
+
+{{ _section_render(_icon="f0484") | aa_relindent() }}
+
+{{ _section_render(_icon="f0c9c", _ns="fail", _mini=true) | aa_relindent() }}
+
+exec = "{{ ga_netns }}"
+
+
+{% endif %}
+{##}
+{##}
+[module/tray]
+type = internal/tray
+
+tray-size = 100%
+tray-foreground = "{{ ga_preset.active }}"
+tray-spacing = {{ _spacing_text }}
