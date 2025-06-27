@@ -1,0 +1,213 @@
+---
+- name: Configure hub restoration
+  tags: apex-env-hub-restore
+  block:
+    - name: Wipe hub state
+      foundation.files.install:
+      vars:
+        targets:
+          - dir: "{{ fa_dir_xdg.hub }}"
+            wipe: "{{ aa_wipe }}"
+            perms: "755:{{ fa_name }}:{{ fa_name }}"
+
+    - name: Restore hub from persist
+      foundation.persist.from:
+        persist: "{{ aa_persist }}"
+      vars:
+        archives:
+          - key: hub/store
+            dir: "{{ fa_dir_xdg.hub }}"
+            perms: "{{ ca_name }}:{{ ca_name }}"
+
+#
+# Notes and personal knowledge configuration.
+#
+# There are the following solutions:
+#
+#  sublime (https://www.sublimetext.com/):
+#   package: aur/pacman-custom
+#   advantages:
+#    + perf (startup + native)
+#    + config (part of other playbook)
+#    + format (markdown out-of-box)
+#   disadvantages:
+#    - collision (dictionary is not supposed to be enabled)
+#
+#  kate (https://kate-editor.org/):
+#   package: pacman (+aspell-en)
+#   advantages:
+#    + perf (startup + qt)
+#    + format (asciidoc)
+#    + feature (search, terminal, dictionary)
+#   disadvantages:
+#    - deps (kde)
+#    - config (katerc, kate, kde.org, katevirc, kate-externaltoolspluginsrc)
+#
+#  lite-xl (https://lite-xl.com/):
+#    package: pacman
+#    advantages:
+#     + perf (startup + sdl)
+#    disadvantages:
+#     - feature (few code highlighting)
+#     - feature (no dictionary)
+#
+#  obsidian (https://obsidian.md/):
+#   package: pacman
+#   advantages:
+#    + feature (drawing)
+#    + feature (cross-connection, search, dictionary, etc)
+#   disadvantages:
+#    - deps (electron)
+#    - config (requires .obsidian)
+#
+#  org-mode (https://orgmode.org/):
+#   package: pacman
+#   disadvantages:
+#    - deps (emacs stack)
+#
+#  mindforget (https://www.mindforger.com/):
+#   package: manual-build
+#   advantages:
+#    + perf (startup + qt)
+#   disadvantages:
+#    - feature (no 1-to-1 directory mapping)
+#
+#  vnote (https://app.vnote.fun/en_us/):
+#   package: aur
+#   advantages:
+#    + perf (startup + qt)
+#   disadvantages:
+#    - deps (electron + ui freezes)
+#
+#  ReText (https://github.com/retext-project/retext):
+#   package: pacman
+#   disadvantages:
+#    - feature (syntax highlighting, and others)
+#
+#  AsciidocFX (https://asciidocfx.com/):
+#   package: manual-jar
+#   disadvantages:
+#    - perf (slow + java)
+#    - deps (java + wayland complications)
+#
+#  TriliumNext (https://github.com/TriliumNext/Notes):
+#   package: aur
+#   advantages:
+#    + feature (drawing)
+#    + feature (mindmap, geomap, etc)
+#   disadvantages:
+#    - perf (electron)
+#    - feature (no 1-to-1 directory mapping)
+#
+#  logseq (https://logseq.com/):
+#   package: aur
+#   advantages:
+#    + feature (navigation through nested lists workflowy-like)
+#   disadvantages:
+#    - feature (messed-up app navigation with today's note/favorites, ...)
+#
+#  siyuan (https://github.com/siyuan-note/siyuan):
+#  anytype (https://anytype.io/):
+#   package: aur
+#   disadvantages:
+#    - feature (rather fancy like notion)
+#    - feature (no 1-to-1 directory mapping)
+#
+#  Zettlr (https://www.zettlr.com/):
+#   package: pacman
+#   disadvantages:
+#    - deps (electon)
+#    - deps (pandoc with 800M+ deps)
+#    - feature (very basic editing)
+#
+#  Foam (https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode):
+#   package: vscode
+#   disadvantages:
+#    - deps (tinkering around vscode)
+#    - feature (only few cross-connection)
+#
+#  joplin (https://joplinapp.org/):
+#   package: pacman
+#   disadvantages:
+#    - feature (strict notes-subnotes structure)
+#
+# - name: Configure notes application for hub
+#   tags: apps-env-hub-notes
+#   block:
+#     - name: Install obsidian packages
+#       foundation.system.packages:
+#         install:
+#           - obsidian
+
+#
+# Drawing configuration.
+#
+# There are the following solutions:
+#
+#  drawio (https://www.drawio.com/):
+#   package: pacman
+#   disadvantages:
+#    - deps (electron)
+#
+#  yed (https://www.yworks.com/products/yed):
+#   package: aur
+#   disadvantages:
+#    - deps (java, with wayland complications)
+#    - feature (fewer blocks, overall looks like visio 2005)
+#
+- name: Configure drawing applications
+  tags: apps-env-hub-draw
+  block:
+    - name: Install drawio packages
+      foundation.system.packages:
+        install:
+          - drawio-desktop
+
+    - name: Wipe drawio state
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_config }}/draw.io"
+
+#
+# Time tracking configuration.
+#
+# There are the following solutions:
+#
+#  klog (https://github.com/kubernetes/klog):
+#   package: aur
+#   advantages:
+#    + feature (1-to-1 directory files, plain format)
+#   disadvantages:
+#    - feature (same task requires copy-paste)
+#    - feature (no advanced processing such as cleanup, although has json)
+#
+# bartib (https://github.com/nikolassv/bartib):
+#  package: aur
+#  advantages:
+#   - feature (shell completions)
+#   - feature (overall okay and simple)
+#  disadvantages:
+#   - feature (no 1-to-1 directory files)
+#
+#  hours (https://github.com/dhth/hours):
+#   package: aur
+#   advantages:
+#    + feature (tui)
+#   disadvantages:
+#    - feature (locked in tui)
+#
+# timetrace (https://github.com/dominikbraun/timetrace):
+#  package: aur
+#  disadvantages:
+#   - feature (very alike docker cli, at the same time no advanced parseable formatting)
+#
+- name: Configure time tracking applications
+  tags: apps-hub-time
+  block:
+    - name: Install klog
+      foundation.system.packages:
+      vars:
+        install:
+          - klog-time-tracker-bin

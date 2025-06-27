@@ -1,0 +1,33 @@
+---
+- name: Configure SSH
+  tags: apex-env-ssh-main
+  block:
+    - name: Install OpenSSH packages
+      foundation.system.packages:
+      vars:
+        install:
+          - openssh
+
+    - name: Disable OpenSSH server services
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - sshdgenkeys.service
+          - sshd.service
+        state:
+          disabled: true
+
+    - name: Render OpenSSH client configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ users.user.home }}/.ssh"
+        perms: "700:600:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config
+            template: ssh/config.j2

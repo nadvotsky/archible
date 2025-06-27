@@ -1,0 +1,168 @@
+---
+- name: Configure vault user layout
+  tags: apex-env-vault-layout
+  block:
+    - name: Resolve password store user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        root: "{{ ha_vault_user_layout }}"
+      register: _hi_ulayout
+
+#
+# Personal vault/keystore configuration.
+#
+# There are the following solutions:
+#
+#  HashiCorp Vault (https://www.hashicorp.com/en/products/vault):
+#   package: pacman
+#   advantages:
+#    + webui
+#    + cli
+#   disadvantages:
+#    - setup (complicated orchestration)
+#    - ram (>200M)
+#    - service
+#
+#  KeepassXC (https://keepassxc.org/):
+#   package: pacman
+#   advantages:
+#    + gui
+#    + cli
+#   disadvantages:
+#    - cli (lacks additional field)
+#    - ram (GUI >200M)
+#
+#  VaultWarden (https://github.com/dani-garcia/vaultwarden):
+#   package: pacman
+#   advantages:
+#    + cli
+#    + ram (idle 8M, web 36M, possibly can be tuned more)
+#   disadvantages:
+#    - cli (additional package https://archlinux.org/packages/extra/x86_64/rbw/)
+#    - cli (additional sync layer)
+#    - cli (client_api)
+#    - cli (fields are rather inconvenient)
+#    - service
+#
+#  pass (https://www.passwordstore.org/):
+#   package: pacman
+#   advantages:
+#    + layout (directory)
+#    + backend (gpg)
+#    + addon (dmenu integration)
+#    + addon (rofi-pass)
+#    + addon (qtpass)
+#    + addon (ripasso)
+#    + addon (tessen)
+#   disadvantages:
+#    - bash
+#    - otp (bash pass-otp only)
+#
+#  gopass (https://github.com/gopasspw/gopass):
+#   package: pacman
+#   advantages:
+#    + go
+#    + otp
+#    + compat (pass)
+#
+#  prs (https://github.com/timvisee/prs):
+#   package: github-release/aur-source
+#   advantages:
+#    + $EDITOR (for entries editing)
+#    + compat (pass)
+#   disadvantages:
+#    - features (cool alternative, but focused on other aspects)
+#
+#  kbs2 (https://github.com/woodruffw/kbs2):
+#   package: aur
+#   advantages:
+#    + backend (age)
+#   disadvantages:
+#    - cli (www/my is not supported)
+#    - layout (environment + unstructured hierarchy)
+#
+#  kure (https://github.com/GGP1/kure):
+#   package: github-release
+#   advantages:
+#    + feature (2fa, rotation, backup, session)
+#   disadvantages:
+#    - cli (www/my is not supported)
+#
+#  scrt (https://github.com/loderunner/scrt):
+#   package: github-release
+#   disadvantages:
+#    + unmaintained
+#    + docs (including error messages)
+#
+#  rooster (https://github.com/conradkleinespel/rooster):
+#   package: aur-source
+#
+#  hash (https://github.com/hrishiksh/hash):
+#   package: github-release
+#   advantages:
+#    + feature (interactive, but focused on other aspects)
+#   disadvantages:
+#    - layout (no folders)
+#
+- name: Configure vault
+  tags: apex-env-vault-main
+  block:
+    - name: Install vault packages
+      foundation.system.packages:
+        install:
+          - gopass
+          - qtpass
+          - ripasso
+
+    - name: Render gopass configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/gopass"
+        perms: "755:644:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config
+            template: gopass/config.j2
+
+    - name: Wipe vault packages state
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_cache }}/gopass"
+          - dir: "{{ fa_dir_config }}/ripasso"
+          - dir: "{{ fa_dir_config }}/IJHack"
+
+- name: Configure vault restoration
+  tags: apex-env-vault-restore
+  block:
+    - name: Restore vault from persist
+      foundation.persist.from:
+        persist: "{{ aa_persist }}"
+      vars:
+        archives:
+          - key: vault/store
+            dir: "{{ _hi_ulayout.root }}"
+            perms: "{{ ca_name }}:{{ ca_name }}"
+
+    - name: Retrieve vault gpg key information
+      foundation.persist.gpg:
+        home: "{{ fa_dir_home }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        keys:
+          - "{{ hi_gpg_key }}"
+      register: _hi_gpg_key
+
+    - name: Render vault key identifier
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: "{{ _hi_ulayout.root }}/.gpg-id"
+            content: "{{ _hi_gpg_key.keys[hi_gpg_key].fingerprint }}"

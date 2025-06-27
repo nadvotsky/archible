@@ -1,0 +1,25 @@
+with-keygrip
+with-subkey-fingerprint
+
+display-charset utf-8
+utf8-strings
+no-compress
+no-auto-key-locate
+no-auto-key-import
+no-auto-key-retrieve
+keyid-format short
+expert
+
+weak-digest SHA1
+disable-cipher-algo 3DES
+
+personal-cipher-preferences {{ hb_ciphers | join(" ") }}
+personal-digest-preferences {{ hb_digests | join(" ") }}
+personal-compress-preferences {{ hb_compressions | join(" ") }}
+s2k-digest-algo {{ hb_digests | first }}
+
+default-preference-list {{ (hb_digests + hb_ciphers + hb_compressions) | join(" ") }}
+
+photo-viewer viu %i
+list-options show-photos,show-keyring,show-usage,show-sig-expire
+verify-options show-photos

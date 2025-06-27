@@ -1,0 +1,298 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- set _font_size_absolute = ga_fonts_mono_sz_medium -%}
+{%- set _font_size_scaled = _font_size_absolute | ga_scale(ga_scaling) -%}
+
+{%- set _sep = ("|", " ") -%}
+{%- set _modifiers_map = {
+    "shift": "SHIFT",
+    "ctrl": "CTRL",
+    "alt": "ALT",
+} -%}
+{%- set _keys_map = {
+    "Left": "LeftArrow",
+    "Up": "UpArrow",
+    "Right": "RightArrow",
+    "Down": "DownArrow",
+} -%}
+{%- set _parse_kwargs = dict(
+    user_action=None,
+    keys=keys,
+    modifiers_map=_modifiers_map,
+    keys_map=_keys_map,
+    sep=_sep,
+    merge_shift=false,
+) -%}
+
+{%- set _keys = {
+    ("common"): [
+        ("paste", "PasteFrom(\"Clipboard\")"),
+    ],
+    ("term"): [
+        ("clear_all", "ResetTerminal"),
+        ("external", "ActivateCommandPalette"),
+        ("search", "Search(\"CurrentSelectionOrEmptyString\")"),
+        ("copy", "ActivateCopyMode"),
+    ],
+} -%}
+
+{%- macro _cycle_next_bind() -%}
+    (function(closure_index)
+        local modes = {"Cell", "Line", "Block", "SemanticZone"}
+
+        return wezterm.action_callback(function(win, pane)
+            local copy_action = closure_index == 0
+                and "ClearSelectionMode"
+                or {SetSelectionMode = modes[closure_index]}
+
+            win:perform_action(wezterm.action.CopyMode(copy_action), pane)
+
+            closure_index = closure_index == #modes and 0 or (closure_index + 1)
+        end)
+    end)(1),
+{%- endmacro -%}
+
+{%- set _keys_copy = {
+    ("term"): [
+        ("search", "CopyMode(\"EditPattern\")"),
+    ],
+    ("bare", "emacs", "common", "vim"): [
+        ("copy", "CopyTo(\"Clipboard\")"),
+
+        ("left", "CopyMode(\"MoveLeft\")"),
+        ("up", "CopyMode(\"MoveUp\")"),
+        ("right", "CopyMode(\"MoveRight\")"),
+        ("down", "CopyMode(\"MoveDown\")"),
+
+        ("left", {"subs": ["CopyMode(\"MoveLeft\")"] * 5, "many": true}),
+        ("up", {"subs": ["CopyMode(\"MoveUp\")"] * 5, "many": true}),
+        ("right", {"subs": ["CopyMode(\"MoveRight\")"] * 5, "many": true}),
+        ("down", {"subs": ["CopyMode(\"MoveDown\")"] * 5, "many": true}),
+
+        ("left", {"subs": "CopyMode(\"MoveBackwardWord\")", "word": true}),
+        ("word_prev", "CopyMode(\"MoveBackwardWord\")"),
+        ("right", {"subs": "CopyMode(\"MoveForwardWord\")", "word": true}),
+        ("word_next", "CopyMode(\"MoveForwardWord\")"),
+
+        ("up", {"subs": "CopyMode(\"MoveBackwardSemanticZone\")", "word": true}),
+        ("down", {"subs": "CopyMode(\"MoveForwardSemanticZone\")", "word": true}),
+
+        ("line_begin", "CopyMode(\"MoveToStartOfLineContent\")"),
+        ("line_begin_alt", "CopyMode(\"MoveToStartOfLine\")"),
+        ("line_end", "CopyMode(\"MoveToEndOfLineContent\")"),
+        ("file_begin", "CopyMode(\"MoveToScrollbackTop\")"),
+        ("file_end", "CopyMode(\"MoveToScrollbackBottom\")"),
+
+        ("enter", ["CopyTo(\"Clipboard\")", "CopyMode(\"ClearSelectionMode\")", "CopyMode(\"Close\")"]),
+        ("escape", ["CopyMode(\"ClearSelectionMode\")", "CopyMode(\"Close\")"]),
+        ("quit", ["CopyMode(\"ClearSelectionMode\")", "CopyMode(\"Close\")"]),
+        ("delete", "CopyMode(\"ClearSelectionMode\")"),
+
+        ("clear_all", "CopyMode(\"ClearPattern\")"),
+
+        ("select_swap", "CopyMode(\"MoveToSelectionOtherEnd\")"),
+
+        ("cycle_next", _cycle_next_bind),
+
+        ("pageup", "CopyMode(\"PageUp\")"),
+        ("pagedown", "CopyMode(\"PageDown\")"),
+        ("pageup_half", "CopyMode({MoveByPage = -0.5})"),
+        ("pagedown_half", "CopyMode({MoveByPage = 0.5})"),
+    ],
+} -%}
+
+{%- set _keys_search = {
+    ("term"): [
+        ("search", "CopyMode(\"AcceptPattern\")"),
+    ],
+    ("bare", "emacs", "common", "vim"): [
+        ("quit", "CopyMode(\"Close\")"),
+        ("escape", "CopyMode(\"Close\")"),
+
+        ("copy", "CopyTo(\"Clipboard\")"),
+
+        ("clear_all", "CopyMode(\"ClearPattern\")"),
+        ("search_next", "CopyMode(\"NextMatch\")"),
+        ("search_prev", "CopyMode(\"PriorMatch\")"),
+        ("cycle_next", "CopyMode(\"CycleMatchType\")"),
+    ]
+} -%}
+
+{%- macro _binds_render(_actions_map, _filter=None) -%}
+    {% set _generator = keys | ga_parse_binds(
+        actions_map=_actions_map,
+        modifiers_map=_modifiers_map,
+        keys_map=_keys_map,
+        sep=_sep,
+        merge_shift=false,
+    ) %}
+
+    {% for _bind in (
+        (_generator | selectattr("mode_name", "in", _filter)) if _filter else generator
+    ): %}
+        {% set _key = _bind.key %}
+        {% set _mods =  _bind.modifiers or "NONE" %}
+        {% set _action = _bind.action.subs %}
+        {##}
+        {% if _action is string %}
+            {key = "{{ _key }}", mods = "{{ _mods }}", action = wezterm.action.{{ _action }}},
+        {% elif _action is iterable %}
+            {
+                key = "{{ _key }}", mods = "{{ _mods }}", action = wezterm.action.Multiple({
+                {% for _line in _action %}
+                    wezterm.action.{{ _line }},
+                {% endfor %}
+                }),
+            },
+        {% else %}
+            {
+                key = "{{ _key }}", mods = "{{ _mods }}", action = {{ _action() | aa_relindent(times=4, **_indent) }}
+            },
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _ansi_render(_colors) -%}
+    {
+    {% for _c in _colors %}
+        "{{ _c }}",
+    {% endfor %}
+    }
+{%- endmacro -%}
+
+
+local wezterm = require("wezterm")
+
+function configure_look(config)
+    -- config.front_end = "WebGpu"
+    config.bold_brightens_ansi_colors = "No"
+    config.animation_fps = 20
+    config.adjust_window_size_when_changing_font_size = false
+
+    config.enable_tab_bar = false
+    config.use_ime = false
+    config.hide_mouse_cursor_when_typing = false
+    config.default_cursor_style = "SteadyBar"
+
+    config.enable_scroll_bar = true
+    config.alternate_buffer_wheel_scroll_speed = 4
+    config.bypass_mouse_reporting_modifiers = "ALT"
+
+    config.audible_bell = "Disabled"
+    config.visual_bell = {
+        fade_in_function = 'Linear',
+        fade_in_duration_ms = 50,
+        fade_out_function = 'Linear',
+        fade_out_duration_ms = 50,
+    }
+
+    config.custom_block_glyphs = true
+    config.anti_alias_custom_block_glyphs = true
+
+    config.colors = {
+        foreground = "{{ ga_preset.foreground }}",
+        background = "{{ ga_preset.border }}",
+
+        cursor_bg = "{{ ga_preset.foreground }}",
+        cursor_border = "{{ ga_preset.foreground }}",
+        cursor_fg = "{{ ga_preset.accent }}",
+
+        selection_bg = "{{ ga_preset.active }}",
+        selection_fg = "{{ ga_preset.accent }}",
+
+        scrollbar_thumb = "{{ ga_preset.inactive }}",
+        compose_cursor = "{{ ga_preset.important }}",
+        visual_bell = "{{ ga_preset.active }}",
+
+        ansi = {{ _ansi_render(ga_ansi.normal) | aa_relindent(times=2, **_indent) }},
+        brights = {{ _ansi_render(ga_ansi.bright) | aa_relindent(times=2, **_indent) }},
+    }
+
+    config.command_palette_bg_color = "{{ ga_preset.background }}"
+    config.char_select_bg_color = "{{ ga_preset.background }}"
+    config.command_palette_fg_color = "{{ ga_preset.accent }}"
+    config.char_select_fg_color = "{{ ga_preset.accent }}"
+    config.ui_key_cap_rendering = "UnixLong"
+
+    config.font = wezterm.font_with_fallback({
+        {
+            family = "{{ ga_fonts_mono }}",
+            assume_emoji_presentation = false,
+        },
+        {
+            family = "{{ ga_fonts_icon }}",
+            assume_emoji_presentation = false,
+        },
+        {
+            family = "{{ ga_fonts_emoji }}",
+            assume_emoji_presentation = true,
+        },
+    })
+
+    config.allow_square_glyphs_to_overflow_width = "Always"
+    config.freetype_load_flags = "DEFAULT"
+    config.freetype_load_target = "HorizontalLcd"
+    config.freetype_interpreter_version = 40
+    config.harfbuzz_features = {"calt=0", "clig=0", "liga=0"}
+
+    if os.getenv("WAYLAND_DISPLAY") then
+        config.dpi = {{ ga_scaling_ethalon }}
+        config.font_size = {{ _font_size_scaled }}
+        config.char_select_font_size = {{ _font_size_scaled }}
+        config.command_palette_font_size = {{ _font_size_scaled }}
+    else
+        config.font_size = {{ _font_size_absolute }}
+        config.char_select_font_size = {{ _font_size_absolute }}
+        config.command_palette_font_size = {{ _font_size_absolute }}
+    end
+end
+
+function configure_binds(config)
+    --config.disable_default_mouse_bindings = true
+    config.disable_default_key_bindings = true
+    config.enable_kitty_keyboard = true
+
+    config.keys = {
+    {% for _selector, _k in _keys.items() %}
+        {{ _binds_render(_k, _selector) | aa_relindent(times=2, **_indent) }}
+    {% endfor %}
+    }
+
+    config.key_tables = {
+        copy_mode = {
+        {% for _selector, _k in _keys_copy.items() %}
+            {{ _binds_render(_k, _selector) | aa_relindent(times=3, **_indent) }}
+        {% endfor %}
+        },
+
+        search_mode = {
+        {% for _selector, _k in _keys_search.items() %}
+            {{ _binds_render(_k, _selector) | aa_relindent(times=3, **_indent) }}
+        {% endfor %}
+        }
+    }
+end
+
+function configure_misc(config)
+    config.canonicalize_pasted_newlines = "LineFeed"
+    config.default_prog = {"/usr/bin/nu", "--login", "--interactive"}
+
+    -- config.default_ssh_auth_sock = /run/user/1000/gnupg/S.gpg-agent.ssh
+    -- config.term = "xterm-direct"
+    config.set_environment_variables = {COLORTERM = "truecolor"}
+
+    config.log_unknown_escape_sequences = false
+    config.warn_about_missing_glyphs = false
+    config.check_for_updates = false
+    config.automatically_reload_config = false
+end
+
+function build_config(...)
+    local config = {}
+    for _, fn in ipairs({...}) do
+        fn(config)
+    end
+    return config
+end
+
+return build_config(configure_look, configure_binds, configure_misc)

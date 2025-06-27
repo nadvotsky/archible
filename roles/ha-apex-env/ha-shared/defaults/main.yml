@@ -1,0 +1,12 @@
+---
+ha_vault_user_layout:
+  default: "{{ fa_dir_home }}/.password-store"
+  #
+  # Some of the utility packages seem to not respect PASSWORD_STORE_DIR
+  #
+  xdg:
+    link: "{{ user_state }}/password-store"
+
+ha_gpg_user_layout:
+  default: "{{ fa_dir_home }}/.gnupg"
+  xdg: "{{ fa_dir_share }}/gnupg"

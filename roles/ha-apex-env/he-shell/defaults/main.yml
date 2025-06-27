@@ -1,0 +1,8 @@
+---
+he_shell_prompt: true
+he_shell_fetch: true
+he_shell_history: true
+he_shell_completion: true
+he_shell_navigator: true
+he_shell_vermen: true
+he_shell_gpg: true

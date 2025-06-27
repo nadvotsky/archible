@@ -1,0 +1,400 @@
+{%- set _spacing = " " -%}
+{%- set _preset = ga_preset | ga_parse_ansi(ga_ansi) -%}
+
+{%- macro _icon(_code) -%}
+    {%- if _code | length <= 4 -%}
+        \u{{ _code.zfill(4) }}
+    {%- else -%}
+        \U{{ _code.zfill(8) }}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro _justify(_expr, n=1) -%}
+    {{ _expr.center(_expr | length + (n * (_spacing | length) * 2)) }}
+{%- endmacro -%}
+
+{%- macro _conditional(_expr) -%}
+    ({{ _expr.removesuffix("\\") }})
+{%- endmacro -%}
+
+{% set _escape_table = "".maketrans({
+    "(": "\\\\(",
+    ")": "\\\\)",
+    "[": "\\\\[",
+    "]": "\\\\]",
+}) %}
+{%- macro _escape(_expr) -%}
+    {{ _expr.translate(_escape_table) }}
+{%- endmacro -%}
+
+{%- macro _multiline(_lines) -%}
+    {%- for _line in _lines -%}
+        {{- _line -}}{{- "\\" -}}
+        {%- if not loop.last -%}{{- "\n" -}}{%- endif -%}
+    {%- endfor -%}
+{%- endmacro -%}
+
+{%- macro _style_internal(_mapping) -%}
+    {% set _attrs = [] %}
+    {##}
+    {% for _name, _value in _mapping.items() %}
+        {% if _value %}
+            {% if _name in ("fg", "bg") %}
+                {% set _ = _attrs.append("{}:{}".format(_name, _value)) %}
+            {% else %}
+                {% set _ = _attrs.append(_name) %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    {##}
+    {{ _attrs | join(" ") }}
+{%- endmacro -%}
+
+{%- macro _style(
+    _inverted=False,
+    _bold=False,
+    _italic=False,
+    _underline=False,
+    _dimmed=False,
+    _blink=False,
+    _strikethrough=False,
+    _fg=None,
+    _bg=None
+) -%}
+    {{ 
+        _style_internal({
+            "inverted": _inverted,
+            "bold": _bold,
+            "italic": _italic,
+            "underline": _underline,
+            "dimmed": _dimmed,
+            "blink": _blink,
+            "strikethrough": _strikethrough,
+            "fg": _fg,
+            "bg": _bg,
+        }) | aa_relindent()
+    }}
+{%- endmacro -%}
+
+{%- macro _block_internal(_expr) -%}
+    {% set _style_rendered = _style(**kwargs) %}
+    {##}
+    [{{ _expr }}]({{ "$style" if _style_rendered | length == 0 else _style_rendered }})
+{%- endmacro -%}
+
+{%- macro _block(_expr) -%}
+    {{ _block_internal(_expr, **kwargs) | aa_relindent() }}
+{%- endmacro -%}
+
+{%- macro _arrow_render_internal(_expr) -%}
+    {% set _styles = kwargs %}
+    {% set _fg = _styles.pop("_fg", None) %}
+    {% set _bg = _styles.pop("_bg", None) %}
+    {##}
+    {{
+        _multiline([
+            _block(_icon("e0b0"), _inverted=True, _fg=_bg, **_styles),
+            _block(_expr, _inverted=True, _fg=_bg, _bg=_fg, **_styles),
+            _block(_icon("e0b0"), _fg=_bg, **_styles),
+        ])
+    }}
+{%- endmacro -%}
+
+{%- macro _arrow_render(_expr) -%}
+    {{ _arrow_render_internal(_justify(_expr), **kwargs) | aa_relindent() }}
+{%- endmacro -%}
+
+{%- macro _git_status_render() -%}
+    {% for _state, _subs in {
+        "conflicted": "conflict",
+        "ahead": None,
+        "behind": None,
+        "diverged": None,
+        "up_to_date": "uptodate",
+        "untracked": None,
+        "stashed": None,
+        "modified": None,
+        "staged": None,
+        "renamed": None,
+        "deleted": None,
+    }.items() %}
+        {{ _state }} = "{{ _spacing }}{{ _state if _subs is none else _subs }}"
+    {% endfor %}
+{%- endmacro -%}
+
+{%- set _os_format = "{}{}".format(_block(_justify(_icon("f303")), _fg=_preset.sharp.line), _spacing) -%}
+
+{%- set _username_hostname_style = {"_bold": True, "_fg": _preset.unimportant.line} -%}
+{%- set _username_hostname_format = "{}{}".format(
+    _block(
+        _escape(["[", "$username", _icon("eb3a"), "$hostname", "]"] | join(_spacing)),
+        **_username_hostname_style,
+    ),
+    _spacing,
+) -%}
+
+{%- set _directory_format = "$directory" -%}
+
+{%- set _git_bg = _preset.inactive.line -%}
+{%- set _git_style = dict(_bg=_git_bg, _fg=_preset.sharp.line) -%}
+{%- set _git_format = _conditional(
+    _arrow_render(
+        "($git_state{s})$git_branch{s}$git_status({s}$git_metrics)".format(s=_spacing),
+        _bg=_git_bg,
+    )
+) -%}
+
+{%- set langs = {
+    "bun": dict(label="Bun", icon="f2ef", bg="#fbf0df", fg="#000000"),
+    "c": dict(label="", icon="f0671", bg="#a4b4c7", fg="#2e3440"),
+    "cmake": dict(label="CMake", icon="f0537", bg="#003663", fg="#ffffff"),
+    "deno": dict(label="Deno", icon="f2ef", bg="#ffffff", fg="#000000"),
+    "dotnet": dict(label=".NET", icon="e77f", bg="#512bd4", fg="#000000"),
+    "golang": dict(label="Go", icon="e627", bg="#00acd7", fg="#ffffff"),
+    "gradle": dict(label="Gradle", icon="e660", bg="#02303a", fg="#ffffff"),
+    "java": dict(label="Java", icon="edaf", bg="#5381a0", fg="#e76e01"),
+    "julia": dict(label="Julia", icon="e624", bg="#9359a5", fg="#131313"),
+    "kotlin": dict(label="Kotlin", icon="e634", bg="#7f52ff", fg="#000000"),
+    "meson": dict(label="Meson", icon="eb9e", bg="#39207c", fg="#ffffff"),
+    "nim": dict(label="Nim", icon="e677", bg="#ffe953", fg="#ffffff"),
+    "nodejs": dict(label="Node.js", icon="ed44", bg="#539e43", fg="#ffffff"),
+    "python": dict(label="Python", icon="e73c", bg="#3b77a7", fg="#ffde58"),
+    "ruby": dict(label="Ruby", icon="e739", bg="#ab1400", fg="#ffffff"),
+    "rust": dict(label="Rust", icon="e7a8", bg="#f64b00", fg="#000000"),
+    "scala": dict(label="Scala", icon="e737", bg="#df311e", fg="#350502"),
+} -%}
+
+{%- macro _langs_format() -%}
+    {% set _acc = [] -%}
+    {% for _name in langs.keys() %}
+        {% set _ = _acc.append("${}".format(_name)) %}
+    {% endfor %}
+    {{ _acc | join("") }}
+{%- endmacro -%}
+
+{%- macro _langs_render() -%}
+    {% for _name, _props in langs.items() %}
+        [{{ _name }}]
+        disabled = false
+        symbol = "{{ _icon(_props.icon) }}"
+
+        format = """
+        {{
+            _arrow_render(
+                ["$symbol" + _spacing, _props.label] | reject("equalto", "") | join(_spacing),
+                _bold=True,
+                _bg=_props.bg,
+                _fg=_props.fg,
+            ) | aa_relindent(space=4, times=2)
+        }}
+        """
+        {% if not loop.last %}{{ "\n\n" }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- set _fill_format = "$fill" -%}
+
+{%- set _status_duration_bg = _preset.inactive.line -%}
+{%- set _status_duration_format = "{}{}".format(
+    _block(
+        _justify(["$status", "$cmd_duration"] | join(_spacing)),
+        _bg=_status_duration_bg,
+        _fg=_preset.sharp.line,
+    ),
+    _spacing,
+) -%}
+
+{%- set _time_format = "$time" -%}
+
+{%- set _line_break_format = "$line_break" -%}
+
+
+format = """
+{{
+    _multiline([
+        _os_format,
+        _username_hostname_format,
+        _directory_format,
+        _git_format,
+        _langs_format() | aa_relindent(),
+        _fill_format,
+        _status_duration_format,
+        _time_format,
+        _line_break_format,
+    ])
+}}
+"""
+add_newline = false
+
+
+[username]
+disabled = false
+show_always = true
+
+style_root = "{{ _style(_bold=True, _fg=_preset.important.line) }}"
+style_user = "{{ _style(**_username_hostname_style) }}"
+
+format = "{{ _block("$user") }}"
+
+
+[hostname]
+disabled = false
+trim_at = ""
+
+ssh_only = false
+
+style = "{{ _style(**_username_hostname_style) }}"
+format = "{{ _block("$hostname") }}"
+
+
+[directory]
+disabled = false
+truncate_to_repo = false
+
+truncation_length = 7
+truncation_symbol = "[...]/"
+use_os_path_sep = false
+
+read_only = "{{ _justify(_icon("e672")) }}"
+
+format = """
+{{ _arrow_render("$path$read_only", _bold=True, _bg=_preset.accent.line) }}
+"""
+
+
+[git_state]
+disabled = false
+
+format = """
+{{
+    _block(
+        "{}{}$state".format(_icon("f47f"), _spacing),
+        _italic=True,
+        _bold=True,
+        _bg=_git_bg,
+        _fg=_preset.important.line,
+    )
+}}
+"""
+
+[git_branch]
+disabled = false
+always_show_remote = false
+
+format = """
+{{
+    _multiline([
+        _block("on", **_git_style),
+        _block(
+            "{s}{i}{s}$branch".format(s=_spacing, i=_icon("e727")),
+            _bold=True,
+            _bg=_git_bg,
+            _fg=_preset.accent.line,
+        ),
+    ])
+}}
+"""
+
+[git_status]
+disabled = false
+
+{{ _git_status_render() | aa_relindent() }}
+
+format = """
+{{
+    _multiline([
+        _block("{}{}".format("while", _spacing), **_git_style),
+        _block(
+            [_icon("f0d04"), "$all_status$ahead_behind"] | join(_spacing),
+            _italic=True,
+            _bold=True,
+            _bg=_git_bg,
+            _fg=_preset.neutral.line,
+        ),
+    ])
+}}
+"""
+
+[git_metrics]
+disabled = false
+only_nonzero_diffs = true
+
+format = """
+{{
+    _multiline([
+        _conditional(
+            _multiline([
+                _block("with", **_git_style),
+                _conditional(
+                    _block("{}{}".format(_spacing, "+$added"), _bold=True, _bg=_git_bg, _fg=_preset.positive.line)
+                ),
+                _conditional(
+                    _block("{}{}".format(_spacing, "-$deleted"), _bold=True, _bg=_git_bg, _fg=_preset.negative.line)
+                ),
+            ])
+        )
+    ])
+}}
+"""
+
+
+{{ _langs_render() | aa_relindent() }}
+
+
+[fill]
+symbol = " "
+
+
+[status]
+disabled = false
+
+pipestatus = false
+map_symbol = false
+recognize_signal_code = false
+
+symbol = "{{
+    _block(
+        [_icon("f110a"), "", "exit status", "$int"] | join(_spacing),
+        _bold=True,
+        _bg=_status_duration_bg,
+        _fg=_preset.negative.line,
+    ) 
+}}"
+success_symbol = "{{
+    _block(
+        [_icon("f0995"), "", "exit status", "$int"] | join(_spacing),
+        _bold=True,
+        _bg=_status_duration_bg,
+        _fg=_preset.positive.line,
+    )
+}}"
+
+format = "$symbol"
+
+
+[cmd_duration]
+disabled = false
+min_time = 0
+show_milliseconds = true
+
+format = "{{
+    _block(
+        "in $duration",
+        _bold=True,
+        _bg=_status_duration_bg,
+        _fg=_preset.sharp.line,
+    )
+}}"
+
+
+[time]
+disabled = false
+use_12hr = true
+
+format = "{{ 
+    _block(
+        [_icon("f199f"), "$time"] | join(_spacing),
+        _bold=True,
+        _fg=_preset.unimportant.line,
+    )
+}}"

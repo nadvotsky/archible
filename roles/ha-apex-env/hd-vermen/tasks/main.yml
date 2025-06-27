@@ -1,0 +1,137 @@
+---
+#
+# Version management is a massive and complex topic. Most notably, there are:
+#
+# mise-en-place (https://mise.jdx.dev/getting-started.html):
+#  - uses own JVM index (https://github.com/jdx/rtx-java-metadata), but unsupported JVMs can still be linked manually
+#    (https://mise.jdx.dev/lang/java.html#idiomatic-version-files).
+#  - no dotnet support
+#
+# proto (https://moonrepo.dev/proto):
+#  - no JVM support
+#  - tricky local/global switch
+#  - ~2 times slower shell-hook than mice
+#  - non-XDG compliant ($HOME/.proto)
+#  - relatively poor tools support (dotnet does not set DOTNET_ROOT, same for rust, maybe others)
+#
+# vfox (https://vfox.dev/):
+#  - dotnet only parses latest releases, LTS versions are not available
+#  - python is not prebuilt, downloads pyenv instead
+#
+# VMR (https://github.com/gvcgo/version-manager):
+#  . basically conda
+#  - no graalvm
+#  - no shell hook
+#  - tricky cli, meant to be used interactively
+#
+# aqua (https://aquaproj.github.io/):
+#  + various small github packages
+#  - no big frameworks like Java, dotnet, etc
+#  - native, but still shim, no shell hook
+#
+# Conda-based (https://anaconda.org/anaconda/conda):
+#  - complicated distribution with its own runtime (such as libc)
+#  - dotnet is old
+#  - only OpenJDK
+#  - no libstdc++ and other advanced features
+#
+# Mamba/MicroMamba (https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html):
+#  - no local packages list, global environments instead
+#
+# Pixi (https://pixi.sh/latest/):
+#  - stores packages in-place
+#
+# Nix-based (https://nixos.org/):
+#  + a lot of packages
+#  - slow to build (3.5G+), as well as messes up the PATH
+#  - overall slower
+#
+# devbox (https://www.jetify.com/devbox):
+#  - 5 times slower startup (100ms vs 20ms) than mise
+#  - way too many environmental variables
+#
+# flox (https://flox.dev/):
+#  - complicated installation
+#
+# Dev Containers (https://containers.dev/):
+#  - highly dependant on IDE
+#  - startup + setup
+#
+# JetBrains Dev Containers (https://www.jetbrains.com/help/idea/connect-to-devcontainer.html):
+#  - downloads additional images 1.5G + 500M
+#  - uses a lot of RAM, because of IDE + gateway + container
+#  - problems with agent
+#
+# VSCode Containers (https://code.visualstudio.com/docs/devcontainers/containers):
+#  + relatively usable
+#  - VSCode is not always the best option for specific languages
+#
+# devpod (https://devpod.sh/):
+#  - launcher for other IDEs
+#  - ssh invocations
+#  - background jobs
+#
+# Docker-based:
+#  - slow autocomplete, debug with IDEs
+#
+# Distrobox (https://distrobox.it/):
+# Toolbx (https://containertoolbx.org/):
+#  - requires big images due to the x11, hardware accelaration
+#
+# importctl/systemd-nspawn (https://www.freedesktop.org/software/systemd/man/latest/systemd-nspawn.html):
+#  - requires provisioning
+#  - still has some workarounds as Docker does, e.g. /usr/local/ and .venv
+#  - still has some lag due to SSH
+#
+# General recommendations:
+#  - DO NOT modify environment variables globally, even if it is something safe
+#  - IDEs do not assign nor use JAVA_HOME
+#  - mise (vermen) does not use --global flag
+#
+# Instead make a use of different approach:
+#  - Make non-default user configuration, such as rust profile, or cmake toolchain
+#  - Use optional configuration via environment variables, such as RUSTFLAGS
+#
+# This would allow to make project-specific cofiguration, and thus:
+#  - Keep system-level program unaffected, such as makepkg
+#  - Keep these settings local-only instead of hardcoding in the /etc/environment, .profile or shell, easy to opt out
+#
+- name: Configure version manager
+  tags: apex-vermen-main
+  block:
+    - name: Install mise packages
+      foundation.system.packages:
+      vars:
+        install:
+          - mise
+
+    - name: Resolve mise user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        data:
+          default: "{{ fa_dir_share }}/mise"
+          dot:
+            link: "{{ fa_dir_home }}/.mise"
+
+        state:
+          default: "{{ fa_dir_state }}/mise"
+          dot:
+            link: "{{ fa_dir_home }}/.mise"
+
+        cache:
+          default: "{{ fa_dir_cache }}/mise"
+
+    - name: Render mise configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/mise"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config.toml
+            template: mise/config.toml.j2

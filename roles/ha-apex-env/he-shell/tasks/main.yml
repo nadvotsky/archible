@@ -1,0 +1,182 @@
+---
+- name: Configure terminal emulator
+  tags: apex-env-shell-terminal
+  block:
+    - name: Install wezterm packages
+      foundation.system.packages:
+      vars:
+        install:
+          - wezterm
+
+    - name: Render wezterm configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/wezterm"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./wezterm.lua
+            template: wezterm/wezterm.lua.j2
+
+- name: Configure prompt
+  tags: apex-env-shell-prompt
+  block:
+    - name: Install starship packages
+      foundation.system.packages:
+      vars:
+        install:
+          - starship
+
+    - name: Render starship configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/starship"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./starship.toml
+            template: starship/starship.toml.j2
+
+- name: Configure fetch
+  tags: apex-env-shell-fetch
+  block:
+    - name: Install fastfetch packages
+      foundation.system.packages:
+      vars:
+        install:
+          - fastfetch
+
+    - name: Render fastfetch configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/fastfetch"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config.jsonc
+            template: fastfetch/config.jsonc.j2
+
+- name: Configure history manager
+  tags: apex-env-shell-history
+  block:
+    - name: Install atuin packages
+      foundation.system.packages:
+      vars:
+        install:
+          - atuin
+
+    - name: Resolve atuin user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        state:
+          default: "{{ fa_dir_share }}/atuin"
+          dot: "{{ fa_dir_home }}/.atuin"
+      register: _he_atuin_layout
+
+    - name: Render atuin configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/atuin"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config.toml
+            template: atuin/config.toml
+
+- name: Configure shell completion
+  tags: apex-env-shell-completion
+  block:
+    - name: Install carapace packages
+      foundation.system.packages:
+      vars:
+        install:
+          - carapace-bin
+          - fish
+
+    - name: Wipe carapace state
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_config }}/carapace"
+          - dir: "{{ fa_dir_cache }}/carapace"
+
+- name: Configure directory navigator
+  tags: apex-env-shell-navigator
+  block:
+    - name: Install zoxide packages
+      foundation.system.packages:
+      vars:
+        install:
+          - zoxide
+
+    - name: Resolve zoxide user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        data:
+          default: "{{ fa_dir_share }}/zoxide"
+          dot:
+            link: "{{ fa_dir_home }}/.zoxide"
+      register: _he_zoxide_ulayout
+
+    - name: Apply zoxide dot layout
+      when: fa_layout == "dot"
+      become: true
+      foundation.user.env:
+        section: env
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        _ZO_DATA_DIR: "{{ _he_zoxide_ulayout.data }}"
+
+- name: Configure shell
+  tags: apex-env-shell-main
+  block:
+    - name: Install nushell packages
+      foundation.system.packages:
+      vars:
+        install:
+          - nushell
+          - vivid
+
+    - name: Retrieve default nushell config
+      ansible.builtin.uri:
+        url:
+          "https://raw.githubusercontent.com/nushell/nushell/refs/heads/main/\
+          crates/nu-utils/src/default_files/default_config.nu"
+        method: GET
+        return_content: true
+      register: _he_nushell_default
+
+    - name: Render nushell configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/nushell"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./env.nu
+            template: nushell/env.nu.j2
+
+          - file: ./config.nu
+            template: nushell/config.nu.j2

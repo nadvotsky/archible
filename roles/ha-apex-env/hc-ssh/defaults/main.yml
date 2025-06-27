@@ -1,0 +1,34 @@
+---
+hc_ciphers:
+  - aes128-gcm@openssh.com
+  - aes128-cbc
+  - aes128-ctr
+  - aes256-gcm@openssh.com
+  - aes256-cbc
+  - aes256-ctr
+  - chacha20-poly1305@openssh.com
+
+hc_public_keys:
+  - ecdsa-sha2-nistp256
+  - ssh-ed25519
+  - ssh-ed25519-cert-v01@openssh.com
+  - ecdsa-sha2-nistp256-cert-v01@openssh.com
+  - rsa-sha2-512
+  - rsa-sha2-512-cert-v01@openssh.com
+
+hc_key_exchangers:
+  - ecdh-sha2-nistp256
+  - curve25519-sha256
+  - curve25519-sha256@libssh.org
+  - sntrup761x25519-sha512@openssh.com
+  - diffie-hellman-group-exchange-sha256
+
+hc_message_auths:
+  - umac-64-etm@openssh.com
+  - umac-128-etm@openssh.com
+  - hmac-sha2-512-etm@openssh.com
+  - hmac-sha2-256-etm@openssh.com
+  - hmac-sha2-512
+  - hmac-sha2-256
+
+hc_gpg_agent: true

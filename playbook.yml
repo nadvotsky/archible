@@ -31,6 +31,7 @@
     - { role: ea-apex-system/ea-shared }
     - { role: fa-apex-user/fa-shared }
     - { role: ga-apex-desktop/ga-shared }
+    - { role: ha-apex-env/ha-shared }
 
     - { role: da-apex-prep/db-packaging, tags: apex-prep-packaging }
     - { role: da-apex-prep/dc-bootloader, tags: apex-prep-bootloader }
@@ -51,6 +52,13 @@
     - { role: ga-apex-desktop/gg-launcher, tags: apex-desktop-launcher }
     - { role: ga-apex-desktop/gh-x11, tags: apex-desktop-x11 }
     - { role: ga-apex-desktop/gi-wayland, tags: apex-desktop-wayland }
+
+    - { role: ha-apex-env/hb-gpg, tags: apex-env-gpg }
+    - { role: ha-apex-env/hc-ssh, tags: apex-env-ssh }
+    - { role: ha-apex-env/hd-vermen, tags: apex-env-vermen }
+    - { role: ha-apex-env/he-shell, tags: apex-env-shell }
+    - { role: ha-apex-env/hg-hub, tags: apex-env-hub }
+    - { role: ha-apex-env/hi-vault, tags: apex-env-vault }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

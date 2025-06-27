@@ -1,0 +1,43 @@
+---
+hb_keyserver: hkps://keys.openpgp.org
+hb_digests:
+  - SHA512
+  - SHA384
+  - SHA256
+  - SHA224
+hb_ciphers:
+  - AES
+  - AES-192
+  - AES-256
+  - CAMELLIA128
+  - CAMELLIA192
+  - CAMELLIA256
+  - CAST5
+  - IDEA
+hb_compressions:
+  - Uncompressed
+  - ZIP
+  - ZLIB
+
+hb_generate: "{{ omit() }}"
+  # <master-name>:
+  #   master:
+  #     name: Alice
+  #     comment: my key
+  #     email: something@.local
+  #     expire: 5y
+  #     password: qwerty
+  #     algo: ecdsa/dsa/rsa
+  #     hint: nistp256/2048/4096
+  #   subkeys:
+  #     <subkey-name>:
+  #       type: encr/auth/sigh
+  #       #
+  #       # SSH key priority for gpg-agent, negative number are highest priority.
+  #       #
+  #       priority: 100
+  #       algo: <>
+  #       hint: <>
+  #
+
+hb_ssh_agent: true
