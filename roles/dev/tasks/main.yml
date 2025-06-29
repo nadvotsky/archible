@@ -124,8 +124,3 @@
   ansible.builtin.import_tasks:
     file: langs/dotnet.yml
 
-- name: Configure containers
-  tags:
-    - dev-containers
-  ansible.builtin.import_tasks:
-    file: misc/containers.yml

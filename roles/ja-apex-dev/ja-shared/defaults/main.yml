@@ -1,0 +1,250 @@
+---
+ja_gitignore: |-
+  #
+  # https://git-scm.com/docs/gitignore
+  #
+
+  #
+  # Filesystems.
+  #
+  .DS_Store
+  [Dd]esktop.ini
+  Thumbs.db
+  $RECYCLE.BIN/
+
+  #
+  # VCS.
+  #
+  .snv
+  .bzr
+
+  #
+  # pixi, conda package management tool.
+  #
+  .pixi
+
+  #
+  # Editors.
+  #
+  #  vim
+  #
+  *.swp
+  *.swo
+  .vim
+  Session.vim
+  #
+  #  Helix.
+  #
+  .helix
+  #
+  #  Emacs.
+  #
+  .dir-locals.el
+  #
+  #  Eclipse.
+  #
+  .cproject
+  .project
+  #
+  #  VSCode.
+  #
+  .vscode
+  *.code-workspace
+  #
+  #  Sublime Text.
+  #
+  *.sublime-workspace
+  #
+  #  JetBrains.
+  #
+  .idea
+  *.iml
+  #
+  #  Zed.
+  #
+  .zed
+  #
+  # Visual Studio.
+  #
+  .settings
+  .vs
+
+  #
+  # Tools.
+  #
+  .valgrindrc
+  *.log
+  .task
+  .doit.db
+  mise.local.toml
+
+  #
+  # Env
+  #
+  .envrc
+  .direnv
+  .env
+  .env*.local
+
+  #
+  # Build artifacts.
+  #
+  /[Aa]rtifacts
+  /[Rr]elease
+  /_[Bb]uild
+  /[Bb]uild
+  /[Oo]ut
+  /[Tt]arget
+  /[Dd]ebug
+  /[Dd]ist
+  /[Dd]l
+  /[Ii]nst
+  /[Oo]bj
+  #
+  #  Executables, libraries, and packages.
+  #
+  *.out
+  *.app
+  *.exe
+  *.so
+  *.dylib
+  *.dll
+  *.app
+  *.zip
+  *.rar
+  *.tgz
+  *.tar.gz
+  *.tar.zst
+
+  #
+  # Caches.
+  #
+  .temp
+  .cache
+
+  #
+  # Lock files.
+  #
+  # Runtime data
+  *.pid
+  *.pid.lock
+
+  #
+  # Vendor.
+  #
+  # vendor
+
+  #
+  # FHS-like.
+  #
+  /tmp
+  /var
+  /run
+  /.local
+
+ja_editorconfig: |-
+  #
+  # https://editorconfig.org/
+  #
+
+  root = true
+
+  [*]
+  end_of_line = lf
+  charset = utf-8
+  insert_final_newline = true
+  trim_trailing_whitespace = true
+
+  [*.{yml,yaml,json}]
+  indent_style = space
+  indent_size = 2
+
+  [*.{xml}]
+  indent_style = space
+  indent_size = 2
+
+  [*.toml]
+  indent_style = space
+  indent_size = 4
+
+  [Makefile]
+  indent_style = tab
+  indent_size = 4
+
+  [*.{bat,cmd}]
+  end_of_line = crlf
+  indent_style = tab
+  indent_size = 4
+
+  [*.ps1]
+  indent_style = spaces
+  indent_size = 4
+
+  [*.{sh,bash,zsh}]
+  indent_style = spaces
+  indent_size = 2
+
+  [*.{nushell,nsh,xonsh,xsh,elvish,esh}]
+  indent_style = spaces
+  indent_size = 4
+
+ja_readme: |-
+  ## Markdown Cheatsheet
+
+  ### Text
+
+  Italics, with *asterisks* or _underscores_ (asterisks preferred).
+  Strong emphasis, aka bold, with **asterisks** or __underscores__ (asterisks preferred).
+  Combined emphasis with **asterisks and _underscores_**.
+  Strikethrough, with ~~two tildes~~.
+
+  > :white_check_mark: Block quotes
+  >
+  > :x: Will not work
+  >
+  > :heavy_exclamation_mark: Do not
+  >
+  > :warning: Might not
+
+  ### Link
+
+  <https://www.gnu.org>
+
+  [Inline-style link](https://www.gnu.org)
+
+  [Inline-style link with title](https://www.gnu.org "GNU.org")
+
+  [Anchor-link](#text)
+
+  [Relative reference to a file](./src/main.rs)
+
+  [Reference-style link][gnu-org]
+
+  [gnu-org]: <https://www.gnu.org> "GNU.org"
+
+  ### List
+
+  1. **First**: Ordered list item
+  2. **Another**: Item
+      * Unordered sub-list.
+  1. Actual numbers don't matter, just that it's a number
+      1. Ordered sub-list
+  4. And another item.
+
+  * Unordered list can use asterisks (preferred)
+
+  - Or minuses
+
+  + Or pluses
+
+  ### Code
+
+  ```rust
+  let mut numbers = vec![1, 2, 3]
+  ```
+
+  ### Tables
+
+  | Left Alignment | Center Alignment | Right Alignment |
+  | :------------- | :--------------: | --------------: |
+  | Left Item      | Center Item      | Right Item      |

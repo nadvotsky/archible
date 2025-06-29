@@ -33,6 +33,7 @@
     - { role: ga-apex-desktop/ga-shared }
     - { role: ha-apex-env/ha-shared }
     - { role: ia-apex-apps/ia-shared }
+    - { role: ja-apex-dev/ja-shared }
 
     - { role: da-apex-prep/db-packaging, tags: apex-prep-packaging }
     - { role: da-apex-prep/dc-bootloader, tags: apex-prep-bootloader }
@@ -68,6 +69,8 @@
     - { role: ia-apex-apps/if-files, tags: apex-apps-files }
     - { role: ia-apex-apps/ig-code, tags: apex-apps-code }
     - { role: ia-apex-apps/ih-misc, tags: apex-apps-misc }
+
+    - { role: ja-apex-dev/jb-containers, tags: apex-dev-containers }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

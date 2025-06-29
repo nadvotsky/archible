@@ -1,0 +1,252 @@
+---
+- name: Configure container runtime
+  tags: apex-dev-containers-runtime
+  block:
+    - name: Stop running containerd instances
+      become: true
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
+      vars:
+        services:
+          - containerd.service
+
+    - name: Install containerd packages
+      foundation.system.packages:
+      vars:
+        install:
+          - containerd
+          - crictl
+          - runc
+          - crun
+          - nvidia-container-toolkit
+          - iptables-nft
+
+    - name: Wipe containerd state
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /var/lib/containerd
+
+    - name: Wipe nft tables
+      when: aa_wipe == 'always'
+      become: true
+      ansible.builtin.command:
+        argv:
+          - nft
+          - flush
+          - ruleset
+      register: _jb_nft_flush_invocation
+      changed_when: _jb_nft_flush_invocation.rc == 0
+
+    - name: Configure crictl and containerd
+      become: true
+      foundation.files.install:
+        wipe: never
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - file: /etc/crictl.yaml
+            copy: cri/crictl.yml
+          - file: /etc/containerd/config.toml
+            copy: containerd/config.toml
+
+    - name: Confgure nvidia container device interface
+      become: true
+      ansible.builtin.command:
+        argv:
+          - nvidia-ctk
+          - config
+          - --in-place
+          - --set
+          - nvidia-container-runtime.mode=cdi
+      register: _jb_nvidia_ctk_invocation
+      changed_when: _jb_nvidia_ctk_invocation.rc == 0
+
+    - name: Disable containerd services
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - containerd.service
+        state:
+          disabled: true
+
+- name: Configure docker container platform
+  tags: apex-dev-containers-docker
+  block:
+    - name: Stop running docker instances
+      become: true
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
+      vars:
+        services:
+          - docker.socket
+          - docker.service
+
+    - name: Install docker packages
+      foundation.system.packages:
+      vars:
+        install:
+          - docker
+          - docker-buildx
+          - docker-compose
+    #
+    # docker ps -q | xargs -r docker kill
+    # docker network prune --force
+    # docker system prune --all --force
+    #
+    - name: Wipe docker state
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /var/lib/docker
+
+    - name: Add user to the docker group
+      become: true
+      ansible.builtin.user:
+        name: "{{ ca_name }}"
+        groups: docker
+        append: true
+
+    - name: Render docker daemon configuration
+      become: true
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/docker/daemon.json
+            copy: docker/daemon.json
+
+    - name: Disable docker services
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - docker.service
+        state:
+          disabled: true
+
+- name: Configure kubernetes conatiner orchestrator
+  tags: apex-dev-containers-k8s
+  block:
+    - name: Stop running kubernetes instances
+      become: true
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
+      vars:
+        services:
+          - kubelet.service
+
+    - name: Install kubernetes cluster and management packages
+      foundation.system.packages:
+      vars:
+        install:
+          - kubeadm
+          - kubelet
+          - kubectl
+          - helm
+          - just
+
+    - name: Reset kubernetes cluster
+      when: aa_wipe == 'always'
+      become: true
+      ansible.builtin.command:
+        argv:
+          - kubeadm
+          - reset
+          - --force
+          - --cleanup-tmp-dir
+      register: _jb_kubeadm_invocation
+      changed_when: _jb_kubeadm_invocation.rc == 0
+
+    - name: Wipe kubernetes letfovers
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /var/log/containers
+          - dir: /var/log/pods
+          - dir: /var/lib/kube-router
+          - dir: /var/lib/kubelet
+          - dir: /var/lib/etcd
+          - dir: /opt/cni
+          - dir: /etc/cni/net.d
+
+          - dir: /etc/kubernetes/pki
+          - file: /etc/kubernetes/admin.conf
+          - file: /etc/kubernetes/kubelet.conf
+          - file: /etc/kubernetes/controller-manager.conf
+          - file: /etc/kubernetes/scheduler.conf
+          - file: /etc/kubernetes/super-admin.conf
+
+    - name: Cleanup kube-proxy
+      become: true
+      ansible.builtin.command:
+        argv:
+          - ip
+          - link
+          - delete
+          - kube-proxy
+      register: _jb_k8s_ip_invocation
+      changed_when: _jb_k8s_ip_invocation.rc == 0
+      failed_when: false
+
+    - name: Resolve kube and helm user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        kube_config:
+          default: "{{ fa_dir_config }}/kube"
+        helm_config:
+          default: "{{ fa_dir_config }}/helm"
+        helm_cache:
+          default: "{{ fa_dir_cache }}/helm"
+        helm_data:
+          default: "{{ fa_dir_share }}/helm"
+          xdg: "{{ fa_dir_home }}/.helm"
+      register: _jb_k8s_ulayout
+
+    - name: Apply helm XDG layout
+      when: fa_layout == 'xdg'
+      become: true
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        HELM_DATA_HOME: "{{ _jb_k8s_ulayout.helm_data }}"
+
+    - name: Disable kubernetes services
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - kubelet.service
+          - cni-dhcp.service
+        state:
+          disabled: true
+
+    - name: Render kubernetes-kubeadm template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - file: ./kubeadm.yml
+            copy: kubeadm/kubeadm.yml
+          - file: ./dashboard.yml
+            copy: kubeadm/dashboard.yml
+          - file: ./kustomization.yml
+            copy: kubeadm/kustomization.yml
+          - file: ./justfile
+            copy: kubeadm/justfile
