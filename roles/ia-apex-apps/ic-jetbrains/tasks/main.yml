@@ -1,0 +1,417 @@
+---
+- name: Configure JetBrains context
+  tags: apex-apps-jetbrains-context
+  block:
+    - name: Retrieve latest IDE releases
+      ansible.builtin.uri:
+        url: "https://data.services.jetbrains.com/products/releases?code={{ ic_products[item].release }}&latest=true&type=release"
+        method: GET
+        return_content: true
+      loop: "{{ ic_install }}"
+      register: _ic_ide_releases
+
+    - name: Retrieve plugins metadata
+      ansible.builtin.uri:
+        url: "https://plugins.jetbrains.com/api/plugins/{{ item | regex_search('\\d+') }}"
+        method: GET
+        return_content: true
+      loop: >-
+        {%- set _acc = ic_plugins -%}
+        {%- for _codename in ic_install -%}
+          {%- do _acc.extend(ic_products[_codename].get('plugins', [])) -%}
+        {%- endfor -%}
+        {{ _acc }}
+      register: _ic_plugins
+
+    - name: Set a context variables
+      ansible.builtin.set_fact:
+        _ic_ctx: >-
+          {%- set _acc = {} -%}
+          {%- set _arch = {'x86_64_v3': 'linux', 'x86_64_v2': 'linux', 'aarch64': 'linuxARM64'}[ba_arch] -%}
+          {%- for _codename, _inv in ic_install | zip(_ic_ide_releases) -%}
+            {%- set _release = _inv.json[_codename] | first -%}
+            {%- set _prod = ic_products[_codename] -%}
+            {%- set _plugins = [] -%}
+            {%- for _id in (ic_plugins + _prod.get('plugins', [])) -%}
+              {%- set _meta = _ic_plugins.results | selectattr('item', 'eq', _id) | first -%}
+              {%- do _plugins.append(dict(
+                id=_meta.json.xmlId,
+                model=_meta.json.pricingModel,
+                code=_meta.json.purchaseInfo.productCode | default(none),
+              )) -%}
+            {%- endfor -%}
+            {%- do _acc.__setitem__(
+              _codename, dict(
+                info_name=_prod.name,
+                info_comm=_prod.comment,
+                code_lic=_prod.license,
+                plugins=_plugins,
+                dist_dir='/opt/jetbrains/ide/{}'.format(_codename),
+                dist_bin='/opt/jetbrains/ide/{}/bin/{}'.format(_codename, _codename),
+                dist_ico='/opt/jetbrains/ide/{}/bin/{}.svg'.format(_codename, _codename),
+                dist_url=_release.downloads[_arch].link,
+                dist_ver='{}.{}'.format(_release.version, _release.build),
+                ide_cfg='{}/{}'.format(fa_dir_config, _codename),
+                ide_sys='{}/{}'.format(fa_dir_cache, _codename),
+                ide_plg=(
+                  '{}/{}'.format(fa_dir_state, _codename)
+                  if fa_layout == 'xdg' else
+                  '{}/.{}'.format(fa_dir_home, _codename)
+                ),
+                ide_key='{}/{}/{}.key'.format(fa_dir_config, _codename, _codename),
+              )
+            ) -%}
+          {%- endfor -%}
+          {{ _acc }}
+
+        _ic_paths:
+          jre_dir: /opt/jetbrains/jre
+          jre_bin: /opt/jetbrains/jre/bin/java
+
+          agent_dir: /opt/jetbrains/agent
+          agent_jar: /opt/jetbrains/agent/jetbra-agent.jar
+
+          vmopts_dir: /opt/jetbrains/vmoptions
+          vmopts_file: /opt/jetbrains/vmoptions/ide.vmoptions
+
+          props_dir: /opt/jetbrains/properties
+          props_file: /opt/jetbrains/properties/ide.properties
+
+          dist_dir: /opt/jetbrains/ide
+
+          ide_cfg: "${user.home}{{ fa_dir_config.removeprefix(fa_dir_home) }}${ide.codename}"
+          ide_sys: "${user.home}{{ fa_dir_cache.removeprefix(fa_dir_home) }}${ide.codename}"
+          ide_plg: >-
+            {{
+              '${user.home}{}${ide.codename}'.format(fa_dir_state.removeprefix(fa_dir_home))
+              if fa_layout == 'xdg' else
+              '${user.home}.${ide.codename}'
+            }}
+          ide_tmp: ${java.io.tmpdir}/${ide.codename}
+
+    - name: Create base JetBrains directories
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /opt/jetbrains
+            perms: 755:root:root
+            create: true
+
+    - name: Wipe default IDE directories
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_config }}/JetBrains"
+          - dir: "{{ fa_dir_cache }}/JetBrains"
+          - dir: "{{ fa_dir_share }}/JetBrains"
+
+- name: Configure JetBrains java
+  tags: apex-apps-jetbrains-java
+  block:
+    - name: Create JBR directories
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ _ic_paths.jre_dir }}"
+            perms: 755:root:root
+            create: true
+
+    - name: Fetch latest release JBR info
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/JetBrains/JetBrainsRuntime/releases/latest
+        return_content: true
+      register: _ic_jre_releases
+
+    - name: Download and unpack JBR
+      become: true
+      foundation.files.net_archive:
+        url: >-
+          {%- set _tag_name = _ic_jre_releases.json.tag_name -%}
+          {%- set _regexp = 'jbr-release-(?P<major>\\d+\\.\\d+\\.\\d+)(?P<minor>b\\d+\\.\\d+)' -%}
+          {%- set _major = _tag_name | regex_search(_regexp, '\\g<major>') | first -%}
+          {%- set _minor = _tag_name | regex_search(_regexp, '\\g<minor>') | first -%}
+          {%- set _arch = {'x86_64_v3': 'x64', 'x86_64_v2': 'x64', 'aarch64': 'aarch64'}[ba_arch] -%}
+          https://cache-redirector.jetbrains.com/intellij-jbr/jbr_jcef-{{ _major }}-linux-{{ _arch }}-{{ _minor }}.tar.gz
+        dest: "{{ _ic_paths.jre_dir }}"
+        perms: root:root
+        strip: 1
+        creates:
+          - "{{ _ic_paths.jre_bin }}"
+
+- name: Configure JetBrains agent
+  tags: apex-apps-jetbrains-agent
+  when: ic_agentize > 0
+  block:
+    - name: Create agent directories
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ _ic_paths.agent_dir }}"
+        perms: 755:644:root:root
+        create: true
+      vars:
+        targets:
+          - dir: ./
+          - dir: ./trust-crt
+
+    - name: Download and unpack agent
+      become: true
+      foundation.files.net_archive:
+        url: https://github.com/novitechie/jetbra/releases/latest/download/jetbra-all.zip
+        dest: /opt/jetbrains/agent
+        perms: root:root
+        strip: 1
+        exclude:
+          - script
+          - vmoptions
+          - trust-crt
+        creates:
+          - "{{ _ic_paths.agent_jar }}"
+
+    - name: Generate agent certificate
+      become: true
+      ansible.builtin.command:
+        cmd: >-
+          openssl req
+          -x509 -noenc -subj "/CN={{ ca_info_short }}/UID={{ ca_name }}"
+          -not_before {{ now(fmt='%Y') }}0101000000Z
+          -not_after {{ now(fmt='%Y') | int + ic_agentize }}0101000000Z
+          -sha256
+          -newkey rsa:4096
+          -keyform pem -keyout "{{ _ic_paths.agent_dir }}/trust-crt/cert.pem"
+          -outform pem -out "{{ _ic_paths.agent_dir }}/trust-crt/cert.crt"
+      register: _ic_agent_cert_invocation
+      changed_when: _ic_agent_cert_invocation.rc == 0
+
+    - name: Ensure private key is inaccessible by world
+      become: true
+      ansible.builtin.file:
+        path: "{{ _ic_paths.agent_dir }}/trust-crt/cert.pem"
+        mode: "0600"
+        owner: root
+        group: root
+
+- name: Configure JetBrains IDE distributions
+  tags: apex-apps-jetbrains-dist
+  block:
+    - name: Create base IDE directories
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: 755:644:root:root
+        create: true
+      vars:
+        targets: >-
+          {%- set _acc = [dict(dir=_ic_paths.dist_dir)] -%}
+          {%- for _ide in _ic_ctx.values() -%}
+            {%- do _acc.append(dict(dir=_ide.dist_dir)) -%}
+          {%- endfor -%}
+          {{ _acc }}
+
+    - name: Download and unpack IDEs
+      become: true
+      foundation.files.net_archive:
+        url: "{{ item.dist_url }}"
+        dest: "{{ item.dist_dir }}"
+        perms: root:root
+        strip: 1
+        creates:
+          - "{{ item.dist_bin }}"
+        exclude:
+          - jbr
+      loop: "{{ _ic_ctx.values() }}"
+
+    - name: Render IDE vmoptions and properties
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - dir: "{{ _ic_paths.vmopts_dir }}"
+            create: true
+          - file: "{{ _ic_paths.vmopts_file }}"
+            template: jetbrains/ide.vmoptions.j2
+
+          - dir: "{{ _ic_paths.props_dir }}"
+            create: true
+          - file: "{{ _ic_paths.props_file }}"
+            template: jetbrains/ide.properties.j2
+
+    #
+    # One may use `dex` with any other wrapper (e.g. mise exec) to launch IDE within an arbitrary environment (e.g. VPN)
+    #
+    - name: Render IDE desktop entries
+      become: true
+      ansible.builtin.template:
+        src: jetbrains/entry.desktop.j2
+        dest: "/usr/local/share/applications/{{ item.key }}.desktop"
+        mode: "0644"
+        owner: root
+        group: root
+        lstrip_blocks: true
+        trim_blocks: true
+      loop: "{{ _ic_ctx | dict2items() }}"
+
+    - name: Update XDG desktop database
+      become: true
+      ansible.builtin.command:
+        argv:
+          - update-desktop-database
+          - /usr/local/share/applications
+      register: _ic_desktop_database_invocation
+      changed_when: _ic_desktop_database_invocation.rc == 0
+
+    - name: Prepare IDE directories
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets: >-
+          {%- set _acc = [] -%}
+          {%- for _ide in _ic_ctx.values() -%}
+            {%- do _acc.append(dict(dir=_ide.ide_cfg)) -%}
+            {%- do _acc.append(dict(dir=_ide.ide_sys)) -%}
+            {%- do _acc.append(dict(dir=_ide.ide_plg)) -%}
+          {%- endfor -%}
+          {{ _acc }}
+
+- name: Configure JetBrains IDE agent
+  tags: apex-apps-jetbrains-agent
+  when: ic_agentize > 0
+  block:
+    - name: Generate IDE license
+      ansible.builtin.set_fact:
+        _ic_lic: >-
+          {%- set _up_to = '{}-01-01'.format(now(fmt='%Y') | int + ic_agentize) -%}
+          {%- set _acc = [] -%}
+          {%- for _ide in _ic_ctx.values() -%}
+            {%- set _lic = {
+              'licenseId': lookup('community.general.random_string', special=false, lower=false, length=10),
+              'licenseeName': ca_info_short,
+              'licenseeType': 'PERSONAL',
+              'assigneeName': '',
+              'assigneeEmail': '',
+              'checkConcurrentUse': false,
+              'products': [dict(code=_ide.code_lic, paidUpTo=_up_to)],
+              'metadata': "01{}0101PPAM000005".format(now(fmt='%Y')),
+            } -%}
+            {%- if ic_code_with_me -%}
+              {%- do _lic.products.append(dict(code='PCWMP', paidUpTo=_up_to)) -%}
+            {%- endif -%}
+            {%- for _plugin in _ide.plugins -%}
+              {%- if _plugin.model != "FREE" -%}
+                {%- do _lic.products.append(dict(code=_plugin.code, paidUpTo=_up_to)) -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- do _acc.append(_lic) -%}
+          {%- endfor -%}
+          {{ _acc }}
+
+    #
+    # SHA1withRSA, i.e. RSASSA-PKCS1-v1_5
+    #
+    - name: Sign IDE license
+      become: true
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail &&
+          echo -n '{{ item | to_json(separators=(',', ':')) }}'
+          | openssl dgst -sha1 -sign "{{ _ic_paths.agent_dir }}/trust-crt/cert.pem" -keyform pem
+          | openssl base64 -A
+      loop: "{{ _ic_lic }}"
+      register: _ic_agent_sign_invocation
+      changed_when: _ic_agent_sign_invocation.rc == 0
+
+    - name: Load agent certificate
+      become: true
+      ansible.builtin.slurp:
+        src: "{{ _ic_paths.agent_dir }}/trust-crt/cert.crt"
+      register: _ic_agent_cert
+
+    - name: Render JetBrain IDE key
+      ansible.builtin.copy:
+        dest: "{{ item.dest }}"
+        mode: "0755"
+        content: "{{ item.content }}"
+      loop: >-
+        {%- set _acc = [] -%}
+        {%- for _ide, _lic, _sign in _ic_ctx.values() | zip(_ic_lic, _ic_agent_sign_invocation.results) -%}
+          {%- set _cert = [] -%}
+          {%- for _line in (_ic_agent_cert.content | b64decode).split("\n") -%}
+            {%- if not _line.startswith("-") -%}
+              {%- do _cert.append(_line) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- set _key = [
+            _lic.licenseId, _lic | to_json(separators=(',', ':')) | b64encode, _sign.stdout, _cert | join("")
+          ] -%}
+          {%- set _prefix = (0xFFFF).to_bytes(2) + "<certificate-key>".encode('utf-16le') + (0xA).to_bytes(2, 'little') -%}
+          {%- do _acc.append(dict(
+            dest=_ide.ide_key, content='{}{}'.format(_prefix, (_key | join('-')).encode('utf-16le'))
+          )) -%}
+        {%- endfor -%}
+        {{ _acc }}
+
+- name: Configure JetBrains IDE
+  tags: apex-apps-jetbrains-config
+  block:
+    - name: Install IDE plugins
+      ansible.builtin.command:
+        argv: >-
+          {%- set _acc = [
+            '/usr/bin/env',
+            '{}_JDK={}'.format(item.key | upper(), ic_paths.jre_dir),
+            '{}_PROPERTIES={}'.format(item.key | upper(), ic_paths.props_file),
+            item.value.dist_bin,
+            '-Dide.codename={}'.format(item.key),
+            'installPlugins',
+          ] -%}
+          {{ _acc + item.value.plugins | map(attribute="id") }}
+      loop: "{{ _ic_ctx | dict2items() }}"
+      register: _ic_install_plugins_invocation
+      changed_when: _ic_install_plugins_invocation.rc == 0
+
+    - name: Remove third party plugins warning
+      ansible.builtin.file:
+        path: "{{ item.ide_cfg }}/alien_plugins.txt"
+        state: absent
+      loop: "{{ _ic_ctx.values() }}"
+
+    - name: Render JetBrains IDE configuration
+      foundation.files.install:
+        wipe: never
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        base: "{{ item.ide_cfg }}"
+      vars:
+        targets:
+          - file: ./disabled_plugins.txt
+            copy: jetbrains/noplugins.txt
+
+          - dir: ./options
+            create: true
+          - file: ./options/ide.general.xml
+            copy: jetbrains/ide.xml
+          - file: ./options/updates.xml
+            copy: jetbrains/updates.xml
+          - file: ./options/security.xml
+            copy: jetbrains/brackets.xml
+          - file: ./options/editor.xml
+            copy: jetbrains/editor.xml
+          - file: ./options/editor-font.xml
+            copy: jetbrains/font.xml
+          - file: ./options/postfixTemplates.xml
+            copy: jetbrains/postfix.xml
+          - file: ./options/ui.lnf.xml
+            copy: jetbrains/ui.xml
+          - file: ./options/trusted-paths.xml
+            copy: jetbrains/trust.xml
+          - file: ./options/project.default.xml
+            copy: jetbrains/trust.xml
+          - file: ./options/rainbow_brackets.xml
+            copy: jetbrains/brackets.xml
+      loop: "{{ _ic_ctx | dict2items() }}"

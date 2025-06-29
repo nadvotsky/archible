@@ -1,0 +1,37 @@
+---
+ig_git_name: "{{ ab_user_info_full }}"
+ig_git_mail: "{{ ab_user_info_mail }}"
+
+ig_git_gpgsign: primary_sign
+
+ig_git_userconf:
+  user.name: "{{ hd_git_name }}"
+  user.email: "{{ hd_git_email }}"
+
+  commit.gpgSign: "true"
+  push.gpgSign: if-asked
+  tag.gpgSign: "true"
+
+  apply.whitespace: fix
+  core.whitespace: tabwidth=4
+
+ig_git_perfconf:
+  checkout.workers: "-1"
+  #
+  # split index feature seems to be incompatible with 'feature.manyFiles'
+  #
+  # core.splitIndex: "true"
+  core.bigFileThreshold: 256m
+  fetch.parallel: "0"
+  feature.experimental: "true"
+  feature.manyFiles: "true"
+  http.maxRequests: "10"
+  pack.threads: "0"
+
+ig_git_featconf:
+  grep.lineNumber: "true"
+  grep.column: "true"
+  grep.fallbackToNoIndex: "true"
+  core.notesRef: "true"
+  log.mailmap: "false"
+  init.defaultBranch: main

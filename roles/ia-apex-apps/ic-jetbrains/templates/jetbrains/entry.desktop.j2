@@ -1,0 +1,67 @@
+{%- set _codename = item.key -%}
+{%- set _ide = item.value -%}
+
+{%- set _wayland = "-Dawt.toolkit.name=WLToolkit" -%}
+
+{%- macro _build_exec(_exec_codename, _exec, _additional) -%}
+    {% set _env = [
+        "{}_JDK={}".format(_exec_codename, _ic_paths.jre_dir) | quote,
+        "{}_VM_OPTIONS={}".format(_exec_codename, _ic_paths.vmopts_file) | quote,
+        "{}_PROPERTIES={}".format(_exec_codename, _ic_paths.props_file) | quote,
+    ] %}
+    {% set _bin = "{}/bin/{}".format(_ide.dist_dir, _exec) %}
+    {% set _prop = "-Dide.codename={}".format(_codename) %}
+    {##}
+    /usr/bin/env {{ _env | join(" ") }} "{{ _bin }}" {{ _prop }} {{ _additional | join(" ") }}
+{%- endmacro -%}
+
+{%- macro _actions_render() -%}
+    {% set _actions = [
+        "Wayland" if ic_wayland else none,
+        "CodeWithMe" if ic_code_with_me else none,
+        "CodeWithMeWayland" if ic_code_with_me and ic_wayland else none,
+    ] %}
+    {{ _actions | select() | join(";") }}
+{%- endmacro -%}
+
+{%- macro _code_with_me_render() -%}
+    [Desktop Action CodeWithMe]
+    Name=Code With Me Guest Launcher
+    Exec={{ _build_exec("JETBRAINS_CLIENT", "jetbrains_client.sh", []) | aa_relident() }}
+
+    {% if ic_wayland %}
+    [Desktop Action CodeWithMeWayland]
+    Name=Code With Me Guest Launcher, with Wayland Support
+    Exec={{ _build_exec("JETBRAINS_CLIENT", "jetbrains_client.sh", [_wayland]) | aa_relident() }}
+
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro _wayland_render() -%}
+[Desktop Action Wayland]
+Name=Wayland display server support
+Exec={{ _build_exec(_codename | upper, _codename, [_wayland]) | aa_relident() }}
+{%- endmacro -%}
+
+
+[Desktop Entry]
+Type=Application
+Version={{ _ide.dist_ver }}
+Name={{ _ide.info_name }}
+Comment={{ _ide.info_comm }}
+Icon={{ _ide.dist_ico }}
+Exec={{ _build_exec(_codename | upper, _codename, []) | aa_relident() }}
+Categories=Development;IDE;
+Terminal=false
+StartupWMClass=jetbrains-{{ _codename }}
+StartupNotify=true
+Actions={{ _actions_render() | aa_relident() }};
+{##}
+{% if ic_code_with_me is true %}
+
+{{ _code_with_me_render() | aa_relident() }}
+{% endif %}
+{% if ic_wayland is true %}
+
+{{ _wayland_render() | aa_relident() }}
+{% endif %}

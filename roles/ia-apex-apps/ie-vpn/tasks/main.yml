@@ -1,0 +1,48 @@
+---
+- name: Configure VPN network namespace
+  tags: apex-apps-vpn-netns
+  block:
+    - name: Install vopono packages
+      foundation.system.packages:
+      vars:
+        install:
+          - vopono-bin
+          - nftables
+          - wireguard-tools
+          - openvpn
+
+    - name: Render vopono configuration
+      become: true
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /etc/sudoers.d/10-vopono
+            perms: 440:root:root
+            content: |
+              %wheel ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/bin/vopono
+
+          - dir: "{{ fa_dir_config }}/vopono"
+            wipe: "{{ aa_wipe }}"
+            perms: "755:{{ ca_name }}:{{ ca_name }}"
+
+          - file: "{{ fa_dir_config }}/vopono/config.toml"
+            perms: "644:{{ ca_name }}:{{ ca_name }}"
+            content: |
+              firewall = "NfTables"
+              provider = "Custom"
+              protocol = "openvpn"
+              config = "{{ fa_dir_config }}/vopono/custom-config"
+
+    - name: Render vopono rofi launcher script
+      become: true
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /usr/local/bin/vopono-rofi
+            perms: 755:root:root
+            content: |
+              #!/usr/bin/env bash
+
+              exec rofi -show drun -display-drun "drun (network ns)" -run-command "vopono exec -- {cmd}"

@@ -102,9 +102,3 @@
           file: java/src/main/java/com/example/util/Util.java
         gradle/app/src/test/java/com/example/util/UtilTests.java:
           file: java/src/test/java/com/example/util/UtilTests.java
-
-- name: Configure IntelliJ IDEA
-  ansible.builtin.import_tasks:
-    file: jetbrains/ide.yml
-  vars:
-    _jetbrains_ide: idea

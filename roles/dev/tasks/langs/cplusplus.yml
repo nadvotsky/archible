@@ -190,8 +190,3 @@
         chdir: "{{ users.user.bin }}"
         cmd: "{{ lookup('ansible.builtin.template', 'local_templates/bazel_download_tools.j2') }}"
 
-- name: Configure Clion IDE
-  ansible.builtin.import_tasks:
-    file: jetbrains/ide.yml
-  vars:
-    _jetbrains_ide: clion

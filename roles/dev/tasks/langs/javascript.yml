@@ -268,8 +268,3 @@
         node/src/util/join.test.ts:
           file: javascript-node/src/util/join.test.ts
 
-- name: Configure WebStorm IDE
-  ansible.builtin.import_tasks:
-    file: jetbrains/ide.yml
-  vars:
-    _jetbrains_ide: webide

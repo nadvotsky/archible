@@ -1,0 +1,247 @@
+---
+#
+# There are the following file managers alternatives:
+#
+#  yazi (https://github.com/sxyazi/yazi):
+#   package: pacman
+#   advantages:
+#    + feature (inline-image)
+#    + feature (out of box)
+#
+#  doublecommander (https://doublecmd.sourceforge.io/):
+#   package: pacman
+#   advantages:
+#    + feature (internal editor)
+#    + feature (preview without d-bus)
+#   disadvantages:
+#    - deps (qt)
+#
+#  thunar (https://docs.xfce.org/xfce/thunar/start):
+#   package: pacman
+#   disadvantages:
+#    - deps (tumbler, webp-pixbuf-loader)
+#
+#  Midnight Commander (https://midnight-commander.org/):
+#   package: pacman(mc)
+#   disadvantages:
+#    - feature (commander-like keybinds)
+#    - feature (no previews)
+#
+#   superfile (https://github.com/yorukot/superfile):
+#    package: pacman
+#    disadvantages:
+#     - feature (no inline protocol support, huge cpu spikes)
+#
+#  broot (https://github.com/Canop/broot):
+#   package: pacman
+#   disadvantages:
+#    - feature (manually scripted previews)
+#    - feature (combined directory expansion)
+#    - feature (no keybinds even for copying)
+#
+#  nnn (https://github.com/jarun/nnn):
+#   package: pacman
+#   disadvantages:
+#    - feature (no previews)
+#
+#  ranger (https://github.com/ranger/ranger):
+#  lf (https://github.com/gokcehan/lf):
+#  vifm (https://vifm.info/):
+#   package: pacman
+#   disadvantages:
+#    - feature (no previews)
+#
+- name: Configure file managers
+  tags: apex-apps-files-manager
+  block:
+    - name: Install file manager packages
+      foundation.system.packages:
+      vars:
+        install:
+          - yazi
+          - doublecmd-qt6
+          #
+          # General-purpose GUI (for Save As, Open).
+          #
+          - pcmanfm-gtk3
+          #
+          # Plain terminal without preview, for FUSE.
+          #
+          - nnn
+          - superfile
+
+    - name: Resolve file manager user layouts
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        yazi_state:
+          default: "{{ fa_dir_state }}/yazi"
+          dot:
+            link: "{{ fa_dir_home }}/.yazi"
+
+        superfile_state:
+          default: "{{ fa_dir_share }}/superfile"
+          dot:
+            link: "{{ fa_dir_home }}/.superfile"
+
+        superfile_log:
+          default: "{{ fa_dir_state }}/superfile"
+          dot:
+            link: "{{ fa_dir_home }}/.superfile"
+
+    - name: Render file manager configurations
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}"
+      vars:
+        targets:
+          - dir: ./nnn
+          - dir: ./superfile
+
+          - dir: ./yazi
+            create: true
+          - file: ./yazi/yazi.toml
+            content: >-
+              [mgr]
+              ratio = [0, 1, 1]
+              linemode = "size"
+              show_hidden = true
+              show_symlink = true
+
+              image_quality = 70
+              image_filter = "nearest"
+
+- name: Configure archive managers
+  tags: apex-apps-files-archive
+  block:
+    - name: Install archive packages
+      foundation.system.packages:
+      vars:
+        install:
+          - peazip-qt-bin
+          - fuse-archive
+          - bsdtar
+          - 7zip
+          # - p7zip-full-bin
+
+- name: Configure usage managers
+  tags: apex-apps-files-usage
+  block:
+    - name: Install usage packages
+      foundation.system.packages:
+      vars:
+        install:
+          - duf
+          - dua-cli
+          - ncdu
+          - fclones
+          # - bleachbit
+          # - czkawka-gui-bin
+
+- name: Configure file editing
+  tags: apex-apps-files-edit
+  block:
+    - name: Install editing packages
+      foundation.system.packages:
+      vars:
+        install:
+          #
+          # Raw bytes manipulation.
+          #
+          - bless
+          - heh
+          - binwalk
+          #
+          # Text replacement.
+          #
+          - sd
+
+- name: Configure file viewing
+  tags: apex-apps-files-view
+  block:
+    - name: Install view packages
+      foundation.system.packages:
+      vars:
+        install:
+          - bat
+          - viu
+
+    - name: Set bat environment variable
+      become: true
+      foundation.user.env:
+        section: apps
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        BAT_THEME: Nord
+        PAGER: bat
+        MANPAGER: bat --style=grid
+
+- name: Configure file searching
+  tags: apex-apps-files-search
+  block:
+    - name: Install file search packages
+      foundation.system.packages:
+      vars:
+        install:
+          - ast-grep
+          - ripgrep
+          - ripgrep-all
+          #
+          # Interactive fuzzy-finding.
+          #
+          - skim
+          - fd
+          - fzf
+
+    - name: Set fzf environment variable
+      become: true
+      foundation.user.env:
+        section: apps
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        FZF_DEFAULT_OPTS: >-
+          {%- set _preset = ga_preset | ga_parse_ansi(ga_ansi, replacements={5: "magenta"}) -%}
+          {%- set _opts = [
+              "--color=fg:-1,bg:-1,hl:{}".format(_preset.accent.line),
+              "--color=fg+:-1,bg+:{},hl+:{}".format(_preset.inactive.line, _preset.accent.line),
+              "--color=info:{},prompt:{},pointer:{}".format(_preset.complement.line, _preset.negative.line, _preset.important.line),
+              "--color=marker:{},spinner:{},header:{}".format(_preset.important.line, _preset.neutral.line, _preset.positive.line),
+              "--color=border:{},label:{}".format(_preset.active.line, _preset.complement.line),
+          ] -%}
+          {{ _opts | join(" ") }}
+
+- name: Configure file watching
+  tags: apex-apps-files-watch
+  block:
+    - name: Install file watch packages
+      foundation.system.packages:
+      vars:
+        install:
+          - entr
+          - watchexec
+
+- name: Configure file renaming
+  tags: apex-apps-files-rename
+  block:
+    - name: Install file watch packages
+      foundation.system.packages:
+      vars:
+        install:
+          - gprename
+          # - renameutils
+          # - nomino
+          # - rnr
+
+- name: Configure file listing
+  tags: apex-apps-files-list
+  block:
+    - name: Install file list packages
+      foundation.system.packages:
+      vars:
+        install:
+          - lsd
+          - xplr
+          # - tre-command

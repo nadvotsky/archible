@@ -1,0 +1,204 @@
+---
+- name: Configure helix editor
+  tags: apex-apps-editors-helix
+  block:
+    - name: Install helix packages
+      foundation.system.packages:
+      vars:
+        install:
+          - helix
+
+    - name: Retrieve default helix config
+      ansible.builtin.uri:
+        url: https://raw.githubusercontent.com/helix-editor/helix/refs/heads/master/helix-term/src/keymap/default.rs
+        method: GET
+        return_content: true
+      register: _ib_helix_config
+
+    - name: Render helix configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/helix"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - file: ./config.toml
+            template: helix/config.toml.j2
+
+    - name: Wipe helix state
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_cache }}/helix"
+
+    - name: Set helix environment variables
+      become: true
+      foundation.user.env:
+        section: apps
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        VISUAL: helix
+        EDITOR: helix
+
+    - name: Set helix MIME assoc
+      ansible.builtin.command:
+        argv:
+          - xdg-mime
+          - default
+          - helix.desktop
+          - text/*
+      register: _ib_helix_xdg_mime_invocation
+      changed_when: _ib_helix_xdg_mime_invocation.rc == 0
+
+- name: Configure micro editor
+  tags: apex-apps-editors-micro
+  block:
+    - name: Install micro packages
+      foundation.system.packages:
+      vars:
+        install:
+          - micro
+
+    - name: Render micro configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/micro"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - file: ./bindings.json
+            template: micro/bindings.json
+          - file: ./config.toml
+            template: micro/settings.json
+
+          - dir: ./colorschemes
+            create: true
+          - file: ./colorschemes/nord.micro
+            copy: micro/nord.micro
+
+- name: Configure sublime-text editor
+  tags: apex-apps-editors-sublime
+  block:
+    - name: Install sublime-text packages
+      foundation.system.packages:
+      vars:
+        install:
+          - sublime-text
+
+    - name: Render sublime-text configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/sublime-text"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - dir: ./Packages
+            create: true
+          - dir: ./Packages/User
+            create: true
+
+          - file: ./Packages/User/Preferences.sublime-settings
+            template: editors/Preferences.sublime-settings.j2
+
+    - name: Wipe sublime-text state
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_cache }}/sublime-text"
+
+- name: Configure visual studio code editor
+  tags: apex-apps-editors-vscode
+  block:
+    - name: Install vscode packages
+      foundation.system.packages:
+      vars:
+        install:
+          - visual-studio-code-bin
+
+    - name: Resolve vscode user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        data: "{{ ia_vscode_user_layout }}"
+        extensions:
+          default: "{{ users.user.home }}/.vscode"
+          xdg: "{{ fa_dir_share }}/vscode"
+      register: _ib_vscode_ulayout
+
+    - name: Build vscode flags
+      ansible.builtin.set_fact:
+        _ib_vscode_flags: >-
+          {%- set _flags = ['--user-data-dir {}'.format(_ib_vscode_ulayout.data)] -%}
+          {%- if fa_layout == 'xdg' -%}
+            {%- do _flags.append('--extensions-dir {}'.format(_ib_vscode_ulayout.extensions)) -%}
+          {%- endif -%}
+          {{ _flags }}
+
+    - name: Render vscode configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ _ib_vscode_ulayout.data }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - dir: ./User
+            create: true
+          - dir: ./User/settings.json
+            template: vscode/settings.json.j2
+
+          - file: "{{ fa_dir_config }}/code-flags.conf"
+            content: "{{ _ib_vscode_flags | join('\n') }}"
+
+    - name: Install vscode extensions
+      ansible.builtin.command:
+        cmd: "code {{ _ib_vscode_flags | join(' ') }} --install-extension {{ item }}"
+      register: _ib_vscode_invocation
+      changed_when: _ib_vscode_invocation.rc == 0
+      loop: "{{ ib_vscode_extensions }}"
+
+- name: Configure zed editor
+  tags: apex-apps-editors-zed
+  block:
+    - name: Install zed editor
+      foundation.system.packages:
+      vars:
+        install:
+          - zed
+
+    - name: Resolve zed user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        extensions:
+          default: "{{ users.user.share }}/zed"
+          dot:
+            link: "{{ users.user.home }}/.zed"
+
+        cache:
+          default: "{{ fa_dir_cahce }}/zed"
+      register: _ib_zed_ulayout
+
+    - name: Render zed configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/zed"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - file: ./settings.json
+            template: zed/settings.json.j2

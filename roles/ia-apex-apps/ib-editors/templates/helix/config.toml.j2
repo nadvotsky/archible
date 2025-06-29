@@ -1,0 +1,444 @@
+{%- set _binds = {} -%}
+
+{%- set _parse_binds_kwargs = dict(
+    keys_map={
+        "Delete": "del",
+        "Enter": "ret",
+        "Tab": "tab",
+        "BackTab": "S-tab",
+        "Backspace": "backspace",
+        "Space": "space",
+        "Escape": "esc",
+        "Left": "left",
+        "Up": "up",
+        "Right": "right",
+        "Down": "down",
+        "Home": "home",
+        "End": "end",
+        "PageUp": "pageup",
+        "PageDown": "pagedown",
+    },
+    modifiers_map={
+        "alt": "A",
+        "ctrl": "C",
+        "shift": "S",
+    },
+    sep=("-", "-"),
+    merge_shift=True,
+) -%}
+
+{%- set _overlay_common_bare = [ 
+    ("pageup", "page_up"),
+    ("pagedown", "page_down"),
+] -%}
+
+{%- set _overlay_common = [
+    ("quit", ":quit-all"),
+    ("terminate", ":quit-all!"),
+
+    ("save", ":write!"),
+    ("close", ":buffer-close"),
+    ("kill", ":buffer-close!"),
+
+    ("cycle_next", "goto_next_buffer"),
+    ("cycle_prev", "goto_previous_buffer"),
+
+    ("goto", "goto_line"),
+    ("open", "file_picker_in_current_directory"),
+    ("external", "command_palette"),
+
+    ("file_begin", "goto_file_start"),
+    ("file_end", "goto_last_line"),
+    ("file_begin", "goto_file_start"),
+    ("file_end", "goto_last_line"),
+
+    ("line_begin", "goto_first_nonwhitespace"),
+    ("line_begin_alt", "goto_line_start"),
+    ("line_end", "goto_line_end"),
+
+    ("select_all", "select_all"),
+    ("copy", "yank_main_selection_to_clipboard"),
+    ("cut", ["yank_main_selection_to_clipboard", "delete_selection"]),
+    ("paste", "paste_clipboard_before"),
+] %}
+
+{%- set _overlay_edit_bare = [
+    ("delete", "delete_char_backward"),
+    ("delete", {"subs": ["move_prev_word_start", "delete_selection"], "word": true}),
+    ("delete", {"subs": ["delete_char_backward"] * 3, "many": true}),
+] -%}
+
+{%- set _overlay_edit_vim = [
+    ("line_clear", "kill_to_line_end"),
+]-%}
+
+{%- set _overlay_edit = [
+    ("enter", "insert_newline"),
+
+    ("left", "move_char_left"),
+    ("up", "move_visual_line_up"),
+    ("right", "move_char_right"),
+    ("down", "move_visual_line_down"),
+
+    ("left", {"subs": ["move_char_left"] * 3, "many": true}),
+    ("up", {"subs": ["move_visual_line_up"] * 3, "many": true}),
+    ("right", {"subs": ["move_char_right"] * 3, "many": true}),
+    ("down", {"subs": ["move_visual_line_down"] * 3, "many": true}),
+
+    ("left", {"subs": "move_prev_word_start", "word": true}),
+    ("right", {"subs": "move_next_word_start", "word": true}),
+
+    ("word_delete", ["move_prev_word_start", "delete_selection"]),
+
+    ("line_delete", ["goto_line_start", "kill_to_line_end"]),
+
+    ("undo", "undo"),
+    ("redo", "redo"),
+] -%}
+
+{%- set _overlay_normal_vim = [
+    ("delete", "delete_selection_noyank"),
+] -%}
+
+{%- set _overlay_normal = [
+    ("left", {"subs": "extend_char_left", "select": true}),
+    ("up", {"subs": "extend_visual_line_up", "select": true}),
+    ("right", {"subs": "extend_char_right", "select": true}),
+    ("down", {"subs": "extend_visual_line_down", "select": true}),
+
+    ("left", {"subs": ["extend_char_left"] * 3, "many": true, "select": true}),
+    ("up", {"subs": ["extend_visual_line_up"] * 3, "many": true, "select": true}),
+    ("right", {"subs": ["extend_char_right"] * 3, "many": true, "select": true}),
+    ("down", {"subs": ["extend_visual_line_down"] * 3, "many": true, "select": true}),
+
+    ("left", {"subs": "extend_prev_word_start", "word": true, "select": true}),
+    ("right", {"subs": "extend_next_word_start", "word": true, "select": true}),
+
+    ("word_next", "move_next_word_start"),
+    ("word_prev", "move_prev_word_start"),
+    ("word_next", {"subs": "extend_prev_word_start", "select": true}),
+    ("word_prev", {"subs": "extend_next_word_start", "select": true}),
+
+    ("prompt", "command_mode"),
+    ("select_mode", "select_mode"),
+    ("insert_mode", "insert_mode"),
+
+    ("search", "search"),
+    ("search_next", "search_next"),
+    ("search_prev", "search_prev"),
+] -%}
+
+{%- set _overlay_space = [
+    ("switch_case", "switch_case"),
+    ("search_selection", "search_selection"),
+    ("files", "file_picker"),
+    ("windows", "buffer_picker"),
+] -%}
+
+{%- set _overlay_insert = [
+    ("escape", "normal_mode"),
+
+    ("invoke", "completion"),
+
+    ("cycle_next", "smart_tab"),
+    ("cycle_prev", "unindent"),
+] -%}
+
+{%- set _overlay_select = [
+    ("escape", "exit_select_mode"),
+
+    ("word_next", "extend_prev_word_start"),
+    ("word_prev", "extend_next_word_start"),
+
+    ("left", "extend_char_left"),
+    ("up", "extend_visual_line_up"),
+    ("right", "extend_char_right"),
+    ("down", "extend_visual_line_down"),
+
+    ("left", {"subs": ["extend_char_left"] * 3, "many": true}),
+    ("up", {"subs": ["extend_visual_line_up"] * 3, "many": true}),
+    ("right", {"subs": ["extend_char_right"] * 3, "many": true}),
+    ("down", {"subs": ["extend_visual_line_down"] * 3, "many": true}),
+
+    ("left", {"subs": "extend_prev_word_start", "word": true}),
+    ("right", {"subs": "extend_next_word_start", "word": true}),
+
+    ("line_begin", "extend_to_line_start"),
+    ("line_end", "extend_to_line_end"),
+] -%}
+
+{%- set _space = ga_keys.binds.space | first | ga_parse_bind(None, keys, **_parse_binds_kwargs) -%}
+{%- set _overlays = {
+    "normal": {
+        "bare": _overlay_common_bare + _overlay_edit_bare,
+        "vim": _overlay_normal_vim + _overlay_edit_vim,
+        ("bare", "common", "vim", "emacs"): _overlay_common + _overlay_edit + _overlay_normal,
+    },
+    "normal.\"{}\"".format(_space.key): {
+        "vim": _overlay_space,
+    },
+    "insert": {
+        "bare": _overlay_common_bare + _overlay_edit_bare,
+        ("bare", "common", "emacs"): _overlay_common + _overlay_edit + _overlay_insert,
+    },
+    "select": {
+        "bare": _overlay_common_bare,
+        ("bare", "common", "vim", "emacs"): _overlay_common + _overlay_select,
+    },
+} -%}
+
+{%- macro _binds_defaults_mode(_mode) -%}
+    {% set _selector = [] %}
+    {##}
+    {% for _line in _ib_helix_config.content.splitlines() | map("trim") %}
+        {% set _start_mode = _line | regex_search("{\\s+\"(\\w+)\\s+mode\"", "\\1") %}
+        {% if _start_mode and _start_mode | first | lower == _mode %}
+            {% set _ = _selector.append(_mode) %}
+        {% elif _selector | length and _line.startswith("}") %}
+            {% set _ = _selector.pop() %}
+        {% elif _selector | length and _line.startswith("\"") %}
+            {% set _keys = _line | regex_search("(\"[^\"]+\")", "\\1") %}
+            {% set _id = _selector | join(".") %}
+            {% set _start_nested = _line | regex_search("=>\\s+{\\s+(\".+\")", "\\1") %}
+            {% if _start_nested %}
+                {% set _ = _selector.append(_keys | first) %}
+            {% else %}
+                {% if not _id in _binds %}
+                    {% set _ = _binds.__setitem__(_id, {}) %}
+                {% endif %}
+                {# {% set _action = _line | regex_search("=>\\s+([\\w_]+),", "\\1") | first %} #}
+                {% for _key in _keys %}
+                    {% set _ = _binds[_id].update({(_key | replace("\\", "\\\\")): "no_op"}) %}
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _binds_defaults() -%}
+    {% for _mode in ["normal", "insert"] %}
+        {% set _ = _binds_defaults_mode(_mode) %}
+    {% endfor %}
+    {#
+        Duplicating normal keybinds to select.
+    #}
+    {% set _normal_to_select_clone = {} %}
+    {% for _k, _v in _binds.items() %}
+        {% if "normal" in _k %}
+            {% set _ = _normal_to_select_clone.__setitem__(_k | replace("normal", "select"), _v.copy()) %}
+        {% endif %}
+    {% endfor %}
+    {% set _ = _binds.update(_normal_to_select_clone) %}
+    {#
+        Parsing select mode itself.
+    #}
+    {% set _ = _binds_defaults_mode("select") %}
+{%- endmacro -%}
+
+{%- macro _binds_overlay(_prefix, _action_map, _selector) -%}
+    {% if _prefix not in _binds %}
+        {% set _ = _binds.__setitem__(_prefix, {}) %}
+    {% endif %}
+    {##}
+    {% for _bind in keys
+        | ga_parse_binds(_action_map, **_parse_binds_kwargs)
+        | selectattr("mode_name", "in", _selector)
+    %}
+        {% set _ = _binds[_prefix].update({(_bind.line | quote): _bind.action.subs}) %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _binds_overlay_cleanup() -%}
+    {% set _toremove = [] %}
+    {% for _section, _items in _binds | dictsort(reverse=true) %}
+        {% if _items.values() | select("ne", "no_op") | length == 0 %}
+            {% set _ = _toremove.append(_section) %}
+        {% endif %}
+    {% endfor %}
+    {##}
+    {% for _bind in _toremove %}
+        {% set _parts = _bind | regex_search("^(.*)(.)(\".+\")$", "\\1", "\\2", "\\3") %}
+        {% if _parts is iterable %}
+            {% set _ = _binds.pop(_bind) %}
+            {% set _ = _binds[_parts[0]].setdefault(_parts[2], "no_op") %}
+        {% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _binds_render() -%}
+    {% set _ = _binds_defaults() %}
+    {##}
+    {% for _prefix, _defs in _overlays.items() %}
+        {% for _selector, _action_map in _defs.items() %}
+            {% set _ = _binds_overlay(_prefix, _action_map, _selector) %}
+        {% endfor %}
+    {% endfor %}
+    {##}
+    {% set _ = _binds_overlay_cleanup() %}
+    {##}
+    {% for _group, _group_binds in _binds.items() %}
+        [keys.{{ _group }}]
+        {% for _bind, _action in _group_binds.items() %}
+        {{ _bind }} = {{ (_action | quote) if _action is string else (_action | tojson) }}
+        {% endfor %}
+        {% if not loop.last %}{{ "\n" }}{% endif %}
+    {% endfor %}
+{%- endmacro -%}
+
+
+theme = "nord"
+
+
+[editor]
+scrolloff = 5
+scroll-lines = 3
+
+mouse = true
+middle-click-paste = false
+
+# workspace-lsp-roots = []
+
+# shell = ["sh", "-c"]
+true-color = false
+undercurl = false
+
+line-number = "absolute"
+
+cursorline = false
+cursorcolumn = false
+
+auto-completion = true
+auto-format = true
+# idle-timeout = 250
+completion-timeout = 5
+completion-trigger-len = 1
+preview-completion-insert = false 
+completion-replace = true
+
+auto-info = true
+popup-border = "popup"
+bufferline = "multiple"
+color-modes = true
+
+auto-pairs = true
+text-width = 120
+rulers = [80, 120]
+
+default-line-ending = "native"
+insert-final-newline = true
+indent-heuristic = "hybrid"
+
+# jump-label-alphabet = "abcdefghijklmnopqrstuvwxyz"
+
+
+[editor.statusline]
+left = [
+    "mode",
+    "spinner",
+    "separator",
+
+    "position",
+    "separator",
+
+    "file-encoding",
+    "file-line-ending",
+    "separator"
+]
+center = ["file-absolute-path", "file-modification-indicator", "read-only-indicator"]
+right = ["separator", "file-type", "version-control"]
+
+mode = { normal = "NORMAL", insert = "INSERT", select = "SELECT" }
+
+# separator = "│"
+
+
+[editor.lsp]
+enable = false
+display-messages = true
+auto-signature-help = true
+display-inlay-hints = false
+display-signature-help-docs = true
+snippets = true
+goto-reference-include-declaration = true
+
+
+[editor.cursor-shape]
+normal = "block"
+insert = "underline"
+select = "bar"
+
+
+[editor.file-picker]
+hidden = true
+follow-symlinks = false
+deduplicate-links = false
+
+parents = true
+ignore = true
+git-ignore = true
+
+git-global = false
+git-exclude = false
+
+# max-depth
+
+
+[editor.auto-save]
+focus-lost = false
+after-delay.enable = false
+after-delay.timeout = 15000
+
+
+[editor.search]
+smart-case = true
+wrap-around = true
+
+
+[editor.whitespace.render]
+space = "all"
+tab = "all"
+nbsp = "none"
+nnbsp = "none"
+newline = "none"
+
+[editor.whitespace.characters]
+space = "·"
+nbsp = " "
+nnbsp = " "
+tab = "→"
+newline = "⏎"
+tabpad = " "
+
+
+[editor.indent-guides]
+render = false
+# character = "╎"
+skip-levels = 0
+
+
+[editor.gutters]
+layout = ["line-numbers", "spacer"]
+
+line-numbers.min-width = 4
+
+# diagnostics
+# diff
+# spacer
+
+
+[editor.soft-wrap]
+enable = true
+wrap-at-text-width = false
+
+#?
+max-wrap = 20
+max-indent-retain = 40
+wrap-indicator = "↪"
+
+
+[editor.smart-tab]
+enable = false
+supersede-menu = true
+
+
+{{ _binds_render() | aa_relindent() }}

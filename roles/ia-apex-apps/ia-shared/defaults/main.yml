@@ -1,0 +1,26 @@
+---
+ia_spotify_launcher_user_layout:
+  default: "{{ fa_dir_share }}/spotify-launcher"
+  dot:
+    link: "{{ fa_dir_home }}/.spotify-launcher"
+
+ia_vscode_user_layout:
+  default: "{{ fa_dir_config }}/Code"
+  dot: "{{ fa_dir_home }}/.vscode/data"
+  xdg: "{{ fa_dir_state }}/vscode"
+
+ia_chromium_ulayout_home:
+  default: "{{ fa_dir_config }}/chromium"
+  xdg: "{{ fa_dir_state }}/chromium"
+
+ia_chromium_ulayout_cache:
+  cache:
+    default: "{{ fa_dir_cache }}/chromium"
+
+ia_firefox_ulayout_home:
+  default: "{{ fa_dir_home }}/.mozilla/firefox"
+  xdg:
+    link: "{{ fa_dir_state }}/firefox"
+
+ia_firefox_ulayout_cache:
+  default: "{{ fa_dir_cache }}/mozilla/firefox"

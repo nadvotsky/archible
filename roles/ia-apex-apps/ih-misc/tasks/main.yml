@@ -1,0 +1,181 @@
+---
+- name: Configure media utilities
+  tags: apex-apps-misc-media
+  block:
+    - name: Install media packages
+      foundation.system.packages:
+      vars:
+        install:
+          - spotify-launcher
+          #
+          # Video.
+          #
+          - obs-studio
+          - mpv
+          - ffmpeg
+          # - handbrake
+          # - vidcutter
+          #
+          # Images.
+          #
+          - imv
+          - imagemagick
+          # - gimp
+          #
+          # Documents.
+          #
+          - evince
+          # - libreoffice-still
+          #
+          # Metadata.
+          #
+          # - perl-image-exiftool
+          # - mat2
+
+    - name: Resolve spotify-launcher user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ aa_user_layout }}"
+      vars:
+        installs: "{{ ia_spotify_launcher_user_layout }}"
+
+    - name: Set media packages MIME assoc
+      ansible.builtin.command:
+        argv:
+          - xdg-mime
+          - default
+          - "{{ item.app }}"
+          - "{{ item.mime }}"
+      loop:
+        - app: mpv.desktop
+          mime: video/*
+        - app: mpv.desktop
+          mime: audio/*
+        - app: imv.desktop
+          mime: image/*
+        - app: evince
+          mime: application/pdf
+      register: _ih_xdg_mime_invocation
+      changed_when: _ih_xdg_mime_invocation.rc == 0
+
+- name: Configure system benchmark and info utilities
+  tags: apex-apps-misc-system
+  block:
+    - name: Install system packages
+      foundation.system.packages:
+      vars:
+        install:
+          #
+          # Hardware probing.
+          #
+          - sysstat
+          - lshw
+          - pciutils
+          - usbutils
+          #
+          # Top.
+          #
+          - nvtop
+          - s-tui
+          - btop
+          - htop
+          #
+          # Proc fs.
+          #
+          - procs
+          #
+          # Archlinux.
+          #
+          # - pacquery
+          # - pacman-contrib
+          # - topgrade
+
+    - name: Render btop configuration file
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/btop"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - file: ./btop.conf
+            copy: btop/btop.conf
+
+- name: Configure data utilities
+  tags: apex-apps-misc-data
+  block:
+    - name: Install data packages
+      foundation.system.packages:
+      vars:
+        install:
+          #
+          # Manual pages.
+          #
+          - tealdeer
+          #
+          # Colors.
+          #
+          - pastel
+          #
+          # Streams manipulation.
+          #
+          - most
+          - progress
+          - yank
+          #
+          # Data processing.
+          #
+          - jq
+          - yq
+          - fx
+          - choose
+          - gron
+          #
+          # Data manipulation.
+          #
+          # - bitwise
+          # - sttr-bin
+
+- name: Configure network utilities
+  tags: apex-apps-misc-network
+  block:
+    - name: Install network packages
+      foundation.system.packages:
+      vars:
+        install:
+          #
+          # Download.
+          #
+          - aria2
+          - wget
+          - monolith
+          #
+          # DNS.
+          #
+          - dog
+          #
+          # Scanner.
+          #
+          - netscanner
+          - rustscan
+          #
+          # Ping, traceroute and speedtest.
+          #
+          - bandwhich
+          - gping
+          - mtr
+          # - speedtest-go
+
+- name: Configure fun utilities
+  tags: apex-apps-misc-fun
+  block:
+    - name: Install fun packages
+      foundation.system.packages:
+      vars:
+        install:
+          - cmatrix
+          - television
+          - genact
+          - fortune-mod
+          - linuxwave

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Name=Default Browser Stub
+Comment=An application that copies the link to the clipboard
+Exec=/usr/local/bin/default-browser-stub %u
+Icon=applications-internet
+MimeType=x-scheme-handler/unknown;x-scheme-handler/about;x-scheme-handler/https;x-scheme-handler/http;text/html;

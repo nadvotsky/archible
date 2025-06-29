@@ -32,6 +32,7 @@
     - { role: fa-apex-user/fa-shared }
     - { role: ga-apex-desktop/ga-shared }
     - { role: ha-apex-env/ha-shared }
+    - { role: ia-apex-apps/ia-shared }
 
     - { role: da-apex-prep/db-packaging, tags: apex-prep-packaging }
     - { role: da-apex-prep/dc-bootloader, tags: apex-prep-bootloader }
@@ -59,6 +60,14 @@
     - { role: ha-apex-env/he-shell, tags: apex-env-shell }
     - { role: ha-apex-env/hg-hub, tags: apex-env-hub }
     - { role: ha-apex-env/hi-vault, tags: apex-env-vault }
+
+    - { role: ia-apex-apps/ib-editors, tags: apex-apps-editors }
+    - { role: ia-apex-apps/ic-jetbrains, tags: apex-apps-jetbrains }
+    - { role: ia-apex-apps/id-browsers, tags: apex-apps-browsers }
+    - { role: ia-apex-apps/ie-vpn, tags: apex-apps-vpn }
+    - { role: ia-apex-apps/if-files, tags: apex-apps-files }
+    - { role: ia-apex-apps/ig-code, tags: apex-apps-code }
+    - { role: ia-apex-apps/ih-misc, tags: apex-apps-misc }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

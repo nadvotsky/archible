@@ -70,9 +70,3 @@
       - file: mise.local.toml
         template: dotnet/mise.local.toml.j2
 
-- name: Configure Rider IDE
-  tags: dev-dotnet-rider
-  ansible.builtin.import_tasks:
-    file: jetbrains/ide.yml
-  vars:
-    _jetbrains_ide: rider

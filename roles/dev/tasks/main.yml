@@ -81,11 +81,6 @@
 #  can be comfortably stored in ~/env/examples
 #
 
-- name: Prepare JetBrains IDEs
-  tags:
-    - dev-jetbrains-base
-  ansible.builtin.import_tasks:
-    file: jetbrains/base.yml
 
 - name: Configure C++ developer suite
   tags:
@@ -134,9 +129,3 @@
     - dev-containers
   ansible.builtin.import_tasks:
     file: misc/containers.yml
-
-- name: Configure editors
-  tags:
-    - dev-editors
-  ansible.builtin.import_tasks:
-    file: misc/editors.yml

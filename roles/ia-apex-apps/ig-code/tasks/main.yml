@@ -1,0 +1,241 @@
+---
+- name: Configure Git version control system
+  tags: apex-apps-code-git
+  block:
+    - name: Install Git packages
+      foundation.system.packages:
+      vars:
+        install:
+          - git
+          #
+          # Helpers.
+          #
+          - lazygit
+          - tgit
+          - sublime-merge
+          #
+          # Changelog.
+          #
+          - git-cliff
+          - clog-bin
+          #
+          # Conventional commit.
+          #
+          # https://github.com/stefanlogue/meteor
+          # https://github.com/SKalt/git-cc
+          # https://github.com/cococonscious/koji
+          #
+
+    - name: Wipe sublime-merge
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_config }}/sublime-merge"
+          - dir: "{{ fa_dir_cache }}/sublime-merge"
+
+    - name: Prepare XDG user layout
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_share }}/git"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: "{{ fa_layout == 'xdg' }}"
+      vars:
+        targets:
+          - dir: ./
+          - file: ./config
+
+    - name: Prepare dot user layout
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: "{{ fa_layout == 'dot' }}"
+      vars:
+        targets:
+          - file: "{{ aa_user_dir_home }}/.gitconfig"
+
+    - name: Retrieve signing key information
+      when: ig_git_gpgsign is defined
+      foundation.persist.gpg:
+        home: "{{ fa_dir_home }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        keys:
+          - "{{ ig_git_gpgsign }}"
+      register: _ig_git_signkey
+
+    - name: Set git config options
+      ansible.builtin.command:
+        argv:
+          - git
+          - config
+          - --global
+          - "{{ item.key }}"
+          - "{{ item.value }}"
+      loop: >-
+        {%- set _config = ig_git_userconf | ansible.builtin.combine(ig_git_perfconf, ig_git_featconf) -%}
+        {%- if _ig_git_signkey is defined -%}
+          {%- do _config.__setitem__('user.signingkey', _ig_git_signkey.keys[ig_git_gpgsign].fingerprint) -%}
+        {%- endif -%}
+
+        {{ _config | dict2items }}
+      register: _ig_git_config_invocation
+      changed_when: _ig_git_config_invocation.rc == 0
+
+- name: Configure database
+  tags: apex-apps-code-database
+  block:
+    - name: Install database packages
+      foundation.system.packages:
+      vars:
+        install:
+          - diffutils
+          - difftastic
+          - diff-so-fancy
+          - git-delta
+          - vbindiff
+
+- name: Configure lines of code (LOC)
+  tags: apex-apps-code-loc
+  block:
+    - name: Install LOC packages
+      foundation.system.packages:
+      vars:
+        install:
+          - tokei
+
+- name: Configure build
+  tags: apex-apps-code-build
+  block:
+    - name: Install build packages
+      foundation.system.packages:
+      vars:
+        install:
+          - just
+
+- name: Configure runtime
+  tags: apex-apps-code-runtime
+  block:
+    - name: Install runtime packages
+      foundation.system.packages:
+      vars:
+        install:
+          - pm2
+          - hyperfine
+          # https://github.com/F1bonacc1/process-compose/releases
+          #
+          # Logs viewer.
+          #
+          - tailspin
+          - lnav
+
+- name: Configure container
+  tags: apex-apps-code-container
+  block:
+    - name: Install container packages
+      foundation.system.packages:
+      vars:
+        install:
+          - ctop
+          - dive
+          - lazydocker
+          - ducker
+          # - oxker-bin
+
+- name: Configure database tools
+  tags: apex-apps-code-database
+  block:
+    - name: Install database packages
+      foundation.system.packages:
+      vars:
+        install:
+          - dbeaver
+          - sqlitebrowser
+
+- name: Configure LLM
+  tags: apex-apps-code-llm
+  block:
+    - name: Install LLM packages
+      foundation.system.packages:
+      vars:
+        install:
+          - tgpt
+          - aichat
+          - goose
+
+    - name: Wipe LLM configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}"
+      vars:
+        targets:
+          #
+          # https://github.com/aandrew-me/tgpt
+          #
+          - dir: ./tgpt
+          #
+          # https://github.com/sigoden/aichat/wiki/Configuration-Guide
+          #
+          - dir: ./aichat
+          #
+          # https://block.github.io/goose/docs/guides/config-file
+          #
+          - dir: ./goose
+
+#
+# API testing utilities:
+#
+# There are the following alternatives:
+#
+#  Yaak (https://yaak.app/):
+#   package: aur
+#   advantages:
+#    + deps (tauri, ~50M less size than electron)
+#
+#  apidash
+#   package: aur
+#   advantages:
+#    + perf (dart)
+#   disadvantages:
+#    - feature (only http & graphql)
+#
+#  bruno:
+#   package: aur
+#   disadvantages:
+#    - feature (some stuff is paid-only)
+#
+#  Restfox:
+#    package: aur
+#    disadvantages:
+#     - deps (requires electron from aur)
+#
+- name: Configure API utilities
+  tags: apex-apps-code-api
+  block:
+    - name: Install API packages
+      foundation.system.packages:
+      vars:
+        install:
+          #
+          # Command-line.
+          #
+          - httpie
+          - hurl
+          - xh
+          #
+          # UI.
+          #
+          - yaak-bin
+
+    - name: Resolve yaak user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        config:
+          default: "{{ fa_dir_config }}/app.yaak.desktop"
+
+        state:
+          default: "{{ fa_dir_share }}/yaak-app"
+          dot:
+            link: "{{ fa_dir_home }}/.yaak"

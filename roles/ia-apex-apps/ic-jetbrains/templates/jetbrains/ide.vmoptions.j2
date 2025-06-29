@@ -1,0 +1,7 @@
+{%- for option in ic_jvmopts -%}
+    {{ option | aa_newline() }}
+{%- endfor -%}
+
+{%- if ic_agentize > 0 -%}
+-javaagent:{{ _ic_paths.agent_jar }}
+{%- endif -%}

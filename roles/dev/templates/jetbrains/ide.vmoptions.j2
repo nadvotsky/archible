@@ -1,7 +1,0 @@
-{%- for option in apps.jetbrains.jvmoptions -%}
-    {{ option | newline }}
-{%- endfor -%}
-
-{%- if apps.jetbrains.agentize -%}
--javaagent:{{ apps.jetbrains.agent }}/jetbra-agent.jar
-{%- endif -%}

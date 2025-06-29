@@ -110,8 +110,3 @@
         go/util/util_test.go:
           file: go/util/util_test.go
 
-- name: Configure GoLand IDE
-  ansible.builtin.import_tasks:
-    file: jetbrains/ide.yml
-  vars:
-    _jetbrains_ide: goland

@@ -1,0 +1,203 @@
+---
+#
+# TODO: think about having 3 browsers for main/compat/netns
+#
+- name: Configure Firefox browser
+  tags: apex-apps-browsers-firefox
+  block:
+    - name: Install Firefox packages
+      foundation.system.packages:
+      vars:
+        install:
+          - firefox
+
+    - name: Create default root directories
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - dir: "{{ fa_dir_home }}/.mozilla"
+            perms: "700:{{ ca_name }}:{{ ca_name }}"
+            create: true
+
+    - name: Resolve Firefox user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        home: "{{ ia_firefox_ulayout_home }}"
+        cache: "{{ ia_firefox_ulayout_cache }}"
+      register: _id_ffox_ulayout
+
+    - name: Stat Firefox profiles.ini
+      ansible.builtin.stat:
+        path: "{{ _id_ffox_ulayout.home }}/profiles.ini"
+      register: _id_ffox_profiles_ini_stat
+
+    - name: Create a new firefox profile if none exist
+      when: _id_ffox_profiles_ini_stat.exists is false
+      ansible.builtin.command:
+        argv:
+          - firefox
+          - -CreateProfile
+          - Default
+      register: _id_ffox_defprofile_invocation
+      changed_when: _id_ffox_defprofile_invocation.rc == 0
+
+    - name: Read Firefox profiles.ini content
+      ansible.builtin.slurp:
+        src: "{{ _id_ffox_ulayout.home }}/profiles.ini"
+      register: _id_ffox_profiles_ini
+
+    - name: Render Firefox user preferences to user.js
+      ansible.builtin.copy:
+        dest: "{{ _id_ffox_ulayout.home }}/{{ item }}/user.js"
+        mode: "0600"
+        content: >-
+          {%- set _acc = [] -%}
+          {%- for _key, _value in id_firefox_prefs.items() -%}
+            {%- set _json = (_value | tojson | tojson) if _value is mapping else (_value | tojson) -%}
+            {%- set _ = _acc.append("user_pref({}, {});".format(_key | tojson, _json)) -%}
+          {%- endfor -%}
+          {{ _acc | join("" | aa_newline) }}
+      loop: >-
+        {%- set _acc = [] -%}
+        {%- for _line in (_id_ffox_profiles_ini.content | b64decode).splitlines() -%}
+          {%- set _matches = _line | regex_search("Path=(.*)", "\\1") -%}
+          {%- if _matches is not none -%}
+            {%- do _acc.append(_matches | first) -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {{ _acc }}
+
+- name: Configure Chromium browser
+  tags: apex-apps-browsers-chromium
+  block:
+    - name: Install Chromium package
+      foundation.system.packages:
+      vars:
+        install:
+          - chromium
+          - jq
+
+    - name: Resolve Chromium ulayout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ aa_user_layout }}"
+      vars:
+        #
+        # There is also CHROME_CONFIG_HOME, but it is a prefix such as ~/.config,
+        #  and not the directory itself.
+        #
+        home: "{{ ia_chromium_ulayout_home }}"
+        cache: "{{ ia_chromium_ulayout_cache }}"
+      register: _id_chr_ulayout
+
+    - name: Find all Chromium profiles
+      ansible.builtin.find:
+        paths: "{{ _id_chr_ulayout.home }}"
+        patterns: "Preferences"
+        recurse: true
+      register: _id_chr_profiles
+
+    - name: Process Chromium profiles results
+      ansible.builtin.set_fact:
+        _id_chr_pending: >-
+          {%- set _acc = [] -%}
+          {%- for _profile in _id_chr_profiles -%}
+            {%- if not _profile.path.endswith('/System Profile') -%}
+              {%- do _acc.append(_profile.path) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if _acc.creates | length == 0 -%}
+            {{ dict(default=true, creates=['{}/{}'.format(_id_chr_ulayout.home, 'Default')]) }}
+          {%- else -%}
+            {{ dict(default=false, creates=_acc) }}
+          {%- endif -%}
+
+    - name: Create default Chromium profile if missing
+      when: _id_chr_pending.default is true
+      ansible.builtin.file:
+        path: "{{ _id_chr_ulayout.home }}/Default"
+        state: directory
+        mode: "0700"
+
+    - name: Render initial_preferences for Chromium profiles
+      ansible.builtin.copy:
+        dest: "{{ item }}/initial_preferences"
+        content: "{{ id_chromium_prefs | tojson }}"
+        mode: "0600"
+      loop: "{{ _id_chr_pending.creates }}"
+
+    - name: Try to patch existing preferences for Chromium profiles
+      ansible.builtin.shell:
+        cmd: >-
+          test -f "{{ item }}" &&
+          jq -s add "{{ item }}/initial_preferences" "{{ item }}/Preferences" > "{{ item }}/Preferences"
+      register: _id_chr_jq_invocation
+      changed_when: _id_chr_jq_invocation.rc == 0
+      loop: "{{ _id_chr_pending.creates }}"
+
+    - name: Render chromium flags
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: "{{ fa_dir_config }}/chromium-flags.conf"
+            content: >-
+              {%- set _acc = [] -%}
+              {%- for _flag in id_chromium_flags -%}
+                {%- do _acc.append('--{}'.format(_flag)) -%}
+              {%- endfor -%}
+              {%- do _acc.extend([
+                '--enable-features={}'.format(id_chromium_features_enable | join(',')),
+                '--disable-features={}'.format(id_chromium_features_disable | join(',')),
+                '--user-data-dir={}'.format(_id_chr_ulayout.home),
+                '--disk-cache-dir={}'.format(_id_chr_ulayout.cache),
+              ]) -%}
+              {{ _acc | join('\n') }}
+
+#
+# Alternatively, there is a dedicated launcher https://browsers.software/ (browsers-bin AUR)
+#
+- name: Configure default browser launcher
+  tags: apex-apps-browsers-default
+  block:
+    - name: Install default browser stub packages
+      foundation.system.packages:
+      vars:
+        install:
+          - libnotify
+
+    - name: Render default browser stub
+      become: true
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: /usr/local/bin/default-browser-stub
+            perms: 755:root:root
+            copy: stub/default-browser-stub.sh
+
+          - file: /usr/local/share/applications/default-browser-stub.desktop
+            perms: 644:root:root
+            copy: stub/default-browser-stub.desktop
+
+    - name: Update XDG desktop database
+      become: true
+      ansible.builtin.command:
+        argv:
+          - update-desktop-database
+          - /usr/local/share/applications
+      register: _ic_desktop_database_invocation
+      changed_when: _id_desktop_database_invocation.rc == 0
+
+    - name: Make stub default browser
+      ansible.builtin.command:
+        argv:
+          - xdg-settings
+          - set
+          - default-web-browser
+          - default-browser-stub.desktop
+      register: _id_xdg_settings_invocation
+      changed_when: _id_xdg_settings_invocation.rc == 0
