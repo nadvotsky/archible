@@ -71,6 +71,7 @@
     - { role: ia-apex-apps/ih-misc, tags: apex-apps-misc }
 
     - { role: ja-apex-dev/jb-containers, tags: apex-dev-containers }
+    - { role: ja-apex-dev/jc-cpp, tags: apex-dev-cpp }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

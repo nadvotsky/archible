@@ -1,0 +1,30 @@
+{%- set _acc = [
+    dict(dir="./", create=true),
+
+    dict(file="./.editorconfig", template="cpp/editorconfig.j2"),
+    dict(file="./.gitignore", template="cpp/gitignore.j2"),
+    dict(file="./tools.py", perms="755", copy="cpp/tools.py"),
+] -%}
+{%- for _entry in [
+    "config/",
+    "config/lint/",
+    "config/lint/clang-tidy.yml",
+    "config/format/",
+    "config/format/clang-format.yml",
+    "src/",
+    "src/main.cc",
+    "src/util/",
+    "src/util/util.cc",
+    "src/util/util.h",
+    "test/",
+    "test/util/",
+    "test/util/util_test.cc",
+] -%}
+    {%- if _entry.endswith("/") -%}
+        {%- set _ = _acc.append(dict(dir="./{}".format(_entry), create=true)) -%}
+    {%- else -%}
+        {%- set _ = _acc.append(dict(file="./{}".format(_entry), copy="cpp/{}".format(_entry))) -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{{ _acc }}

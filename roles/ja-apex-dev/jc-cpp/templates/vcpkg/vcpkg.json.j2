@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "vcpkg-template",
+  "description": "An example vcpkg template.",
+  "homepage": "https://github.com/microsoft/vcpkg",
+  "license": "MIT",
+  "maintainers": [
+    "{{ ca_info_full }} <{{ ca_info_email }}>"
+  ],
+  "dependencies": [
+    "fmt",
+    {
+      "name": "gtest",
+      "host": true
+    }
+  ]
+}

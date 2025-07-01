@@ -1,0 +1,123 @@
+{%- set _indent = {"space": 2} -%}
+
+{%- macro _configurations_render() -%}
+  {% for _name, _tchain in _jc_template.toolchains.items() %}
+    {
+      "name": "{{ _name }}",
+    {% if _tchain.toolchain is string %}
+      "toolchainFile": "{{ _tchain.toolchain }}",
+    {% endif %}
+    {##}
+    {% if _tchain.default is true %}
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "warnings": {
+        "dev": false,
+        "deprecated": true,
+        "uninitialized": true,
+        "unusedCli": false,
+        "systemVars": true
+      }{{ "," if _tchain.cache is defined else "" }}
+    {% else %}
+      "inherits": ["default"]{{ "," if _tchain.cache is defined else "" }}
+    {% endif %}
+    {##}
+    {% if _tchain.cache is sequence %}
+      "cacheVariables": {
+      {% for _var, _val in _tchain.cache.items() %}
+        "{{ _var }}": "{{ _val }}"{{ "," if not loop.last else "" }}
+      {% endfor %}
+      }
+    {% endif %}
+    }{{ "," if not loop.last else "" }}
+  {% endfor %}
+{%- endmacro -%}
+
+{%- macro _builds_render() -%}
+  {% for _tchain in _jc_template.toolchains.keys() %}
+    {
+      "name": "{{ _tchain }}",
+      "configurePreset": "{{ _tchain }}"
+    }{{ "," if not loop.last else "" }}
+  {% endfor %}
+{%- endmacro -%}
+
+{%- macro _tests_render() -%}
+  {% for _kv in _jc_template.toolchains | dict2items | selectattr("value.release", "undefined") %}
+    {
+      "name": "{{ _kv.key }}",
+      "configurePreset": "{{ _kv.key }}",
+    {% if _kv.value.default is true %}
+      "output": {
+        "outputOnFailure": true,
+        "shortProgress": true
+      }
+    {% else %}
+      "inherits": ["default"]
+    {% endif %}
+    }{{ "," if not loop.last else "" }}
+  {% endfor %}
+{%- endmacro -%}
+
+{%- macro _packages_render() -%}
+  {% for _name, _tchain in _jc_template.toolchains.items() %}
+    {
+      "name": "{{ _name }}",
+      "configurePreset": "{{ _name }}",
+    {% if _tchain.default is true %}
+      "packageName": "{{ _jc_template.name }}",
+      "packageVersion": "1.0.0",
+      "packageDirectory": "dist",
+      "generators": ["TGZ"]
+    {% else %}
+      "inherits": ["default"]
+    {% endif %}
+    }{{ "," if not loop.last else "" }}
+  {% endfor %}
+{%- endmacro -%}
+
+{%- macro _workflows_render() -%}
+  {% for _name, _tchain in _jc_template.toolchains.items() %}
+    {
+      "name": "{{ _name }}",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "{{ _name }}"
+        },
+        {
+          "type": "build",
+          "name": "{{ _name }}"
+        },
+        {
+          "type": "{{ "package" if _tchain.release is true else "test" }}",
+          "name": "{{ _name }}"
+        }
+      ]
+    }{{ "," if not loop.last else "" }}
+  {% endfor %}
+{%- endmacro -%}
+
+{
+  "$schema": "https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json",
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 31
+  },
+  "configurePresets": [
+    {{ _configurations_render() | aa_relindent(times=2, **_indent) }}
+  ],
+  "buildPresets": [
+    {{ _builds_render() | aa_relindent(times=2, **_indent) }}
+  ],
+  "testPresets": [
+    {{ _tests_render() | aa_relindent(times=2, **_indent) }}
+  ],
+  "packagePresets": [
+    {{ _packages_render() | aa_relindent(times=2, **_indent) }}
+  ],
+  "workflowPresets": [
+    {{ _workflows_render() | aa_relindent(times=2, **_indent) }}
+  ]
+}

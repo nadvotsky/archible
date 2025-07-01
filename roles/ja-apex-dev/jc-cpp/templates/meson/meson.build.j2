@@ -1,0 +1,74 @@
+project(
+  '{{ _jc_template.name }}',
+  'cpp',
+  version : '1.0.0',
+  license : 'MIT',
+  default_options : [
+    'warning_level=3',
+    'cpp_std=c++20',
+    'b_pie=true',
+  ],
+)
+
+
+sources = files(
+  'src/util/util.h',
+  'src/util/util.cc',
+)
+main_sources = files('src/main.cc')
+test_sources = files('test/util/util_test.cc')
+deps = [
+  dependency('fmt', include_type : 'system'),
+]
+
+
+executable(
+  '{{ _jc_template.name }}',
+  sources + main_sources,
+  dependencies : deps,
+  pie : true,
+)
+
+test(
+  'meson template test',
+  executable(
+    '{{ _jc_template.name }}-test',
+    sources + test_sources,
+    dependencies : [
+      dependency('gtest_main', include_type : 'system')
+    ],
+    include_directories : 'src',
+    build_by_default : false,
+  ),
+  protocol : 'gtest',
+)
+
+
+clang_tidy_program = find_program('clang-tidy', required: false)
+if clang_tidy_program.found()
+  run_target(
+    'clang-tidy',
+    command : [
+      clang_tidy_program,
+      '--quiet',
+      '--use-color',
+      '--config-file=../config/lint/clang-tidy.yml',
+      '-p', meson.current_build_dir(),
+      sources + main_sources + test_sources,
+    ],
+  )
+endif
+
+
+clang_format_program = find_program('clang-format', required: false)
+if clang_format_program.found()
+  run_target(
+    'clang-format',
+    command : [
+      clang_format_program,
+      '--style=file:../config/format/clang-format.yml',
+      '-i',
+      sources + main_sources + test_sources,
+    ],
+  )
+endif

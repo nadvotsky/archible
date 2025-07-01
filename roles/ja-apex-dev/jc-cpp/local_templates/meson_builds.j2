@@ -1,0 +1,45 @@
+{%- set _acc = lookup(
+    "ansible.builtin.template", "local_templates/conan_toolchains.j2",
+) -%}
+{%- for _name, _tchain in _acc.items() -%}
+    {%- if _tchain.default is true -%}
+        {%- continue -%}
+    {%- endif -%}
+
+    {%- if _tchain.conan.conf is defined -%}
+        {%- do _tchain.conan.conf.pop("tools.build:sharedlinkflags", none) -%}
+        {%- set _exelinkflags = (
+            _tchain.conan.conf.get("tools.build:exelinkflags", []) | reject("eq", _tchain.linker.use | default(""))
+        ) -%}
+        {%- if _exelinkflags | length > 0 -%}
+            {%- do _tchain.conan.conf.__setitem__("tools.build:exelinkflags", _exelinkflags) -%}
+        {%- else -%}
+            {%- do _tchain.conan.conf.pop("tools.build:exelinkflags", none) -%}
+        {%- endif -%}
+    {%- endif -%}
+
+    {%- do _tchain.__setitem__("meson", {}) -%}
+    {%- set _meson = {
+        "options": {
+            "prefer_static": (_tchain.linkage is string and _tchain.linkage == "static") | ternary(true, none),
+            "b_lto": _tchain.release is true | ternary(true, none),
+        } | dict2items | rejectattr("value", "none") | items2dict,
+        "binaries": {
+            "c_ld": _tchain.linker.name | default(none),
+            "cpp_ld": _tchain.linker.name | default(none),
+        } | dict2items | rejectattr("value", "none") | items2dict,
+    } -%}
+    {%- for _k, _v in _meson.items() -%}
+        {%- if _v.keys() | length > 0 -%}
+            {%- do _tchain.meson.__setitem__(_k, _v) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- if _tchain.meson.binaries is defined or _tchain.meson.options is defined -%}
+        {%- do _tchain.conan.conf.__setitem__(
+            "tools.meson.mesontoolchain:extra_machine_files", ["../config/natives/{}.ini".format(_name)],
+        ) -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{{ _acc }}

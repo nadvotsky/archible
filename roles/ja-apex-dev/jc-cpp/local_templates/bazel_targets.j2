@@ -1,0 +1,67 @@
+{%- set _rc_lines = [] -%}
+{%- for _name, _tchain in lookup("jc_cmake_toolchains").items() -%}
+    {%- if _tchain.default is true -%}
+        {%- continue -%}
+    {%- endif -%}
+
+    {%- set _lines = [
+        "--force_pic",
+        "--spawn_strategy=local",
+        "--symlink_prefix=build/",
+
+        "--action_env=CC={}".format(_tchain.cxx.name)
+            if _tchain.cxx.name is string else none,
+
+        ["--linkopt {}".format(_tchain.linker.use)]
+            if _tchain.linker.use is string else none,
+
+        ["--cxxopt {}".format(_tchain.cxx.use), "--linkopt {}".format(_tchain.cxx.use)]
+            if _tchain.cxx.use is string else none,
+
+        ["--compilation_mode=opt", "--strip=always", "--copt -O3"]
+            if _tchain.release is true else
+            ["--compilation_mode=dbg", "--strip=never"],
+
+        ("--dynamic_mode=off" if _tchain.linkage == "static" else "--dynamic_mode=fully")
+            if _tchain.linkage is string else none,
+    ] -%}
+
+    {%- for _arg, _flags in {
+        "--copt": _tchain.c.flags,
+        "--cxxopt": _tchain.cxx.flags,
+        "--linkopt": _tchain.linker.flags,
+    }.items() -%}
+        {%- if _flags is defined -%}
+            {%- for _flag in _flags -%}
+                {%- do _lines.append("{} {}".format(_arg, _flag)) -%}
+            {%- endfor -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- for _line in _lines | reject("none") | flatten() -%}
+        {%- do _rc_lines.append("build:{} {}".format(_name, _line)) -%}
+    {%- endfor -%}
+
+    {%- do _rc_lines.append("") -%}
+{%- endfor -%}
+
+{%- set _acc = [
+    {
+        "file": "./.bazelrc",
+        "content": _rc_lines | join("\n"),
+    },
+    {
+        "file": "./src/BUILD",
+        "copy": "bazel/src/BUILD",
+    },
+    {
+        "file": "./test/BUILD",
+        "copy": "bazel/test/BUILD",
+    },
+    {
+        "file": "./MODULE.bazel",
+        "template": "bazel/MODULE.bazel.j2",
+    },
+] -%}
+
+{{ _acc }}

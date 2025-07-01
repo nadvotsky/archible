@@ -1,0 +1,16 @@
+{%- set _acc = [
+    {
+        "file": "./CMakeLists.txt",
+        "template": "cmake/CMakeLists.txt.j2",
+    },
+    {
+        "file": "./CMakePresets.json",
+        "template": "cmake/CMakePresets.json.j2",
+    },
+    {
+        "file": "./README.md",
+        "template": "cmake/README.md.j2",
+    },
+] -%}
+
+{{ _acc }}

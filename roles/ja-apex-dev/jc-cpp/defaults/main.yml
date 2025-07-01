@@ -1,0 +1,73 @@
+---
+jc_toolchains:
+  default:
+    default: true
+
+  debug:
+    inherits:
+      - default
+
+  release:
+    intermediate: true
+    release: true
+  release-static:
+    inherits:
+      - default
+      - release
+    linkage: static
+  release-dynamic:
+    inherits:
+      - default
+      - release
+    linkage: dynamic
+
+  clang:
+    intermediate: true
+    linker:
+      name: lld
+      use: -fuse-ld=lld
+    compiler:
+      version: 19
+      family: clang
+    c:
+      name: clang
+      std: "23"
+    cxx:
+      name: clang++
+      use: -stdlib=libc++
+      stdlib: libc++
+      std: "26"
+
+  clang-debug:
+    inherits:
+      - default
+      - debug
+      - clang
+    c:
+      flags:
+        - -march=native
+        - -mtune=native
+    cxx:
+      flags:
+        - -march=native
+        - -mtune=native
+
+  clang-release:
+    intermediate: true
+    linker:
+      flags:
+        - -Wl,--strip-all,--gc-sections,-O2
+  clang-release-static:
+    inherits:
+      - default
+      - release
+      - release-static
+      - clang
+      - clang-release
+  clang-release-dynamic:
+    inherits:
+      - default
+      - release
+      - release-dynamic
+      - clang
+      - clang-release

@@ -82,12 +82,6 @@
 #
 
 
-- name: Configure C++ developer suite
-  tags:
-    - dev-cplusplus
-  ansible.builtin.import_tasks:
-    file: langs/cplusplus.yml
-
 - name: Configure Rust developer suite
   tags:
     - dev-rust

@@ -1,0 +1,45 @@
+{%- set _acc = [
+    {
+        "file": "./meson.build",
+        "template": "meson/meson.build.j2",
+    },
+    {
+        "file": "./conanfile.py",
+        "template": "meson/conanfile.py.j2",
+    },
+
+    {
+        "dir": "./config/natives",
+        "create": true,
+    },
+] -%}
+{%- for _name, _tchain in _jc_template.builds.items() -%}
+    {%- if _tchain.default is true -%}
+        {%- continue -%}
+    {%- endif -%}
+
+    {%- set _lines = [] -%}
+    {%- for _section in {
+        "built-in options": _tchain.meson.options,
+        "binaries": _tchain.meson.binaries,
+    } | dict2items | selectattr("value", "defined") -%}
+        {%- do _lines.append("[{}]".format(_section.key)) -%}
+        {%- for _prop, _val in _section.value.items() -%}
+            {%- do _lines.append(
+                "{} = {}".format(
+                    _prop, (_val | string | squote) if _val is string else (_val | string | lower),
+                ),
+            ) -%}
+        {%- endfor -%}
+        {%- do _lines.append("\n") -%}
+    {%- endfor -%}
+
+    {%- if _lines | length > 0 -%}
+        {%- do _acc.append({
+            "file": "./config/natives/{}.ini".format(_name),
+            "content": _lines | join("\n"),
+        }) -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{{ _acc }}

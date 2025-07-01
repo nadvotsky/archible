@@ -1,0 +1,45 @@
+{%- set _acc = lookup("jc_cmake_toolchains") -%}
+{%- for _name, _tchain in _acc.items() -%}
+    {%- if _tchain.default is true -%}
+        {%- continue -%}
+    {%- endif -%}
+
+    {%- set _cmake = {
+        "CMAKE_BUILD_TYPE": _tchain.release is true | ternary("Release", "Debug"),
+        "BUILD_SHARED_LIBS": (_tchain.linkage is string and _tchain.linkage == "dynamic") | ternary("ON", none),
+        "CMAKE_LINKER_TYPE": _tchain.linker.name.upper() if _tchain.linker.name is string else none,
+    } -%}
+    {%- if _tchain.linker.name is string and _tchain.linker.use is string -%}
+        {%- do _cmake.update({
+            ("CMAKE_C_USING_LINKER_{}".format(_tchain.linker.name.upper())): _tchain.linker.use,
+            ("CMAKE_CXX_USING_LINKER_{}".format(_tchain.linker.name.upper())): _tchain.linker.use,
+        }) -%}
+    {%- endif -%}
+
+    {%- for _var, _val in {
+        "CMAKE_EXE_LINKER_FLAGS_INIT": _tchain.linker.flags,
+        "CMAKE_MODULE_LINKER_FLAGS_INIT": _tchain.linker.flags,
+        "CMAKE_SHARED_LINKER_FLAGS_INIT": _tchain.linker.flags,
+        "CMAKE_C_COMPILER": _tchain.c.name,
+        "CMAKE_C_FLAGS_INIT": _tchain.c.flags,
+        "CMAKE_CXX_COMPILER": _tchain.cxx.name,
+        "CMAKE_CXX_FLAGS_INIT": _tchain.cxx.flags,
+    }.items() -%}
+        {%- if _val is defined -%}
+            {%- do _cmake.__setitem__(_var, _val) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- if _tchain.cxx.use is string -%}
+        {%- do _cmake.__setitem__(
+            "CMAKE_CXX_FLAGS_INIT", [_tchain.cxx.use] + _cmake.get("CMAKE_CXX_FLAGS_INIT", []),  
+        ) -%}
+    {%- endif -%}
+
+    {%- do _tchain.update({
+        "cmake": _cmake | dict2items | rejectattr("value", "none") | items2dict,
+        "toolchain": "${{sourceDir}}/config/toolchains/{}.cmake".format(_name),
+    }) -%}
+{%- endfor -%}
+
+{{ _acc }}

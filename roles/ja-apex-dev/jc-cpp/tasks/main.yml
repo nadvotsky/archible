@@ -1,0 +1,236 @@
+---
+#
+# TODO: README.md for each
+#
+- name: Configure C++ language
+  tags: apex-dev-cpp-main
+  block:
+    - name: Install common C++ packages
+      foundation.system.packages:
+      vars:
+        install:
+          - base-devel
+          - llvm
+          - clang
+          - lldb
+          - lld
+          - libc++
+          - ninja
+          - valgrind
+
+- name: Configure CMake
+  tags: apex-dev-cpp-cmake
+  vars:
+    _jc_template:
+      name: cpp-cmake-template
+      fetch: true
+      toolchains: "{{ lookup('ansible.builtin.template', 'local_templates/cmake_toolchains.j2') }}"
+  block:
+    - name: Install cmake
+      foundation.system.packages:
+      vars:
+        install:
+          - cmake
+
+    - name: Resolve cmake user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        user_package_repo:
+          default: "{{ fa_dir_home }}/.cmake"
+          xdg:
+            link: "{{ fa_dir_state }}/cmake"
+
+    - name: Render CMake template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/{{ _jc_template.name }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _cpp = lookup('ansible.builtin.template', 'local_templates/cpp_targets.j2') -%}
+          {%- set _cmake = lookup('ansible.builtin.template', 'local_templates/cmake_targets.j2') -%}
+          {%- set _cmake_shared = lookup('ansible.builtin.template', 'local_templates/cmake_shared_targets.j2') -%}
+          {{ _cpp + _cmake + _cmake_shared }}
+
+- name: Configure vcpkg
+  tags: apex-dev-cpp-vcpkg
+  vars:
+    _jc_template:
+      name: cpp-vcpkg-template
+      toolchains: "{{ lookup('ansible.builtin.template', 'local_templates/vcpkg_toolchains.j2') }}"
+  block:
+    - name: Install vcpkg packages
+      foundation.system.packages:
+      vars:
+        install:
+          - vcpkg
+
+    - name: Resolve vcpkg user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        cache:
+          default: "{{ fa_dir_cache }}/vcpkg"
+        root:
+          default: "{{ fa_dir_share }}/vcpkg"
+          dot: "{{ fa_dir_home }}/.vcpkg"
+      register: _jc_vcpkg_ulayout
+
+    - name: Apply vcpkg dot layout
+      when: fa_layout == 'dot'
+      become: true
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        VCPKG_ROOT: "{{ _jc_vcpkg_ulayout.root }}"
+
+    - name: Create vcpkg home directory
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - dir: "{{ _jc_vcpkg_ulayout.root }}"
+            perms: "755:{{ ca_name }}:{{ ca_name }}"
+            create: true
+
+    - name: Bootstrap vcpkg
+      ansible.builtin.git:
+        repo: git@github.com:microsoft/vcpkg.git
+        dest: "{{ _jc_vcpkg_ulayout.root }}"
+        single_branch: true
+        version: master
+
+    - name: Render vcpkg template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/{{ _jc_template.name }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _cpp = lookup('ansible.builtin.template', 'local_templates/cpp_targets.j2') -%}
+          {%- set _cmake_shared = lookup('ansible.builtin.template', 'local_templates/cmake_shared_targets.j2') -%}
+          {%- set _vcpkg = lookup('ansible.builtin.template', 'local_templates/vcpkg_targets.j2') -%}
+          {{ _cpp + _cmake_shared + _vcpkg }}
+
+- name: Configure conan
+  tags: apex-dev-cpp-conan
+  vars:
+    _jc_template:
+      name: cpp-conan-template
+      toolchains: "{{ lookup('ansible.builtin.template', 'local_templates/conan_toolchains.j2') }}"
+  block:
+    - name: Install conan
+      foundation.system.packages:
+      vars:
+        install:
+          - conan
+
+    - name: Resolve conan user layout
+      become: true
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        home:
+          default: "{{ fa_dir_home }}/.conan2"
+          xdg: "{{ fa_dir_share }}/conan"
+      register: _jc_conan_ulayout
+
+    - name: Apply XDG conan layout
+      when: fa_layout == 'xdg'
+      become: true
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        CONAN_HOME: "{{ _jc_conan_ulayout.home }}"
+
+    - name: Render conan template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/{{ _jc_template.name }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _cpp = lookup('ansible.builtin.template', 'local_templates/cpp_targets.j2') -%}
+          {%- set _cmake_shared = lookup('ansible.builtin.template', 'local_templates/cmake_shared_targets.j2') -%}
+          {%- set _conan_shared = lookup('ansible.builtin.template', 'local_templates/conan_shared_targets.j2') -%}
+          {%- set _conan = lookup('ansible.builtin.template', 'local_templates/conan_targets.j2') -%}
+          {{ _cpp + _cmake_shared + _conan_shared + _conan }}
+
+- name: Configure meson
+  tags: apex-dev-cpp-meson
+  vars:
+    _jc_template:
+      name: cpp-meson-template
+      toolchains: "{{ lookup('ansible.builtin.template', 'local_templates/meson_toolchains.j2') }}"
+  block:
+    - name: Install meson
+      foundation.system.packages:
+      vars:
+        install:
+          - meson
+
+    - name: Render meson template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/{{ _jc_template.name }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _cpp = lookup('ansible.builtin.template', 'local_templates/cpp_targets.j2') -%}
+          {%- set _conan_shared = lookup('ansible.builtin.template', 'local_templates/conan_shared_targets.j2') -%}
+          {%- set _meson = lookup('ansible.builtin.template', 'local_templates/meson_targets.j2') -%}
+          {{ _cpp + _conan_shared + _meson }}
+
+- name: Configure bazel
+  tags: apex-dev-cpp-bazel
+  vars:
+    _jc_template:
+      name: cpp-bazel-template
+  block:
+    - name: Install bazelisk version manager
+      foundation.system.packages:
+      vars:
+        remove:
+          - bazel
+        install:
+          - bazelisk-bin
+
+    - name: Wipe bazel
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - file: "{{ fa_dir_home }}/.bazelrc"
+          - dir: "{{ fa_dir_cache }}/bazel"
+
+    - name: Fetch bazel-compile-commands releases
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/kiron1/bazel-compile-commands/releases/latest
+        return_content: true
+      register: _jc_bazel_compile_commands
+
+    - name: Download and unpack latest bazel-compile-commands release
+      ansible.builtin.shell:
+        chdir: "{{ fa_dir_bin }}"
+        cmd: "set -o pipefail && {{ lookup('ansible.builtin.template', 'local_templates/bazel_tools.j2') }}"
+      register: _jc_bazel_compile_commands_invocation
+      changed_when: _jc_bazel_compile_commands_invocation.rc == 0
+
+    - name: Render bazel template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/{{ _jc_template.name }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _cpp = lookup('ansible.builtin.template', 'local_templates/cpp_targets.j2') -%}
+          {%- set _bazel = lookup('ansible.builtin.template', 'local_templates/bazel_targets.j2') -%}
+          {{ _cpp + _bazel }}
