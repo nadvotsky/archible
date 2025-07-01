@@ -99,10 +99,3 @@
     - dev-js
   ansible.builtin.import_tasks:
     file: langs/javascript.yml
-
-- name: Configure C# developer suite
-  tags:
-    - dev-dotnet
-  ansible.builtin.import_tasks:
-    file: langs/dotnet.yml
-

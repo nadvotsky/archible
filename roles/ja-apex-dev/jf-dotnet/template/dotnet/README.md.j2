@@ -1,0 +1,38 @@
+# dotnet-template
+
+## .NET Cheatsheet
+
+### Dependencies
+
+- Install Dependencies: ```dotnet restore```
+- Update Dependencies: *IDE*
+
+### Templates and Multi-Project Configurations
+
+- Search Templates: ```dotnet new search wasmconsole```
+- Solution: ```dotnet new sln [--name My.Solution]```
+- References: ```dotnet add reference src/Template.Another```
+
+### Working with Code
+
+- Lint: ```dotnet build```
+- Fix: ```dotnet format```
+- Test: ```dotnet test [--filter UtilTests]```
+
+### Developement Flow
+
+- Run: ```dotnet run [--project <>.csproj]```
+- Build: ```dotnet publish [-a linux-x64] [-o dist] [--sc] [-p:PublishTrimmed=true] [-p:PublishSingleFile=true] [-p:PublishReadyToRun=true]```
+
+### Links
+
+- Project Organization: <https://learn.microsoft.com/en-us/dotnet/core/porting/project-structure>
+- Naming Guidelines: <https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/naming-guidelines>
+- Coding Convensions: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions>
+- NUnit Usage: <https://docs.nunit.org/articles/nunit/technical-notes/usage/Usage-Notes.html>
+- dotnet Templates: <https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new-sdk-templates>
+- dotnet Tools: <https://github.com/quozd/awesome-dotnet?tab=readme-ov-file#code-analysis-and-metrics>
+- RID: <https://learn.microsoft.com/en-us/dotnet/core/rid-catalog>
+- Single-File Publish: <https://github.com/dotnet/designs/blob/main/accepted/2020/single-file/design.md>
+
+{{ ja_readme }}

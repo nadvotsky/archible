@@ -1,0 +1,147 @@
+---
+- name: Configure .NET user layout
+  tags: apex-dev-dotnet-layout
+  block:
+    #
+    # There is no need to set DOTNET_ROOT, as the dotnet-install.sh installs complete .NET suite: runtime, sdk,
+    #  and entry dotnet binary. This binary sdk auto-discovery is set to the binary directory and not the popular
+    #  linux default (/usr/share/dotnet).
+    #
+    # This means that there is no need for any dotnet-tools system package as it used to be with AUR, and the only
+    #  thing that is required to get started is to add this binary to the PATH variable.
+    #
+    # Moreover, even if the system dotnet-runtime or dotnet-sdk is installed, such installation does not interfere
+    #  with them.
+    #
+    - name: Resolve dotnet user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        dotnet_root:
+          default: "{{ fa_dir_home }}/.dotnet"
+          xdg: "{{ fa_dir_share }}/dotnet"
+        dotnet_tools:
+          default: "{{ fa_dir_home }}/.dotnet/tools"
+          xdg: "{{ fa_dir_state }}/dotnet/tools"
+
+        nuget:
+          default: "{{ fa_dir_home }}/.nuget"
+        nuget_packages:
+          default: "{{ fa_dir_home }}/.nuget/packages"
+          xdg: "{{ fa_dir_state }}/nuget"
+        nuget_cache:
+          default: "{{ fa_dir_share }}/NuGet/v3-cache"
+          xdg: /tmp/nuget/cache
+          dot: /tmp/nuget/cache
+        nuget_temp:
+          default: "/tmp/NuGetScratch{{ ca_name }}"
+          xdg: /tmp/nuget/temp
+          dot: /tmp/nuget/temp
+        nuget_plugins:
+          default: "{{ fa_dir_share }}/NuGet/plugins-cache"
+          xdg: "{{ fa_dir_cache }}/nuget/plugins"
+          dot: "{{ fa_dir_cache }}/nuget/plugins"
+      register: _jf_ulayout
+
+- name: Configure .NET
+  tags: apex-dev-dotnet-main
+  block:
+    - name: Install dotnet runtime dependencies
+      foundation.system.packages:
+      vars:
+        install:
+          - icu
+          - krb5
+          - libunwind
+          - zlib
+
+    - name: Create dotnet root
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - dir: "{{ _jf_ulayout.dotnet_root }}"
+            create: true
+            perms: "755:{{ ca_name }}:{{ ca_name }}"
+
+    - name: Download dotnet-install.sh
+      ansible.builtin.get_url:
+        url: https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh
+        dest: "{{ _jf_ulayout.dotnet_root }}/dotnet-install"
+        mode: "0755"
+
+    - name: Install dotnet via dotnet-install.sh
+      ansible.builtin.command:
+        argv:
+          - "{{ _jf_ulayout.dotnet_root }}/dotnet-install"
+          - --channel
+          - STS
+          - --install-dir
+          - "{{ _jf_ulayout.dotnet_root }}"
+          - --no-path
+      register: _jf_install_invocation
+      changed_when: _jf_install_invocation.rc == 0
+
+    - name: Set dotnet and NuGet environment variables
+      become: true
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        NUGET_HTTP_CACHE_PATH: "{{ _jf_ulayout.nuget_cache }}"
+        NUGET_SCRATCH: "{{ _jf_ulayout.nuget_temp }}"
+        NUGET_PLUGINS_CACHE_PATH: "{{ _jf_ulayout.nuget_plugins }}"
+
+        DOTNET_SYSTEM_NET_DISABLEIPV6: "1"
+        DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+        DOTNET_GENERATE_ASPNET_CERTIFICATE: "0"
+        DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: "0"
+
+    - name: Apply Nuger XDG layout
+      become: true
+      when: fa_layout == 'xdg'
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        NUGET_PACKAGES: "{{ _jf_ulayout.nuget_packages }}"
+
+- name: Configure .NET template
+  tags: apex-dev-dotnet-template
+  block:
+    - name: Render dotnet template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/dotnet-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets:
+          - dir: ./
+          - file: ./stylecop.json
+            copy: dotnet/stylecop.json
+          - file: ./.gitignore
+            template: dotnet/gitignore.j2
+          - file: ./.editorconfig
+            template: dotnet/editorconfig.j2
+          - file: ./README.md
+            template: dotnet/README.md.j2
+          - file: ./mise.local.toml
+            template: dotnet/mise.local.toml.j2
+
+          - dir: ./src
+          - dir: ./src/Template
+          - dir: ./src/Template/Utilities
+          - file: ./src/Template/Utilities/Util.Strings.cs
+            copy: dotnet/src/Template/Utilities/Util.Strings.cs
+          - file: ./src/Template/Program.Template.cs
+            copy: dotnet/src/Template/Program.Template.cs
+
+          - dir: ./tests
+          - dir: ./tests/Template.Tests
+          - dir: ./tests/Template.Tests/Utilities
+          - file: ./tests/Template.Tests/Utilities/UtilTests.cs
+            copy: dotnet/tests/Template.Tests/Utilities/UtilTests.cs
