@@ -1,0 +1,198 @@
+---
+- name: Configure Java
+  tags: apex-dev-java-main
+  block:
+    - name: Install java user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - java@latest
+          - java@oracle-graalvm
+
+- name: Configure Java context
+  tags: apex-dev-java-context
+  block:
+    - name: Define Java sources targets
+      ansible.builtin.set_fact:
+        _je_targets:
+          - dir: ./config
+          - dir: ./config/checkstyle
+          - file: ./config/checkstyle/checkstyle.xml
+            copy: java/config/checkstyle/checkstyle.xml
+          - file: ./config/checkstyle/suppressions.xml
+            copy: java/config/checkstyle/suppressions.xml
+
+          - dir: ./src
+          - dir: ./src/main
+          - dir: ./src/main/java
+          - dir: ./src/main/java/com
+          - dir: ./src/main/java/com/example
+          - dir: ./src/main/java/com/example/util
+          - file: ./src/main/java/com/example/util/Util.java
+            copy: java/src/main/java/com/example/util/Util.java
+          - file: ./src/main/java/com/example/Main.java
+            copy: java/src/main/java/com/example/Main.java
+
+          - dir: ./src/test
+          - dir: ./src/test
+          - dir: ./src/test/java
+          - dir: ./src/test/java/com
+          - dir: ./src/test/java/com/example
+          - dir: ./src/test/java/com/example/util
+          - file: ./src/test/java/com/example/util/UtilTests.java
+            copy: java/src/main/java/com/example/util/UtilTests.java
+
+- name: Configure Apache Maven
+  tags: apex-dev-java-maven
+  block:
+    - name: Install maven user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - aqua:apache/maven@latest
+
+    - name: Resolve maven user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        home:
+          default: "{{ fa_dir_home }}/.m2"
+          xdg: "{{ fa_dir_state }}/maven"
+      register: _je_maven_ulayout
+
+    - name: Apply XDG maven layout
+      when: fa_layout == 'xdg'
+      become: true
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        MAVEN_OPTS: "-Dmaven.repo.local={{ _je_maven_ulayout.home }}"
+
+    - name: Render maven template
+      foundation.files.install:
+        wipe: never
+        base: "{{ fa_dir_xdg.templates }}/java-maven-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./.editorconfig
+            template: java/editorconfig.j2
+          - file: ./.gitignore
+            template: java/gitignore.j2
+          - file: ./README.md
+            template: maven/README.md.j2
+          - file: ./pom.xml
+            template: maven/pom.xml.j2
+          - file: ./mise.toml
+            template: maven/mise.toml.j2
+
+    - name: Render java template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/java-maven-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets: "{{ _je_targets }}"
+
+- name: Configure Gradle
+  tags: apex-dev-java-gradle
+  block:
+    - name: Install gradle user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - gradle@latest
+
+    - name: Resolve gradle user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        home:
+          default: "{{ fa_dir_home }}/.gradle"
+          xdg: "{{ fa_dir_state }}/gradle"
+      register: _je_gradle_ulayout
+
+    - name: Apply XDG gradle layout
+      when: fa_layout == 'xdg'
+      become: true
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        GRADLE_USER_HOME: "{{ _je_gradle_ulayout.home }}"
+
+    - name: Render global gradle configuration
+      foundation.files.install:
+        wipe: never
+        base: "{{ _je_gradle_ulayout.home }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - file: ./gradle.properties
+            content: |
+              org.gradle.parallel=true
+              org.gradle.caching=true
+              org.gradle.daemon.idletimeout=1200000
+              org.gradle.configuration-cache=true
+              org.gradle.test.worker={{ (ba_cores / 2) | round | int }}
+              org.gradle.java.installations.auto-download=false
+
+    - name: Render maven template
+      foundation.files.install:
+        wipe: never
+        base: "{{ fa_dir_xdg.templates }}/java-gradle-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./.editorconfig
+            template: java/editorconfig.j2
+          - file: ./.gitignore
+            template: java/gitignore.j2
+          - file: ./README.md
+            template: gradle/README.md.j2
+
+          - file: ./gradle.properties
+            copy: gradle/gradle.properties
+          - file: ./settings.gradle
+            copy: gradle/settings.gradle
+          - file: ./mise.toml
+            template: maven/mise.toml.j2
+
+          - dir: ./gradle
+            create: true
+          - file: ./gradle/libs.versions.toml
+            copy: gradle/gradle/libs.versions.toml
+
+          - dir: ./app
+            create: true
+          - file: ./app/build.gradle
+            template: gradle/app/build.gradle.j2
+
+    - name: Render java template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/java-gradle-template/app"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets: "{{ _je_targets }}"

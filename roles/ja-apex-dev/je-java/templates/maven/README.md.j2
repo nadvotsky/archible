@@ -1,0 +1,39 @@
+# java-maven-template
+
+## Apache Maven Cheatsheet
+
+### Dependencies
+
+- Install Dependencies: ```[./]mvn[w] dependency:resolve```
+- Update Dependencies: ```[./]mvn[w] versions:display-property-updates``` or ```[./]mvn[w] versions:update-properties```
+- Wrapper: ```[./]mvn[w] wrapper:wrapper```
+
+### Working with Code
+
+- Format: ```[./]mvn[w] checkstyle:checkstyle```
+- Source Code Analysis: ```[./]mvn[w] pmd:pmd```
+- Bytecode Analysis: ```[./]mvn[w] compile spotbugs:spotbugs``` or ```[./]mvn[w] compile spotbugs:gui```
+- All-in-One Linting: ```[./]mvn[w] verify```
+- Test: ```[./]mvn[w] test```
+
+### Developement Flow
+
+- Run: ```[./]mvn[w] compile exec:java```
+- Build: ```[./]mvn[w] package```
+- Clean: ```[./]mvn[w] clean```
+
+### Links
+
+- Maven Surefire: <https://maven.apache.org/surefire/maven-surefire-plugin/test-mojo.html>
+- Rerun Failed Tests: <https://maven.apache.org/surefire/maven-surefire-plugin/examples/rerun-failing-tests.html>
+- Maven Wrapper: <https://maven.apache.org/wrapper/>
+- Maven Workspace: <https://www.baeldung.com/maven-multi-module>
+- PMD Plugin: <https://maven.apache.org/plugins/maven-pmd-plugin/pmd-mojo.html>
+- Checkstyle Plugin: <https://maven.apache.org/plugins/maven-checkstyle-plugin/checkstyle-mojo.html>
+- Checkstyle: <https://checkstyle.sourceforge.io/>
+- Checkstyle Sun Checks: <https://github.com/checkstyle/checkstyle/blob/master/src/main/resources/sun_checks.xml>
+- Spotbugs Plugin: <https://spotbugs.github.io/spotbugs-maven-plugin/spotbugs-mojo.html>
+- Findsecbugs: <https://find-sec-bugs.github.io/>
+- Error Prone: <https://errorprone.info/docs/installation>
+
+{{ ja_readme }}

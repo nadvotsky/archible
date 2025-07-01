@@ -1,0 +1,38 @@
+# java-gradle-template
+
+## Gradle Cheatsheet
+
+### Dependencies
+
+- Install Dependencies: *automatically during the build*
+- Update Dependencies: ```vim ./gradle/libs.versions.toml```
+- Wrapper: ```[./]gradle[w] wrapper```
+
+### Working with Code
+
+- Format: ```[./]gradle[w] app:checkstyle[Main/Test] [--rerun-tasks]```
+- Source Code Analysis: ```[./]gradle[w] app:pmd[Main/Test] [--rerun-tasks]```
+- Bytecode Analysis: ```[./]gradle[w] app:spotbugs[Main/Test] [--rerun-tasks]```
+- All-in-One Linting: ```[./]gradle[w] check [--rerun-tasks]```
+- Test: ```[./]gradle[w] test [--rerun-tasks] [--tests SomeTestClass.someMethod]```
+
+### Developement Flow
+
+- Run: ```[./]gradle[w] app:run```
+- Build: ```[./]gradle[w] build```
+- Clean: ```[./]gradle[w] clean```
+
+### Links
+
+- Structuring Multi P`roject: <https://docs.gradle.org/current/userguide/multi_project_builds.html>
+- Gradle Version Catalog: <https://docs.gradle.org/current/userguide/version_catalogs.html>
+- Gradle Wrapper: <https://docs.gradle.org/current/userguide/gradle_wrapper.html>
+- PMD Plugin: <https://docs.gradle.org/current/userguide/pmd_plugin.html>
+- Checkstyle Plugin: <https://docs.gradle.org/current/userguide/checkstyle_plugin.html>
+- Checkstyle: <https://checkstyle.sourceforge.io/>
+- Checkstyle Sun Checks: <https://github.com/checkstyle/checkstyle/blob/master/src/main/resources/sun_checks.xml>
+- Spotbugs Plugin: <https://spotbugs.readthedocs.io/en/latest/gradle.html>
+- Findsecbugs: <https://find-sec-bugs.github.io/>
+- Error Prone: <https://errorprone.info/docs/installation>
+
+{{ ja_readme }}

@@ -1,0 +1,13 @@
+[tools]
+java = "oracle-graalvm"
+"aqua:apache/maven" = "latest"
+
+[env]
+MAVEN_OPTS = "{% raw %}{{get_env(name='MAVEN_OPTS', default='')}}{% endraw %} {{ je_jvmopts }}"
+
+[tasks.init]
+description = "Initialize template to a working state."
+run = [
+    "mvn versions:display-property-updates",
+    "mvn wrapper:wrapper",
+]

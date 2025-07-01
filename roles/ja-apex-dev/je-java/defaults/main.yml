@@ -1,0 +1,9 @@
+---
+je_jvmopts: >-
+  -XX:+UnlockExperimentalVMOptions
+  -XX:+UseZGC -XX:+ZGenerational
+  -XX:-EnableJVMCI
+  -XX:+UseGraalJIT
+  -XX:-OmitStackTraceInFastThrow
+  -XX:+ParallelRefProcEnabled
+  -XX:+PerfDisableSharedMem

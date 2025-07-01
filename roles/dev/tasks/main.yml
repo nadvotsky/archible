@@ -100,12 +100,6 @@
   ansible.builtin.import_tasks:
     file: langs/javascript.yml
 
-- name: Configure Java developer suite
-  tags:
-    - dev-java
-  ansible.builtin.import_tasks:
-    file: langs/java.yml
-
 - name: Configure C# developer suite
   tags:
     - dev-dotnet

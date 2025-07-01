@@ -6,9 +6,9 @@
 >
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.example</groupId>
-  <artifactId>maven-template</artifactId>
+  <artifactId>java-maven-template</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <name>maven-template</name>
+  <name>java-maven-template</name>
   <url>http://maven.apache.org</url>
   <description>An example maven project</description>
   <licenses>
@@ -21,10 +21,9 @@
   </licenses>
   <developers>
     <developer>
-      <id>{{ users.user.name }}</id>
-      <name>{{ users.user.full }}</name>
-      <email>{{ users.user.email }}</email>
-      <timezone>Europe/Kyiv</timezone>
+      <id>{{ ca_name }}</id>
+      <name>{{ ca_info_full }}</name>
+      <email>{{ ca_info_mail }}</email>
     </developer>
   </developers>
   <scm>
@@ -34,7 +33,7 @@
   </scm>
   <packaging>jar</packaging>
   <properties>
-    <maven.compiler.release>{{ apps.java.release }}</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <tools.failOnError>false</tools.failOnError>

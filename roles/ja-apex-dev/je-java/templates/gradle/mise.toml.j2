@@ -1,0 +1,10 @@
+[tools]
+java = "oracle-graalvm"
+gradle = "latest"
+
+[env]
+JAVA_OPTS = "{{ je_jvmopts }}"
+
+[tasks.init]
+description = "Initialize template to a working state."
+run = "gradle wrapper"
