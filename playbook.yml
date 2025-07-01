@@ -72,6 +72,7 @@
 
     - { role: ja-apex-dev/jb-containers, tags: apex-dev-containers }
     - { role: ja-apex-dev/jc-cpp, tags: apex-dev-cpp }
+    - { role: ja-apex-dev/jd-rust, tags: apex-dev-rust }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

@@ -1,0 +1,106 @@
+---
+- name: Configure rust system fix
+  tags: apex-dev-rust-fix
+  block:
+    - name: Install Rust distribution instead of rustup for system purposes
+      foundation.system.packages:
+      vars:
+        remove:
+          - rustup
+        install:
+          - rust
+
+- name: Configure Rust
+  tags: apex-dev-rust-main
+  block:
+    - name: Install Rust packages
+      foundation.system.packages:
+      vars:
+        install:
+          - lldb
+          - lld
+
+    - name: Resolve Rust user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        rustup:
+          default: "{{ fa_dir_home }}/.rustup"
+          xdg: "{{ fa_dir_state }}/rustup"
+        cargo:
+          default: "{{ fa_dir_home }}/.cargo"
+          xdg: "{{ fa_dir_state }}/cargo"
+      register: _jd_ulayout
+
+    - name: Apply XDG Rust layout
+      when: fa_layout == 'xdg'
+      become: true
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        RUSTUP_HOME: "{{ _jd_ulayout.rustup }}"
+        CARGO_HOME: "{{ _jd_ulayout.cargo }}"
+
+    - name: Install Rust user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - rust@nightly
+          - rust@stable
+      environment:
+        RUSTUP_HOME: "{{ _jd_ulayout.rustup }}"
+        CARGO_HOME: "{{ _jd_ulayout.cargo }}"
+
+    - name: Render rust template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/rust-template"
+        create: true
+      vars:
+        targets:
+          - dir: ./
+
+          - dir: ./src
+          - dir: ./src/util
+          - file: ./src/util/join.rs
+            copy: rust/src/util/join.rs
+          - file: ./src/util.rs
+            copy: rust/src/util.rs
+          - file: ./src/main.rs
+            copy: rust/src/main.rs
+
+          - file: ./.editorconfig.j2
+            template: rust/editorconfig.j2
+          - file: ./.gitignore
+            template: rust/gitignore.j2
+
+          - file: ./rust-toolchain.toml
+            content: |
+              [toolchain]
+              channel = "nightly"
+          - file: ./Cargo.toml
+            template: rust/Cargo.toml.j2
+
+          - file: ./mise.toml
+            content: |
+              [tools]
+              rust = "nightly"
+
+              [env]
+              RUSTFLAGS = "-Z threads={{ (ba_cores / 2) | round | int }} -Z linker-features=+lld -C target-cpu=native"
+              #
+              # Rust stable alternative:
+              #
+              # RUSTFLAGS = "-C target-cpu=native -C link-arg=-fuse-ld=lld"
+          - file: ./mise.local.toml
+            content: |
+              [env]
+              _.path = ["{{ _jd_ulayout.cargo }}/bin"]
+
+          - file: ./README.md
+            template: rust/README.md.j2
