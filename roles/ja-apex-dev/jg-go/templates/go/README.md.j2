@@ -1,0 +1,33 @@
+# go-template
+
+## Go Cheatsheet
+
+### Dependencies
+
+- Install dependencies: ```go mod download```
+- Update dependencies: ```go get -u``` or ```go mod tidy```
+
+### Working with Code
+
+- Format: ```go fmt```
+- Check: ```go vet```
+- Lint: ```golangci-lint run [--fix]``` or ```revive -config revive.toml -formatter friendly './cmd/...' './internal/...'```
+- Test: ```go test './...'```
+
+### Developement Flow
+
+- Run: ```go run .```
+- Build: ```CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build [-trimpath] [-o dist/go-template]```
+
+### Links
+
+- `GOOS` and `GOARCH`: <https://gist.github.com/asukakenji/f15ba7e588ac42795f421b48b8aede63>
+- golangci-lint: <https://golangci-lint.run/usage/linters>
+- revive: <https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md>
+- Awesome Lists: <https://github.com/avelino/awesome-go>
+- testify: <https://github.com/stretchr/testify>
+- Go Testing: <https://go.dev/doc/tutorial/add-a-test>
+- Go by Example: <https://gobyexample.com/>
+- Go Workspaces: <https://go.dev/doc/tutorial/workspaces>
+
+{{ ja_readme }}

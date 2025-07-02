@@ -3,7 +3,7 @@ package util_test
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"example.com/golang-template/util"
+	"example.com/go-template/util"
 )
 
 func TestJoinStringsSeparator(t *testing.T) {

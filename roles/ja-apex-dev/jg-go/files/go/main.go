@@ -1,7 +1,7 @@
 package main
 
 import (
-	"example.com/golang-template/util"
+	"example.com/go-template/util"
 )
 
 func main() {

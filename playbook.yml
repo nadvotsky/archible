@@ -75,6 +75,7 @@
     - { role: ja-apex-dev/jd-rust, tags: apex-dev-rust }
     - { role: ja-apex-dev/je-java, tags: apex-dev-java }
     - { role: ja-apex-dev/jf-dotnet, tags: apex-dev-dotnet }
+    - { role: ja-apex-dev/jg-go, tags: apex-dev-go }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

@@ -1,0 +1,11 @@
+[tools]
+go = "latest"
+"aqua:golangci/golangci-lint" = "latest"
+
+[tasks.init]
+description = "Initialize template to a working state."
+run = [
+    "go mod init example.com/go-template",
+    "go get github.com/stretchr/testify",
+    "go mod download",
+]
