@@ -1,0 +1,31 @@
+# python-template
+
+## Python Cheatsheet
+
+### Dependencies
+
+- Install Dependencies: ```uv sync```
+- Update Dependencies: ```uv sync -U``` (does not modify pyproject.toml)
+
+### Working with Code
+
+- Format: ```uvx ruff format```
+- Lint: ```uvx ruff check```
+- Typecheck: ```uv run ruff mypy src```
+- Test: ```uv run pytest```
+
+### Developement Flow
+
+- Run: ```uv run ./src/main.py```
+- Build: ```uv build```
+
+### Links
+
+- uv Workspaces: <https://docs.astral.sh/uv/concepts/projects/workspaces/#workspace-sources>
+- pytest Fixtures: <https://docs.pytest.org/en/stable/reference/fixtures.html>
+- Skip Tests: <https://docs.pytest.org/en/stable/how-to/skipping.html>
+- ruff: <https://docs.astral.sh/ruff/configuration/>
+- PDM: <https://pdm-project.org/en/latest/usage/uv/#use-uv-experimental>
+- poetry: <https://python-poetry.org/>
+
+{{ ja_readme }}

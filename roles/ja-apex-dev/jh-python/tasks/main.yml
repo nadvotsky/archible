@@ -1,0 +1,249 @@
+---
+- name: Configure Python
+  tags: apex-dev-python-main
+  block:
+    - name: Install Python user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - python@latest
+
+    - name: Resolve Python user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        pycache:
+          default: "{{ fa_dir_cache }}/python/cache"
+        history:
+          default: "{{ fa_dir_home }}/.python_history"
+          xdg: "{{ fa_dir_cache }}/python/history"
+          dot: "{{ fa_dir_cache }}/python/history"
+      register: _jh_python_ulayout
+
+    - name: Apply Python layout
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        PYTHONPYCACHEPREFIX: "{{ _jh_python_ulayout.pycache }}"
+        PYTHON_HISTORY: "{{ _jh_python_ulayout.history }}"
+
+- name: Configure uv
+  tags: apex-dev-python-uv
+  block:
+    - name: Install uv packages
+      foundation.system.packages:
+      vars:
+        install:
+          - uv
+
+    - name: Resolve uv user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        cache:
+          default: "{{ fa_dir_cache }}/uv"
+        python:
+          default: "{{ fa_dir_share }}/uv/python"
+          dot: "{{ fa_dir_home }}/.uv/python"
+        tools:
+          default: "{{ fa_dir_share }}/uv/tools"
+          dot: "{{ fa_dir_home }}/.uv/tools"
+      register: _jh_uv_ulayout
+
+    - name: Apply uv dot layout
+      when: fa_layout == 'dot'
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        UV_PYTHON_INSTALL_DIR: "{{ _jh_uv_ulayout.python }}"
+        UV_TOOL_DIR: "{{ _jh_uv_ulayout.tools }}"
+
+- name: Configure IPython
+  tags: apex-dev-python-ipython
+  block:
+    - name: Resolve IPython user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        home:
+          default: "{{ fa_dir_home }}/.ipython"
+          xdg: "{{ fa_dir_state }}/ipython"
+      register: _jh_ipython_ulayout
+
+    - name: Apply IPython XDG layout
+      when: fa_layout == 'xdg'
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        IPYTHONDIR: "{{ _jg_ipython_ulayout.home }}"
+
+- name: Configure ruff
+  tags: apex-dev-python-ruff
+  block:
+    - name: Resolve ruff user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        cache:
+          default: "{{ fa_dir_cache }}/ruff"
+      register: _jh_ruff_ulayout
+
+    - name: Apply ruff layout
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        RUFF_CACHE_DIR: "{{ _jh_ruff_ulayout.cache }}"
+
+- name: Configure mypy
+  tags: apex-dev-python-mypy
+  block:
+    - name: Resolve mypy user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        config_ini:
+          default: "{{ fa_dir_home }}/.mypy.ini"
+        config:
+          default: "{{ fa_dir_config }}/mypy"
+        cache:
+          default: "{{ fa_dir_cache }}/mypy"
+      register: _jh_mypy_ulayout
+
+    - name: Apply ruff layout
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        MYPY_CACHE_DIR: "{{ _jh_mypy_ulayout.cache }}"
+
+- name: Configure black
+  tags: apex-dev-python-black
+  block:
+    - name: Resolve black user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        config:
+          default: "{{ fa_dir_config }}/black"
+
+- name: Configure pdm
+  tags: apex-dev-python-pdm
+  block:
+    - name: Resolve pdm user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        config:
+          default: "{{ fa_dir_config }}/pdm"
+        cache:
+          default: "{{ fa_dir_cache }}/pdm"
+        log:
+          default: "{{ fa_dir_state }}/pdm"
+          dot: "{{ fa_dir_cache }}/.pdm/logs"
+        python:
+          default: "{{ fa_dir_share }}/pdm/python"
+          dot: "{{ fa_dir_home }}/.pdm/python"
+        venv:
+          default: "{{ fa_dir_share }}/pdm/venvs"
+          dot: "{{ fa_dir_home }}/.pdm/venvs"
+      register: _jh_pdm_ulayout
+
+    - name: Render pdm configuration
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: "{{ fa_dir_config }}/pdm/config.toml"
+            perms: "644:{{ ca_name }}:{{ ca_name }}"
+            content: |
+              use_uv = true
+              venv.location = {{ _jh_pdm_ulayout.venv }}
+              python.install_root = {{ _jh_pdm_ulayout.python }}
+              log_dir = {{ _jh_pdm_ulayout.log }}
+
+- name: Configure poetry
+  tags: apex-dev-python-poetry
+  block:
+    - name: Resolve poetry user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        config:
+          default: "{{ fa_dir_config }}/pypoetry"
+        cache:
+          default: "{{ fa_dir_cache }}/pypoetry"
+        data:
+          default: "{{ fa_dir_share }}/pypoetry"
+          dot: "{{ fa_dir_home }}/.poetry"
+      register: _jh_poetry_ulayout
+
+    - name: Render poetry configuration
+      when: fa_layout == 'dot'
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: "{{ fa_dir_config }}/pypoetry/config.toml"
+            content: |
+              data-dir = "{{ _jh_poetry_ulayout.data }}"
+
+- name: Configure Python template
+  tags: apex-dev-python-template
+  block:
+    - name: Render Python template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/dotnet-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets:
+          - dir: ./
+          - file: ./.gitignore
+            template: python/gitignore.j2
+          - file: ./.editorconfig
+            template: python/editorconfig.j2
+          - file: ./README.md
+            template: python/README.md.j2
+
+          - file: ./pyproject.toml
+            template: python/pyproject.toml.j2
+          - file: ./mise.toml
+            content: |
+              [tools]
+              python = "latest"
+
+          - dir: ./src
+          - dir: ./src/util
+          - file: ./src/util/__init__.py
+            copy: python/src/util/__init__.py
+          - file: ./src/util/join.py
+            copy: python/src/util/join.py
+          - file: ./src/main.py
+            copy: python/src/main.py
+
+          - dir: ./tests
+          - dir: ./tests/util
+          - file: ./tests/util/conftest.py
+            copy: python/tests/util/conftest.py
+          - file: ./tests/util/test_util.py
+            copy: python/tests/util/test_util.py

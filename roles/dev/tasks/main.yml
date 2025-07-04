@@ -82,12 +82,6 @@
 #
 
 
-- name: Configure Python developer suite
-  tags:
-    - dev-python
-  ansible.builtin.import_tasks:
-    file: langs/python.yml
-
 - name: Configure JavaScript developer suite
   tags:
     - dev-js
