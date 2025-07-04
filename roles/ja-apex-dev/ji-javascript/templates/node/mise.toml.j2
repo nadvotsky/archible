@@ -1,0 +1,18 @@
+[tools]
+node = "latest"
+
+[tasks.yarn]
+description = "Initialize template to a working state with yarn package manager."
+run = [
+    "corepack use yarn@*",
+    "corepack enable",
+    "yarn up $(jq -r '.devDependencies | keys | .[]' package.json)",
+]
+
+[tasks.pnpm]
+description = "Initialize template to a working state with pnpm package manager."
+run = [
+    "corepack use pnpm@*",
+    "corepack enable",
+    "pnpm update",
+]

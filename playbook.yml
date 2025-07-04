@@ -77,6 +77,7 @@
     - { role: ja-apex-dev/jf-dotnet, tags: apex-dev-dotnet }
     - { role: ja-apex-dev/jg-go, tags: apex-dev-go }
     - { role: ja-apex-dev/jh-python, tags: apex-dev-python }
+    - { role: ja-apex-dev/ji-javascript, tags: apex-dev-javascript }
 
     - { role: packaging, tags: packaging }
     - { role: bootloader, tags: bootloader }

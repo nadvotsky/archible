@@ -1,0 +1,29 @@
+# javascript-deno-template
+
+## Deno Cheatsheet
+
+### Dependencies
+
+- Install Dependencies: ```deno install``` or ```deno cache ./src/main.ts```
+- Update Dependencies: ```deno outdated``` (deno.json/package.json only)
+
+### Working with Code
+
+- Format: ```deno task fmt```
+- Lint: ```deno task lint[:watch]```
+- Typecheck: ```deno task typecheck```
+- Test: ```deno task test[:watch]```
+
+### Developement Flow
+
+- Run: ```deno task run[:watch]```
+- Build: ```deno compile --target x86_64-unknown-linux-gnu --output dist/javascript-deno-template src/main.ts```
+
+### Links
+
+- Deno Cache: <https://denolib.gitbook.io/guide/advanced/deno_dir-code-fetch-and-cache>
+- Deno cli manual: <https://docs.deno.com/runtime/reference/cli/>
+- Deno Testing: <https://docs.deno.com/runtime/fundamentals/testing/>
+- Deno Workspaces: <https://docs.deno.com/runtime/fundamentals/workspaces/>
+
+{{ ja_readme }}

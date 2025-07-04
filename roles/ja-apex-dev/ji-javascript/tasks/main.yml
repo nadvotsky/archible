@@ -1,0 +1,271 @@
+---
+- name: Configure JavaScript context
+  tags: apex-dev-javascript-context
+  block:
+    - name: Define JavaScript sources targets
+      ansible.builtin.set_fact:
+        _ji_targets:
+          - dir: ./
+
+          - file: ./.gitignore
+            template: javascript/gitignore.j2
+          - file: ./.editorconfig
+            template: javascript/editorconfig.j2
+
+          - dir: ./src
+          - file: ./src/main.ts
+            copy: javascript/src/main.ts
+          - dir: ./src/util
+          - file: ./src/util/join.ts
+            copy: javascript/src/util/join.ts
+
+- name: Configure Node.js
+  tags: apex-dev-javascript-node
+  block:
+    - name: Install Node.js user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - node@latest
+
+    - name: Resolve Node.js user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        history:
+          default: "{{ fa_dir_home }}/.node_repl_history"
+          xdg: "{{ fa_dir_cache }}/node/history"
+          dot: "{{ fa_dir_cache }}/node/history"
+
+        corepack:
+          default: "{{ fa_dir_cache }}/node/corepack"
+
+        npm_cache:
+          default: "{{ fa_dir_home }}/.npm"
+          xdg: "{{ fa_dir_cache }}/npm"
+        npm_rc:
+          default: "{{ fa_dir_home }}/.npmrc"
+
+        pnpm_cache:
+          default: "{{ fa_dir_cache }}/pnpm"
+        pnpm_state:
+          default: "{{ fa_dir_state }}/pnpm"
+          dot: "{{ fa_dir_home }}/.pnpm/state"
+        pnpm_store:
+          default: "{{ fa_dir_share }}/pnpm/store"
+          dot: "{{ fa_dir_home }}/.pnpm/store"
+        pnpm_global:
+          default: "{{ fa_dir_share }}/pnpm/global"
+          dot: "{{ fa_dir_home }}/.pnpm/global"
+        pnpm_bin:
+          default: "{{ fa_dir_share }}/pnpm"
+          dot: "{{ fa_dir_home }}/.pnpm/bin"
+
+        yarn_config:
+          default: "{{ fa_dir_config }}/yarn"
+        yarn_cache:
+          default: "{{ fa_dir_cache }}/yarn"
+        yarn_rc:
+          default: "{{ fa_dir_home }}/.yarnrc"
+      register: _ji_node_ulayout
+
+    - name: Apply Node.js layout
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        NPM_CONFIG_CACHE: "{{ _ji_node_ulayout.npm_cache }}"
+        PNPM_HOME: "{{ _ji_node_ulayout.pnpm_store }}"
+
+    - name: Apply Node.js DOT layout
+      when: fa_layout == 'dot'
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: "{{ fa_dir_config }}/pnpm/rc"
+            content: |
+              stateDir = {{ _ji_node_ulayout.pnpm_state }}
+              storeDir = {{ _ji_node_ulayout.pnpm_store }}
+              globalDir = {{ _ji_node_ulayout.pnpm_global }}
+              globalBinDir = {{ _ji_node_ulayout.pnpm_bin }}
+
+    - name: Render JavaScript template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/javascript-node-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets: "{{ _ji_targets }}"
+
+    - name: Render Node.js template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/javascript-node-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - file: ./src/main.ts
+            copy: node/src/main.ts
+          - file: ./src/util/join.test.ts
+            copy: node/src/util/join.test.ts
+          - file: ./README.md
+            template: node/README.md.j2
+
+          - file: ./package.json
+            template: node/package.json.j2
+          - file: ./eslint.config.mjs
+            copy: node/eslint.config.mjs
+          - file: ./tsconfig.json
+            copy: node/tsconfig.json
+          - file: ./vitest.config.mts
+            copy: node/vitest.config.mts
+
+          - file: ./mise.toml
+            template: node/mise.toml.j2
+
+- name: Configure Deno
+  tags: apex-dev-javascript-deno
+  block:
+    - name: Install Deno user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - deno@latest
+
+    - name: Resolve Deno user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        home:
+          default: "{{ fa_dir_home }}/.deno"
+          xdg: "{{ fa_dir_share }}/deno"
+        cache:
+          default: "{{ fa_dir_cache }}/deno"
+      register: _ji_deno_ulayout
+
+    - name: Apply Deno XDG layout
+      when: fa_layout == 'xdg'
+      foundation.user.env:
+        section: dev
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        DENO_DIR: "{{ _ji_deno_ulayout.home }}"
+
+    - name: Render JavaScript template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/javascript-deno-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets: "{{ _ji_targets }}"
+
+    - name: Render Deno template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/javascript-deno-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - file: ./src/util/join.test.ts
+            copy: deno/src/util/join.test.ts
+          - file: ./README.md
+            template: deno/README.md.j2
+
+          - file: ./deno.json
+            template: deno/deno.json.j2
+          - file: ./mise.toml
+            content: |
+              [tools]
+              node = "latest"
+
+- name: Configure Bun
+  tags: apex-dev-javascript-bun
+  block:
+    - name: Install Bun user packages
+      foundation.user.packages:
+        wipe: "{{ aa_wipe }}"
+        home: "{{ fa_dir_home }}"
+      vars:
+        install:
+          - bun@latest
+
+    - name: Resolve Bun user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        home:
+          default: "{{ fa_dir_home }}/.bun"
+          xdg: "{{ fa_dir_share }}/bun"
+        store:
+          default: "{{ fa_dir_home }}/.bun/install/global"
+          xdg: "{{ fa_dir_share }}/bun/global"
+        bin:
+          default: "{{ fa_dir_home }}/.bun/bin"
+          xdg: "{{ fa_dir_share }}/bun/bin"
+        cache:
+          default: "{{ fa_dir_home }}/.bun/install/cache"
+          xdg: "{{ fa_dir_cache }}/bun"
+          dot: "{{ fa_dir_cache }}/bun"
+      register: _ji_bun_ulayout
+
+    - name: Apply Bun XDG layout
+      when: fa_layout == 'dot'
+      foundation.files.install:
+        wipe: never
+      vars:
+        targets:
+          - file: "{{ fa_dir_config }}/.bunfig.toml"
+            content: |
+              [install]
+              globalDir = "{{ _ji_bun_ulayout.store }}"
+              globalBinDir = "{{ _ji_bun_ulayout.bin }}"
+              cache.dir = "{{ _ji_bun_ulayout.cache }}"
+
+    - name: Render JavaScript template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/javascript-bun-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets: "{{ _ji_targets }}"
+
+    - name: Render Bun template
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_xdg.templates }}/javascript-bun-template"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - file: ./src/util/join.test.ts
+            copy: bun/src/util/join.test.ts
+          - file: ./README.md
+            template: bun/README.md.j2
+
+          - file: ./biome.json
+            copy: bun/biome.json
+          - file: ./tsconfig.json
+            copy: bun/tsconfig.json
+
+          - file: ./package.json
+            template: bun/package.json.j2
+          - file: ./mise.toml
+            content: |
+              [tools]
+              bun = "latest"
+
+              [tasks.init]
+              description = "Initialize template to a working state."
+              run = "bun update"
