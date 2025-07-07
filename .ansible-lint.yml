@@ -1,0 +1,40 @@
+---
+profile: production
+
+offline: true
+quiet: true
+strict: true
+verbosity: 1
+
+use_default_rules: true
+
+skip_list:
+  - var-naming[no-role-prefix]
+  - role-name[path]
+
+enable_list:
+  - args
+  - empty-string-compare
+  - no-log-password
+  - no-same-owner
+  - name[prefix]
+  - galaxy-version-incorrect
+  - yaml
+
+exclude_paths:
+  - collections/ansible_collections/foundation/legacy
+
+mock_modules:
+  - foundation.files.install
+  - foundation.files.net_archive
+  - foundation.persist.from
+  - foundation.persist.to
+  - foundation.persist.from
+  - foundation.system.env
+  - foundation.system.kernel
+  - foundation.system.packages
+  - foundation.system.services
+  - foundation.system.stop
+  - foundation.user.env
+  - foundation.user.layout
+  - foundation.user.packages
