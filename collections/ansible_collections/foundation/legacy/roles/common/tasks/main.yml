@@ -2,9 +2,8 @@
 - name: Print a deprecation message
   ansible.builtin.debug:
     msg: >-
-      'common' role is deprecated: consider migrating to the common_* actions instead.
-      They feature various optimizations, robust error handling, templating support,
-      and require no change in ansible configuration.
+      'common' role is deprecated: consider migrating to the foundation.* actions instead. They feature various
+      optimizations, robust error handling, templating support, and require no change in ansible configuration.
 
 - name: Common packaging tasks
   when: _common_packages is defined
@@ -23,7 +22,7 @@
       failed_when: false
       changed_when: __paru_invocation.rc == 0
 
-    - name: Sync the database, update the system, or do both
+    - name: Sync the database, update the system, or do both # noqa: [key-order]
       <<: *paru-assert
       when: _common_packages.sync is true or _common_packages.upgrade is true
       ansible.builtin.command:
@@ -33,7 +32,7 @@
           {{ _common_packages.upgrade is true | ternary('--sysupgrade', '') }}
         stdin: "{{ ansible_become_password }}"
 
-    - name: Install packages
+    - name: Install packages # noqa: [key-order]
       <<: *paru-assert
       when: _common_packages.install is defined
       ansible.builtin.command:
@@ -380,26 +379,27 @@
               item.value.archive, [item.value.base | default(__base), item.value.archive] | path_join,
             )
           }}
-        cmd: >-
+        cmd: >- # noqa: [risky-shell-pipe]
           {%- set _exclude = [] -%}
           {%- for _pattern in item.value.exclude | default([]) -%}
-            {%- set _ = _exclude.append('--exclude={}'.format(_pattern | squote)) -%}
+            {%- set _ = _exclude.append("--exclude={}".format(_pattern | quote)) -%}
           {%- endfor -%}
           {#--#}
           set -o pipefail &&
-          tar
-          --wildcards
-          --anchored
-          --no-wildcards-match-slash
-          --numeric-owner
-          --group=0
-          --owner=0
-          --gzip
-          --create
-          --to-stdout
-          {{ item.value.include | join(' ') }}
-          {{ _exclude | join(' ') }}
-          | {{ base64.shell_encode }}
+            tar
+            --wildcards
+            --anchored
+            --no-wildcards-match-slash
+            --numeric-owner
+            --group=0
+            --owner=0
+            --gzip
+            --create
+            --to-stdout
+            {{ item.value.include | join(' ') }}
+            {{ _exclude | join(' ') }}
+          |
+            {{ base64.shell_encode }}
       register: __tar_invocation
       changed_when: __tar_invocation.rc == 0
       become: "{{ item.value.become | default(__become) | ternary(true, omit) }}"
@@ -540,7 +540,7 @@
       become: "{{ __become }}"
 
     #
-    # TODO: Likely not required; we always do _common_install beforehand
+    # Likely not required; we always do _common_install beforehand
     #
     # - name: Ensure target directory is created
     #   ansible.builtin.file:
@@ -558,7 +558,7 @@
         __exclude: >-
           {%- set _exclude = [] -%}
           {%- for _pattern in _common_urlunpack.exclude | default([]) -%}
-            {%- set _ = _exclude.append("--exclude {}".format(_pattern | squote)) -%}
+            {%- set _ = _exclude.append("--exclude {}".format(_pattern | quote)) -%}
           {%- endfor -%}
           {{ _exclude | join(' ') }}
       ansible.builtin.shell:

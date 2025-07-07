@@ -10,6 +10,32 @@ from jinja2.nodes import Node, Output, Const, CallBlock
 from jinja2.parser import Parser
 from jinja2.ext import Extension
 
+"""
+{% setindent spaces 8 %}
+
+{% macro foo() %}
+	{% indent %}
+	function() {+
+		{% indent %}
+			return [1, 2, 3];+
+		{% endindent %}
+	}
+	{% endindent %}
+
+{% endmacro %}
+
+{+
+	{% indent %}
+		"root: "true",+
+		"values": [+
+			{% indent %}{{ foo() }}{% endindent %},+
+		],+
+	{% endindent %}
+}+
+
+{% newline 3 %}
+"""
+
 
 class TemplatePlus(Templar):
     KEEP = "+"
@@ -41,10 +67,7 @@ class TemplatePlus(Templar):
         if not isinstance(result, str):
             return result
 
-        style, size = (
-            self.environment.policies[key]
-            for key in (self.POLICY_STYLE, self.POLICY_SIZE)
-        )
+        style, size = (self.environment.policies[key] for key in (self.POLICY_STYLE, self.POLICY_SIZE))
         indent = (" " if style == "spaces" else "\t") * size
 
         return result.replace(self.NEWLINE, "\n").replace(self.INDENT, indent)
@@ -58,16 +81,12 @@ class SetIndentExtension(Extension):
 
         indent_style = parser.parse_expression()
         if indent_style.name not in ("tabs", "spaces"):
-            raise TemplateSyntaxError(
-                "Expected indent style to be either 'tabs' or 'spaces'.", lineno
-            )
+            raise TemplateSyntaxError("Expected indent style to be either 'tabs' or 'spaces'.", lineno)
         self.environment.policies[TemplatePlus.POLICY_STYLE] = indent_style.name
 
         indent_size = parser.parse_expression()
         if not (0 < indent_size.value <= 8):
-            raise TemplateSyntaxError(
-                "Indentation size must be bigger than 0 and less than 9.", lineno
-            )
+            raise TemplateSyntaxError("Indentation size must be bigger than 0 and less than 9.", lineno)
         self.environment.policies[TemplatePlus.POLICY_SIZE] = indent_size.value
 
         return Output("", lineno=lineno)
@@ -82,9 +101,7 @@ class NewlineExtension(Extension):
         count_token = parser.stream.next_if("integer")
         count = 1 if count_token is None else count_token.value
         if not (0 < count <= 10):
-            raise TemplateSyntaxError(
-                "Newline counter must be bigger than 0 and less than 10."
-            )
+            raise TemplateSyntaxError("Newline counter must be bigger than 0 and less than 10.")
 
         return Output([Const(TemplatePlus.NEWLINE * count)], lineno=lineno)
 
@@ -92,9 +109,7 @@ class NewlineExtension(Extension):
 class IndentExtension(Extension):
     tags = {"indent"}
 
-    def preprocess(
-        self, source: str, name: str | None, filename: str | None = None
-    ) -> str:
+    def preprocess(self, source: str, name: str | None, filename: str | None = None) -> str:
         lines = []
         for line in source.splitlines():
             line = line.replace("\n", "").replace("\t", "")
@@ -103,6 +118,9 @@ class IndentExtension(Extension):
             else:
                 lines.append(line)
 
+        # TODO: another placeholder or keep the newline
+        # that needs to be replaced to none afterwards.
+        # Lua inline array would say thank you :)
         return "".join(lines)
 
     def parse(self, parser: Parser) -> Node:
@@ -125,10 +143,7 @@ class IndentExtension(Extension):
         indent = TemplatePlus.INDENT * size
 
         return TemplatePlus.NEWLINE.join(
-            (
-                line if not line else f"{indent}{line}"
-                for line in str(caller()).split(TemplatePlus.NEWLINE)
-            )
+            (line if not line else f"{indent}{line}" for line in str(caller()).split(TemplatePlus.NEWLINE))
         )
 
 

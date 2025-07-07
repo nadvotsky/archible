@@ -6,11 +6,7 @@ class FilterModule:
             parse_bind=self.parse_bind,
         )
 
-    DEFAULT_REPLACEMENTS = dict(
-        enumerate(
-            ["black", "red", "green", "yellow", "blue", "purple", "cyan", "white"]
-        )
-    )
+    DEFAULT_REPLACEMENTS = dict(enumerate(["black", "red", "green", "yellow", "blue", "purple", "cyan", "white"]))
     ANSI_TABLE_SIZE = 8
 
     @classmethod
@@ -18,9 +14,7 @@ class FilterModule:
         try:
             mode_alt = False
             position = lookup.index(item)
-            ansi = (
-                30 if position < cls.ANSI_TABLE_SIZE else 90
-            ) + position % cls.ANSI_TABLE_SIZE
+            ansi = (30 if position < cls.ANSI_TABLE_SIZE else 90) + position % cls.ANSI_TABLE_SIZE
             name = code_to_name[position % cls.ANSI_TABLE_SIZE]
             modifier = mod if position >= cls.ANSI_TABLE_SIZE else None
         except ValueError:
@@ -51,12 +45,7 @@ class FilterModule:
         return {
             name: parsed
             for name, color in preset.items()
-            if (
-                parsed := cls._parse_ansi_preset(
-                    name, color, lookup, code_to_name, mod, sep
-                )
-            )
-            is not None
+            if (parsed := cls._parse_ansi_preset(name, color, lookup, code_to_name, mod, sep)) is not None
         }
 
     @staticmethod
@@ -87,11 +76,7 @@ class FilterModule:
 
         exprs = [
             modifiers[mode]["alt" if alt else "main"],
-            *[
-                modifiers["extra"][k]
-                for k in ["word", "many", "select"]
-                if action[k] is True
-            ],
+            *[modifiers["extra"][k] for k in ["word", "many", "select"] if action[k] is True],
         ]
 
         for expr in filter(None, exprs):
@@ -164,9 +149,7 @@ class FilterModule:
 
         mode, alt, raw_key = cls._parse_bind_mode(bind)
         modifiers = cls._parse_bind_modifiers(mode, alt, keys["modifiers"], action)
-        is_merged, key = cls._parse_bind_key(
-            raw_key, keys_map, modifiers["shift"], merge_shift
-        )
+        is_merged, key = cls._parse_bind_key(raw_key, keys_map, modifiers["shift"], merge_shift)
 
         modifiers_line = sep[0].join(
             [
@@ -206,6 +189,4 @@ class FilterModule:
                 action["subs"] = user_action
 
             for bind in keys["binds"][action_name]:
-                yield cls.parse_bind(
-                    bind, action, keys, modifiers_map, keys_map, sep, merge_shift
-                )
+                yield cls.parse_bind(bind, action, keys, modifiers_map, keys_map, sep, merge_shift)

@@ -1,4 +1,3 @@
-
 class FilterModule:
     def filters(self):
         return dict(relative_indent=self.relative_indent)
@@ -12,17 +11,6 @@ class FilterModule:
         if not any(mask):
             return string.strip()
 
-        block_base = min(
-            [
-                len(lines[i]) - len(lines[i].lstrip())
-                for i, m in enumerate(mask)
-                if m is True
-            ]
-        )
+        block_base = min([len(lines[i]) - len(lines[i].lstrip()) for i, m in enumerate(mask) if m is True])
 
-        return "\n".join(
-            [
-                (prepend + lines[i][block_base:]) if m else lines[i]
-                for i, m in enumerate(mask)
-            ]
-        )
+        return "\n".join([(prepend + lines[i][block_base:]) if m else lines[i] for i, m in enumerate(mask)])
