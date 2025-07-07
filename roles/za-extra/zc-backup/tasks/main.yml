@@ -1,0 +1,76 @@
+---
+- name: Configure GnuPG backup
+  tags: extra-backup-gpg
+  block:
+    - name: Retrieve unattended keys metadata
+      foundation.persist.gpg:
+        home: "{{ fa_dir_home }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        keys: all
+      register: _zc_unattended
+
+    - name: Define GnuPG keys context
+      ansible.builtin.set_fact:
+        _zc_keys: >-
+          {%- set _acc = {} -%}
+          {%- for _name, _meta in _zc_unattended.keys.items() -%}
+            {%- for _master, _subdict in hb_generate.items() -%}
+              {%- if _master == _name -%}
+                {%- do _acc.__setitem__(
+                  _name, dict(fingerprint=_meta.fingerprint, keygrip=_meta.keygrip, password=_subdict.master.password),
+                ) -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+          {{ _acc }}
+
+    - name: Transfer GnuPG state to the persist
+      foundation.persist.to:
+        persist: "{{ aa_persist }}"
+        base: "{{ lookup('foundation.user.layout', fa_layout, ha_gpg_user_layout) }}"
+      vars:
+        shells:
+          - key: gpg/keyring
+            cmd: >-
+              printf "%s\n" {{ _zc_keys.values() | map(attribute='password') | map('quote') | join(' ') }} |
+              gpg --batch
+                --passphrase-fd 0 --pinentry-mode loopback
+                --export-secret-keys --export-options backup --output -
+                {{ _zc_keys.values() | map(attribute='fingerprint') | join(' ') }}
+        archives:
+          - key: gpg/private-keys
+            include: >-
+              {%- set _acc = [] -%}
+              {%- for _key in _zc_keys.keys() -%}
+                {%- do _acc.append('private-keys-v1.d/{}.key'.format(_key)) -%}
+              {%- endfor -%}
+              {{ _acc }}
+
+          - key: gpg/unattended-keys
+            include:
+              - unattended-keys.json
+
+- name: Configure hub backup
+  tags: extra-backup-hub
+  block:
+    - name: Transfer hub to the persist
+      foundation.persist.to:
+        persist: "{{ aa_persist }}"
+        base: "{{ fa_dir_xdg.hub }}"
+      vars:
+        archives:
+          - key: hub/store
+            include: []
+
+- name: Configure vault backup
+  tags: extra-backup-vault
+  block:
+    - name: Transfer vault to the persist
+      foundation.persist.to:
+        persist: "{{ aa_persist }}"
+        base: "{{ lookup('foundation.user.layout', fa_layout, ha_vault_user_layout) }}"
+      vars:
+        archives:
+          - key: vault/store
+            include: []

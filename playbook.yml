@@ -79,14 +79,21 @@
     - { role: ja-apex-dev/jh-python, tags: apex-dev-python }
     - { role: ja-apex-dev/ji-javascript, tags: apex-dev-javascript }
 
-    - { role: packaging, tags: packaging }
-    - { role: bootloader, tags: bootloader }
-    - { role: system, tags: system }
-    - { role: user, tags: user }
-    - { role: shell, tags: shell }
-    - { role: graphics, tags: graphics }
-    - { role: media, tags: media }
-    - { role: apps, tags: apps }
-    - { role: dev, tags: dev }
-    # - { role: cleanup, tags: cleanup }
-    # - { role: pull, tags: pull }
+- name: Perform maintenance of the system
+  hosts: main_extra
+  gather_facts: false
+  roles:
+    - { role: aa-global/aa-shared }
+    - { role: ba-prelude/ba-shared }
+    - { role: ca-catalyst/ca-shared }
+    - { role: da-apex-prep/da-shared }
+    - { role: ea-apex-system/ea-shared }
+    - { role: fa-apex-user/fa-shared }
+    - { role: ga-apex-desktop/ga-shared }
+    - { role: ha-apex-env/ha-shared }
+    - { role: ia-apex-apps/ia-shared }
+    - { role: ja-apex-dev/ja-shared }
+    - { role: za-extra/za-shared }
+
+    - { role: za-extra/zb-cleanup, tags: extra-cleanup }
+    - { role: za-extra/zc-backup, tags: extra-backup }

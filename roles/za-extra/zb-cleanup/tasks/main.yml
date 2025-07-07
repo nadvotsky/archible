@@ -1,0 +1,148 @@
+---
+- name: Configure system drives cleanup
+  tags: extra-cleanup-trim
+  block:
+    - name: Run fstrim on all fstab entries
+      become: true
+      ansible.builtin.command:
+        argv:
+          - fstrim
+          - --fstab
+          - --quiet-unsupported
+      register: _zb_fstrim_invocation
+      changed_when: _zb_fstrim_invocation.rc == 0
+
+- name: Configure package manager cleanup
+  tags: extra-cleanup-packaging
+  block:
+    - name: Clean paru and pacman cache
+      become: true
+      ansible.builtin.command:
+        argv:
+          - paru
+          - --sync
+          - --clean
+          - --clean
+      register: _zb_paru_clean_invocation
+      changed_when: _zb_paru_clean_invocation.rc == 0
+
+- name: Configure cache directories cleanup
+  tags: extra-cleanup-cache
+  block:
+    - name: Wipe user and system caches directory
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        create: true
+      vars:
+        targets:
+          - dir: /var/cache
+            perms: 755:root:root
+
+          - dir: "{{ fa_dir_cache }}"
+            perms: "700:{{ ca_name }}:{{ ca_name }}"
+
+- name: Configure trash cleanup
+  tags: extra-cleanup-trash
+  block:
+    - name: Wipe trash
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_share }}/Trash"
+            perms: "700:{{ ca_name }}:{{ ca_name }}"
+            create: true
+
+- name: Configure user home cleanup
+  tags: extra-cleanup-home
+  block:
+    - name: Wipe intermediate home leftovers
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_home }}"
+      vars:
+        targets: "{{ zb_home }}"
+
+- name: Configure gecko-based applications cleanup
+  tags: za-cleanup-gecko
+  when: aa_wipe == 'always'
+  block:
+    - name: Find gecko entries to clean by patterns
+      ansible.builtin.find:
+        paths: "{{ lookup('foundation.user.layout', fa_layout, ia_firefox_ulayout_home) }}"
+        patterns: "{{ zb_gecko }}"
+        file_type: any
+        depth: 2
+        recurse: true
+      register: _za_gecko_dirs
+
+    - name: Wipe gecko entries
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ _za_gecko_dirs.files | map(attribute='path') }}"
+
+    - name: Find sqlite databases to clean
+      ansible.builtin.find:
+        paths: "{{ lookup('foundation.user.layout', fa_layout, ia_firefox_ulayout_home) }}"
+        patterns: "*.sqlite"
+        file_type: file
+        depth: 2
+        recurse: true
+      register: _za_gecko_dbs
+
+    - name: Vacuum sqlite databases
+      ansible.builtin.command:
+        argv:
+          - sqlite3
+          - "{{ item }}"
+          - VACUUM
+      register: _za_gecko_vacuum_invocation
+      changed_when: _za_gecko_vacuum_invocation.rc == 0
+      loop: "{{ _za_gecko_dbs.files | map(attribute='path') }}"
+
+- name: Cleanup chromium-based apps
+  tags: extra-cleanup-chromium
+  when: aa_wipe == 'always'
+  block:
+    - name: Stop running GnuPG instance
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
+      vars:
+        processes:
+          - chromium
+          - code
+
+    - name: Wipe Public Key Infrastructure storage
+      ansible.builtin.file:
+        path: "{{ fa_dir_home }}/.pki"
+        state: absent
+
+    - name: Find chromium entries to clean by patterns
+      ansible.builtin.find:
+        paths:
+          - "{{ lookup('foundation.user.layout', fa_layout, ia_chromium_ulayout_home) }}"
+          - "{{ lookup('foundation.user.layout', fa_layout, ia_vscode_user_layout) }}"
+        patterns: "{{ zb_gecko }}"
+        file_type: any
+        depth: 2
+        recurse: true
+      register: _za_chromium_dirs
+
+    - name: Wipe chromium entries
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ _za_chromium_dirs.files | map(attribute='path') }}"
+
+- name: Cleaup spotify-launcher
+  tags: extra-cleanup-spotify
+  block:
+    - name: Wipe spotify-launcher
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ lookup('foundation.user.layout', fa_layout, ia_spotify_launcher_user_layout) }}"
