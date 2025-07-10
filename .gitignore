@@ -1,19 +1,123 @@
 #
-# IDEs.
+# https://git-scm.com/docs/gitignore
 #
-/.vscode
 
 #
-# Python.
+# Filesystems.
+#
+.DS_Store
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+
+#
+# VCS.
+#
+.snv
+.bzr
+
+#
+# vim editor.
+#
+*.swp
+*.swo
+.vim
+Session.vim
+#
+# Helix editor.
+#
+.helix
+#
+# Emacs editor.
+#
+.dir-locals.el
+#
+# VSCode editor.
+#
+.vscode
+*.code-workspace
+#
+# Sublime Text editor.
+#
+*.sublime-workspace
+#
+# JetBrains editor.
+#
+.idea
+*.iml
+#
+# Zed editor.
+#
+.zed
+
+#
+# Tools.
+#
+*.log
+.task
+.doit.db
+mise.local.toml
+
+#
+# Env.
+#
+.envrc
+.direnv
+.env
+.env*.local
+
+#
+# Caches.
+#
+.temp
+.cache
+
+#
+# FHS-like.
+#
+/tmp
+/var
+/run
+/.local
+
+#
+# Python bytecode.
 #
 __pycache__
+*.py[cod]
+
+#
+# Python PDM package manager.
+#
+.pdm.toml
+.pdm-python
+.pdm-build
+__pypackages__
+
+#
+# Python virtual environment.
+#
+.env
+.venv
+/venv
+
+
+#
+# Python tools.
+#
+.cache
+.ruff_cache
 
 #
 # Ansible.
 #
 /.ansible
+/persist
 
 #
-# Persist.
+# Ansible user inventories, keeping only example.
 #
-/persist/
+inventories/*.yml
+!inventories/example.yml
+inventories/group_vars/*
+!inventories/group_vars/example
