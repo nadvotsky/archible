@@ -1,6 +1,7 @@
 ---
 - name: Perform initial preparation of the system
-  hosts: main_prelude
+  tags: prelude
+  hosts: example_prelude
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }
@@ -10,7 +11,8 @@
     - { role: ba-prelude/bc-bootstrap, tags: prelude-bootstrap }
 
 - name: Perform early preparation of the system
-  hosts: main_catalyst
+  tags: catalyst
+  hosts: example_catalyst
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }
@@ -21,7 +23,8 @@
     - { role: ca-catalyst/cc-user, tags: catalyst-user }
 
 - name: Perform main provisioning of the system
-  hosts: main_apex
+  tags: apex
+  hosts: example_apex
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }
@@ -80,7 +83,8 @@
     - { role: ja-apex-dev/ji-javascript, tags: apex-dev-javascript }
 
 - name: Perform maintenance of the system
-  hosts: main_extra
+  tags: extra
+  hosts: example_extra
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }

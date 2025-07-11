@@ -7,7 +7,7 @@ hb_generate:
       comment: private usage only
 
       expire: 5y
-      password: test
+      password: example
 
       algo: ecdsa
       hint: nistp256
@@ -30,35 +30,6 @@ hb_generate:
         algo: ecdsa
         hint: nistp256
 
-  compat:
-    master:
-      name: "{{ ca_info_full }}"
-      comment: "{{ ca_info_alt }}; compat algorithms"
-      email: "{{ ca_info_mail }}"
-
-      expire: 5y
-      password: test
-
-      algo: rsa
-      hint: 3072
-    subkeys:
-      compat_sign_main:
-        type: sign
-        algo: dsa
-        hint: 2048
-      compat_sign_alt:
-        type: sign
-        algo: rsa
-        hint: 3072
-      compat_encr:
-        type: encr
-        algo: rsa
-        hint: 3072
-      compat_ssh:
-        type: auth
-        priority: 500
-        algo: rsa
-        hint: 3072
   primary:
     master:
       name: "{{ ca_info_full }}"
@@ -66,7 +37,7 @@ hb_generate:
       email: "{{ ca_info_mail }}"
 
       expire: 5y
-      password: test
+      password: example
 
       algo: ecdsa
       hint: nistp256
@@ -89,3 +60,5 @@ hb_generate:
         priority: -500
         algo: ed25519
         hint: ~
+
+hi_gpg_key: private_encr_vault

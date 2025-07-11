@@ -1,0 +1,25 @@
+---
+ed_blacklist:
+  #
+  # Fake keyboard reported by mouse.
+  #
+  - subsystem: usb
+    command: echo 0 > %S%p/authorized
+    selectors:
+      - ENV{PRODUCT}=="4d9/fc70/100", ENV{INTERFACE}=="3/1/1"
+
+  #
+  # SATA storages.
+  #
+  - subsystem: scsi
+    command: echo 1 > $sys%p/delete
+    selectors:
+      - ATTR{model}=="ST2000*"
+
+  #
+  # NVME Storages.
+  #
+  - subsystem: nvme
+    command: echo 1 > $sys%p/device/remove
+    selectors:
+      - ATTR{model}=="Seagate ZP500CV30002", ATTR{serial}=="70??????"

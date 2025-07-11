@@ -1,10 +1,10 @@
 ---
 main:
   hosts:
-    main_prelude:
+    example_prelude:
       ansible_connection: local
 
-    main_catalyst:
+    example_catalyst:
       ansible_connection: foundation.connection.nspawn
       foundation_nspawn_root: "{{ ba_mount_point }}"
       foundation_nspawn_args: >-
@@ -12,9 +12,9 @@ main:
         --hostname={{ ba_hostname }} --machine={{ ba_hostname }}
         --resolv-conf=off --timezone=off --link-journal=no
 
-    main_apex: &main-apex
-      ansible_user: "{{ ca_name }}"
-      ansible_become_password: "{{ ca_password }}"
+    example_apex: &example-apex
+      ansible_user: example
+      ansible_become_password: test
       ansible_connection: foundation.connection.nspawn
       foundation_nspawn_root: "{{ ba_mount_point }}"
       foundation_nspawn_args: >-
@@ -22,4 +22,4 @@ main:
         --hostname={{ ba_hostname }} --machine={{ ba_hostname }}
         --resolv-conf=bind-host --timezone=off --link-journal=no
 
-    main_extra: *main-apex
+    example_extra: *example-apex

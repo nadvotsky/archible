@@ -1,10 +1,10 @@
 ---
 fa_layout: dot
 
-fa_dir_home: "/home/{{ aa_user }}"
+fa_dir_home: "/home/{{ ca_name }}"
 fa_dir_config: "{{ fa_dir_home }}/.config"
 fa_dir_cache: "{{ fa_dir_home }}/.cache"
-fa_dir_share: "{{ fa_dir_home }}/share"
+fa_dir_share: "{{ fa_dir_home }}/.local/share"
 fa_dir_state: "{{ fa_dir_home }}/.local/state"
 fa_dir_bin: "{{ fa_dir_home }}/.local/bin"
 
@@ -17,7 +17,7 @@ fa_dir_subs:
 fa_dir_xdg:
   download: "{{ fa_dir_home }}/dls"
   documents: "{{ fa_dir_home }}/env"
-  hub: "{{ fa_dir_hom }}/hub"
+  hub: "{{ fa_dir_home }}/hub"
 
   pictures: "{{ fa_dir_home }}/media/pics"
   videos: "{{ fa_dir_home }}/media/vids"

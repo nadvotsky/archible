@@ -1,11 +1,7 @@
 ---
-#
-# Basic user information.
-#
 ca_name: example
 ca_password: test
-
-ca_info_short: Example
+ca_info_short: User
 ca_info_full: Example User
-ca_info_alt: Example d'Utilisateur
+ca_info_alt: Exemple d'Utilisateur
 ca_info_mail: example@.local
