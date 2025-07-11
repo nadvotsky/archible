@@ -134,7 +134,8 @@ class ActionModule(ActionBase):
         return RawResult()
 
     def _consume_vars(self) -> tuple[list[str], DomainState]:
-        variables = validate_spec(VARS_SPEC, self._task.vars)
+        variables = validate_spec(VARS_SPEC, self._templar.template(self._task.vars))
+
         return variables["units"], DomainState.from_state(variables["state"])
 
     def _handle_units(

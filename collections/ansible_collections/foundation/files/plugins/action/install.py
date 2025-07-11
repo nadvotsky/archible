@@ -427,7 +427,7 @@ class ActionModule(ActionBase):
                     "options": TARGET_SPECS,
                 },
             },
-            self._task.vars,
+            self._templar.template(self._task.vars),
         )
 
         targets = [Target(defaults=defaults, **raw_target) for raw_target in raw_vars["targets"]]

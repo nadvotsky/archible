@@ -42,7 +42,7 @@ class ActionModule(ActionBase):
         else:
             raise AnsibleActionFail("Unreachable layout")
 
-        keys = validate_spec(VARS_SPEC, self._task.vars)["keys"]
+        keys = validate_spec(VARS_SPEC, self._templar.template(self._task.vars))["keys"]
 
         return path, None if keys == ["all"] else keys
 

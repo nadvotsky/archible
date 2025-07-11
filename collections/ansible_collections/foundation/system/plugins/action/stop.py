@@ -59,7 +59,7 @@ class ActionModule(ActionBase):
 
     def _process_inputs(self) -> Inputs:
         _, raw_args = self.validate_argument_spec(argument_spec={"headless": {"type": str, "required": True}})
-        variables = validate_spec(SPEC, self._task.vars, one_of=list(SPEC.keys()))
+        variables = validate_spec(SPEC, self._templar.template(self._task.vars), one_of=list(SPEC.keys()))
 
         return Inputs(
             headless=raw_args["headless"],

@@ -62,11 +62,8 @@ class ActionModule(ActionBase):
         return result
 
     def _validate_specs(self) -> Inputs:
-        _, raw_args = self.validate_argument_spec(
-            argument_spec=SPEC,
-            required_one_of=list(SPEC.keys()),
-        )
-        raw_vars = validate_spec(VARS_SPEC, self._task.vars)
+        _, raw_args = self.validate_argument_spec(argument_spec=SPEC)
+        raw_vars = validate_spec(VARS_SPEC, self._templar.template(self._task.vars))
 
         if not raw_args.get("sync"):
             if not any((bool(raw_vars.get(key)) for key in VARS_SPEC.keys())):

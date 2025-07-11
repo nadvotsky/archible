@@ -141,7 +141,7 @@ class ActionModule(ActionBase):
                     "description": ["A list of tools to uninstall."],
                 },
             },
-            obj=self._task.vars,
+            obj=self._templar.template(self._task.vars),
             one_of=["install", "remove"],
         )
 
@@ -165,7 +165,7 @@ class ActionModule(ActionBase):
                 self._execute_module(
                     module_name=module_name,
                     module_args=module_args,
-                    task_vars=task_vars.raw,
+                    task_vars=task_vars,
                 )
             )
 

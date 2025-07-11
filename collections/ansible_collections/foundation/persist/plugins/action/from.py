@@ -90,7 +90,7 @@ class ActionModule(ActionBase):
         if not os.path.isdir(raw_args["persist"]):
             raise AnsibleActionFail("Persist directory '{}' must exist".format(raw_args["persist"]))
 
-        raw_vars = validate_spec(specs, self._task.vars)
+        raw_vars = validate_spec(specs, self._templar.template(self._task.vars))
         if all(
             (raw_vars[collection] is None or len(raw_vars[collection]) == 0 for collection in ("shells", "archives"))
         ):

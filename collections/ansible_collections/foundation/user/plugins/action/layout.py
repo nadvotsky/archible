@@ -161,7 +161,7 @@ class ActionModule(ActionBase):
             dispatch.link(con.value, con.extra)
 
     def run(self, tmp: None = None, task_vars: TaskVars = None) -> RawResult:
-        args, variables = self._parse_inputs(self._task.args, self._task.vars)
+        args, variables = self._parse_inputs(self._task.args, self._templar.template(self._task.vars))
         operations = Operations(args.layout, args.wipe)
         dispatch = Dispatch(self, task_vars)
 

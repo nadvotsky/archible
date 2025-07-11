@@ -172,7 +172,7 @@ class ActionModule(ActionBase):
         if defaults.base is not None and not os.path.isabs(defaults.base):
             raise AnsibleActionFail(f"Non-absolute base directory '{defaults.base}'")
 
-        raw_vars = validate_spec(TARGETS_SPEC, self._task.vars, ["shells", "archives"])
+        raw_vars = validate_spec(TARGETS_SPEC, self._templar.template(self._task.vars), ["shells", "archives"])
         if not any(map(len, (raw_vars["shells"], raw_vars["archives"]))):
             raise AnsibleActionFail("No-op action")
 
