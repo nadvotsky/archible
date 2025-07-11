@@ -44,7 +44,7 @@
     - { role: ea-apex-system/eb-init, tags: apex-system-init }
     - { role: ea-apex-system/ec-core, tags: apex-system-core }
     - { role: ea-apex-system/ed-devices, tags: apex-system-devices }
-    - { role: ea-apex-system/ee-stubs, tags: apex-system-stubs }
+    - { role: ea-apex-system/ee-dirs, tags: apex-system-dirs }
 
     - { role: fa-apex-user/fb-skel, tags: apex-user-skel }
     - { role: fa-apex-user/fc-xdg, tags: apex-user-xdg }
