@@ -5,9 +5,9 @@ import dataclasses
 
 @dataclasses.dataclass
 class Result:
-    skipped: bool | None = None
-    changed: bool | None = None
-    failed: bool | None = None
+    skipped: bool | None = False
+    changed: bool | None = False
+    failed: bool | None = False
     msg: str | None = None
 
 
