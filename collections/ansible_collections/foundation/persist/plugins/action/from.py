@@ -157,7 +157,7 @@ class ActionModule(ActionBase):
             case _, None:
                 target["dir"] = defaults.base
             case _:
-                target["dir"] = os.path.realpath(os.path.join(defaults.base, directory))
+                target["dir"] = os.path.normpath(os.path.join(defaults.base, directory))
 
         if "perms" in target:
             target["perms"] = target["perms"].split(":", maxsplit=2)

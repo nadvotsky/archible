@@ -209,7 +209,7 @@ class ActionModule(ActionBase):
         elif directory is None:
             return base
 
-        return os.path.realpath(os.path.join(base, directory))
+        return os.path.normpath(os.path.join(base, directory))
 
     def _process_shells(self, targets: Targets, persist: Persist) -> None:
         for shell in targets.shells:

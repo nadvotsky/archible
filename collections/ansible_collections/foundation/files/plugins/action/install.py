@@ -272,11 +272,11 @@ class TargetProcessor:
         if path is None:
             raise AnsibleActionFail("Target must define either directory or file only")
         elif os.path.isabs(path):
-            return os.path.realpath(path)
+            return os.path.normpath(path)
         elif not path.startswith("./"):
             raise AnsibleActionFail("Relative path '{}' must start with './'".format(path))
 
-        return os.path.realpath(os.path.join(defaults.base, path))
+        return os.path.normpath(os.path.join(defaults.base, path))
 
     @classmethod
     def postprocess_actions(cls, model: object, kind: TargetKind) -> tuple[TargetKind, bool]:
