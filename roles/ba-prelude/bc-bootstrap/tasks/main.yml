@@ -12,7 +12,6 @@
 
 - name: Configure base system
   tags: prelude-bootstrap-pacstrap
-  become: true
   block:
     - name: Bootstrap base system with pacstrap
       become: true
@@ -23,9 +22,20 @@
           - -K
           - "{{ ba_mount_point }}"
           - base
+          - iptables-nft
+          - util-linux
+          #
+          # Kernel.
+          #
           - linux
           - linux-firmware
+          #
+          # Ansible, mkpasswd, and packaging.
+          #
+          - python
           - sudo
+          - whois
+          - reflector
       register: _bc_pacstrap_invocation
       changed_when: _bc_pacstrap_invocation.rc == 0
 
@@ -64,7 +74,7 @@
         group: 0
       loop:
         - file: /
-          mntops: "{{ bc_mountsopts_root }}"
+          mntops: "{{ bc_mountopts_root }}"
         - file: /boot
           mntops: "{{ bc_mountopts_efi }}"
       register: _bc_replace_invocation
