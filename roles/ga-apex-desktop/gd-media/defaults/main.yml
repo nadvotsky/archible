@@ -97,7 +97,7 @@ gd_whitelist:
 #  Options: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n2706
 #  Paths: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n2794
 #
-gd_cards: "{{ omit() }}"
+gd_cards: "{{ undef() }}"
   # <name>:
   #   #
   #   # Create a rule that would disable any other devices other than this.

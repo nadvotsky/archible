@@ -9,7 +9,7 @@
 #  - initramrd creation
 #  - and others.
 #
-ba_headless: "{{ omit() }}"
+ba_headless: "{{ undef() }}"
 
 #
 # Mount point to do partitioning and bootstrapping.
@@ -19,12 +19,14 @@ ba_mount_point: "{{ aa_machine_mount }}"
 #
 # Machine hostname.
 #
-ba_hostname: "{{ omit() }}"
+ba_hostname: "{{ undef() }}"
 
 #
 # Number of cores the target machine has.
 #
-ba_cores: "{{ omit() }}"
+# Used in the various places to specify possible parallelism, but typically is divided by two or four.
+#
+ba_cores: "{{ undef() }}"
 
 #
 # Machine arch.

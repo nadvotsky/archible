@@ -24,36 +24,36 @@
 # Unlike XDG layout, this allows having a single entry point (HOME directory) for both compliant and non-compliant
 #  applications.
 #
-fa_layout: "{{ omit() }}"
+fa_layout: "{{ undef() }}"
 
 #
 # Base directories.
 #
-fa_dir_home: "{{ omit() }}"
-fa_dir_config: "{{ omit() }}"
-fa_dir_cache: "{{ omit() }}"
-fa_dir_share: "{{ omit() }}"
-fa_dir_state: "{{ omit() }}"
-fa_dir_bin: "{{ omit() }}"
+fa_dir_home: "{{ undef() }}"
+fa_dir_config: "{{ undef() }}"
+fa_dir_cache: "{{ undef() }}"
+fa_dir_share: "{{ undef() }}"
+fa_dir_state: "{{ undef() }}"
+fa_dir_bin: "{{ undef() }}"
 
 #
 # XDG base directories, useful with 'foundation.user.env'.
 #
 fa_dir_subs:
-  XDG_CONFIG_HOME: "{{ omit() }}"
-  XDG_CACHE_HOME: "{{ omit() }}"
-  XDG_DATA_HOME: "{{ omit() }}"
-  XDG_STATE_HOME: "{{ omit() }}"
+  XDG_CONFIG_HOME: "{{ undef() }}"
+  XDG_CACHE_HOME: "{{ undef() }}"
+  XDG_DATA_HOME: "{{ undef() }}"
+  XDG_STATE_HOME: "{{ undef() }}"
 
 #
 # XDG user directories.
 #
 fa_dir_xdg:
-  downloads: "{{ omit() }}"
-  documents: "{{ omit() }}"
-  pictures: "{{ omit() }}"
-  videos: "{{ omit() }}"
-  music: "{{ omit() }}"
-  templates: "{{ omit() }}"
-  publicshare: "{{ omit() }}"
-  desktop: "{{ omit() }}"
+  downloads: "{{ undef() }}"
+  documents: "{{ undef() }}"
+  pictures: "{{ undef() }}"
+  videos: "{{ undef() }}"
+  music: "{{ undef() }}"
+  templates: "{{ undef() }}"
+  publicshare: "{{ undef() }}"
+  desktop: "{{ undef() }}"

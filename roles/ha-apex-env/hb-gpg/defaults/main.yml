@@ -19,7 +19,20 @@ hb_compressions:
   - ZIP
   - ZLIB
 
-hb_generate: "{{ omit() }}"
+#
+# List of keys to generate.
+#
+# New keys will be generated only if they were not restored from the persist.
+#
+# Note that in order to integrate existing GnuPG keyring into this role and foundation.user.gpg role, the following
+#  persist items must exist:
+#  - gpg/keyring: full GnuPG keyring backup with secret keys
+#  - gpg/private-keys: archive of private-keys-v1.d/*.key, in order to omit reencryption of keys that occurs after
+#    keyring import
+#  - gpg/unattended-keys: JSON metadata file of keys from `hb_generate` in the form of array of objects:
+#    <master_key_or_subkey>: {"fingerprint": <fpr>, "keygrip": <krp>}
+#
+hb_generate: "{{ undef() }}"
   # <master-name>:
   #   master:
   #     name: Alice

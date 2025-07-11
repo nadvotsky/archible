@@ -2,7 +2,7 @@
 #
 # Disk identifier as listed in the `/dev/disk/by-id`.
 #
-bb_disk_id: "{{ omit() }}"
+bb_disk_id: "{{ undef() }}"
 
 #
 # Refer to the files/apart/README.md for more info.

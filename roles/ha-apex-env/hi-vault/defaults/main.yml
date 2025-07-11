@@ -1,2 +1,5 @@
 ---
-hi_gpg_key: "{{ omit() }}"
+#
+# Generated previously GnuPG key to use for vault.
+#
+hi_gpg_key: "{{ undef() }}"

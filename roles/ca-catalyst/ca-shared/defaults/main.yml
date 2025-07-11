@@ -2,14 +2,49 @@
 #
 # Basic user information.
 #
-ca_name: "{{ omit() }}"
-ca_password: "{{ omit() }}"
 
-ca_info_short: "{{ omit() }}"
-ca_info_full: "{{ omit() }}"
-ca_info_alt: "{{ omit() }}"
-ca_info_mail: "{{ omit() }}"
+#
+# User name.
+#
+ca_name: "{{ undef() }}"
 
+#
+# User password.
+#
+ca_password: "{{ undef() }}"
+
+#
+# Short user information.
+#
+# Expected to be a real name or nickname.
+#
+ca_info_short: "{{ undef() }}"
+
+#
+# Full user information.
+#
+# Expected to be a whole name, including first name and surname.
+#
+ca_info_full: "{{ undef() }}"
+
+#
+# Alternative user information.
+#
+# Expected to be a whole name with some changes due to the translation or other inconsistencies.
+#
+ca_info_alt: "{{ undef() }}"
+
+#
+# User email.
+#
+ca_info_mail: "{{ undef() }}"
+
+#
+# List of default groups user belongs to.
+#
+# This only defines an essential list, the applications installation roles will
+#  only append required groups to this list (docker, seat, etc).
+#
 ca_groups:
   #
   # Admin access.
@@ -29,5 +64,12 @@ ca_groups:
   - kvm
   - video
 
+#
+# DNS IP address.
+#
 ca_dns_ip: 1.1.1.1
+
+#
+# DNS Server Name Indication (SNI).
+#
 ca_dns_sni: cloudflare-dns.com

@@ -1,5 +1,8 @@
 ---
-bc_root_password: "123"
+#
+# Root user password.
+#
+bc_root_password: "{{ undef() }}"
 
 bc_mountopts_root: defaults,noatime
 bc_mountopts_efi: fmask=0137,dmask=0027,noatime

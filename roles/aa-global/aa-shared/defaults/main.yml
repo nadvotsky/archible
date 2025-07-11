@@ -34,4 +34,4 @@ aa_persist: "{{ omit() }}"
 #
 # Must be either `always` or `never`.
 #
-aa_wipe: "{{ omit() }}"
+aa_wipe: "{{ undef() }}"

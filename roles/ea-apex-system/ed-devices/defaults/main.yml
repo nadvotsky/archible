@@ -33,4 +33,4 @@
 #    selectors:
 #      - ENV{PCI_CLASS}=="40300"
 #
-ed_blacklist: "{{ omit() }}"
+ed_blacklist: "{{ undef() }}"
