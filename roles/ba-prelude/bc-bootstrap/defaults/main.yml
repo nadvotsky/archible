@@ -4,9 +4,32 @@
 #
 bc_root_password: "{{ undef() }}"
 
+#
+# Mount options for root partition.
+#
 bc_mountopts_root: defaults,noatime
+
+#
+# Mount options for EFI (ESP) partition.
+#
 bc_mountopts_efi: fmask=0137,dmask=0027,noatime
 
-bc_locale: en
-bc_keymap: en_US.UTF-8
+#
+# VT locale.
+#
+bc_locale: en_US.UTF-8
+
+#
+# VT keymap.
+#
+# Theoretically, layout switching can be achieved, but it is tricky:
+#  https://wiki.archlinux.org/title/Linux_console/Keyboard_configuration#Layout_switching
+#
+bc_keymap: us
+
+#
+# Machine timezone.
+#
+# https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+#
 bc_timezone: UTC

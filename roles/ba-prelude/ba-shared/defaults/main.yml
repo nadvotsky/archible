@@ -1,9 +1,9 @@
 ---
 #
-# Headless installation flag is important for tasks that need to know whether machine is actually booted, i.e. in the
-#  consitent and defined state.
+# Headless installation flag.
 #
-# This flag is used in:
+# It is important for tasks that need to know whether machine is actually booted or exist in the transient state
+#  (i.e. chroot, container). This flag defines the behavior of the following processes:
 #  - service management
 #  - temporary files creation
 #  - initramrd creation
@@ -29,6 +29,13 @@ ba_hostname: "{{ undef() }}"
 ba_cores: "{{ undef() }}"
 
 #
-# Machine arch.
+# Target machine architecture.
 #
-ba_arch: "x86_64_v3"
+# Supported values include: 'x86_64_v3', 'x86_64_v2', and 'aarch64'. This value combines different purposes:
+#  - Make use of optimized repositories for newer CPU instruction sets (_v3, _v4)
+#  - Prepare for possible ARM transition, at least for non-essential task
+#
+# The current implementation is far from being ready, as both mentioned reasons above raise a lot of questions about
+#  software stack. In either case, here is some further information: https://wiki.cachyos.org/features/optimized_repos/.
+#
+ba_arch: "x86_64_v2"

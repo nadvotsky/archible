@@ -6,11 +6,13 @@
   become: true
   block:
     - name: Install dependencies for disk probing
+      become: true
       ansible.builtin.package:
         name: util-linux
         state: present
 
     - name: Ensure nothing is mounted at the mount point
+      become: true
       ansible.builtin.command:
         argv:
           - findmnt
@@ -20,6 +22,7 @@
       changed_when: false
 
     - name: Get disk stat
+      become: true
       ansible.builtin.stat:
         path: "{{ _bb_disk_path }}"
         follow: true
@@ -32,6 +35,7 @@
         msg: Requested disk id {{ _bb_disk_stat }} cannot be found
 
     - name: Get a list of partitions for the disk
+      become: true
       ansible.builtin.find:
         paths: /dev/disk/by-id
         file_type: link
@@ -40,6 +44,7 @@
       register: _bb_disk_partitions
 
     - name: Ensure none of the disk partitions are currently mounted
+      become: true
       ansible.builtin.command:
         argv:
           - findmnt
@@ -71,7 +76,7 @@
       foundation.files.install:
         base: /tmp/apart
         wipe: never
-        perms: 755:root:root
+        perms: 755:644:root:root
       vars:
         targets:
           - dir: ./
@@ -86,12 +91,14 @@
             url: https://github.com/abs-lang/abs/releases/latest/download/abs-linux-amd64
 
     - name: Partition disk and mount filesystems with apart
+      become: true
       ansible.builtin.command:
         argv: >-
           {%- set _binary = ["/tmp/apart/abs", "/tmp/apart/apart.abs"] -%}
-          {%- set _args = ["--disk", _bb_disk_path, "--mount", ba_mount_point] -%}
+          {%- set _disk = ["--disk", "/dev/disk/by-id/{}".format(bb_disk_id)] -%}
+          {%- set _mount = ["--mount", ba_mount_point] -%}
 
-          {{ _binary + _args + bb_schema }}
+          {{ _binary + _disk + _mount + bb_schema }}
       environment:
         NO_COLOR: "1"
       register: _bb_apart_invocation

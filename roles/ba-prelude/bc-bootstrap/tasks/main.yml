@@ -1,9 +1,9 @@
 ---
 - name: Configure bootstrap dependencies
-  tags: prelude-bootstap-deps
-  become: true
+  tags: prelude-bootstrap-deps
   block:
     - name: Install bootstrap prelude dependencies
+      become: true
       ansible.builtin.package:
         name:
           - arch-install-scripts
@@ -11,10 +11,11 @@
         state: present
 
 - name: Configure base system
-  tags: prelude-bootstap-pacstrap
+  tags: prelude-bootstrap-pacstrap
   become: true
   block:
     - name: Bootstrap base system with pacstrap
+      become: true
       ansible.builtin.command:
         argv:
           - pacstrap
@@ -30,9 +31,9 @@
 
 - name: Configure fstab
   tags: prelude-bootstrap-fstab
-  become: true
   block:
     - name: Generate fstab via genfstab
+      become: true
       ansible.builtin.shell:
         cmd: >-
           genfstab -t PARTUUID "{{ ba_mount_point }}" > "{{ ba_mount_point }}/etc/fstab"
@@ -40,6 +41,7 @@
       changed_when: _bc_genfstab_invocation.rc == 0
 
     - name: Modify mount options
+      become: true
       ansible.builtin.replace:
         path: "{{ ba_mount_point }}/etc/fstab"
         regexp: "\
