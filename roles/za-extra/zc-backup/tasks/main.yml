@@ -14,7 +14,7 @@
       ansible.builtin.set_fact:
         _zc_keys: >-
           {%- set _acc = {} -%}
-          {%- for _name, _meta in _zc_unattended.keys.items() -%}
+          {%- for _name, _meta in _zc_unattended.gpg.items() -%}
             {%- for _master, _subdict in hb_generate.items() -%}
               {%- if _master == _name -%}
                 {%- do _acc.__setitem__(

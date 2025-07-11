@@ -75,7 +75,7 @@
       loop: >-
         {%- set _config = ig_git_userconf | ansible.builtin.combine(ig_git_perfconf, ig_git_featconf) -%}
         {%- if _ig_git_signkey is defined -%}
-          {%- do _config.__setitem__('user.signingkey', _ig_git_signkey.keys[ig_git_gpgsign].fingerprint) -%}
+          {%- do _config.__setitem__('user.signingkey', _ig_git_signkey.gpg[ig_git_gpgsign].fingerprint) -%}
         {%- endif -%}
 
         {{ _config | dict2items }}

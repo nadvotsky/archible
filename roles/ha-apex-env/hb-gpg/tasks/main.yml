@@ -125,7 +125,7 @@
           - --import-ownertrust
         stdin: >-
           {%- set _acc = [] -%}
-          {%- for _key in _gb_restore_unattended.keys.values() -%}
+          {%- for _key in _gb_restore_unattended.gpg.values() -%}
             {%- do _acc.append("{}:6:".format(_key.fingerprint)) -%}
           {%- endfor -%}
           {{ _acc | join("\n") }}

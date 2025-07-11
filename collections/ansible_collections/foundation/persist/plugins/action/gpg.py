@@ -61,11 +61,11 @@ class ActionModule(ActionBase):
         path, keys = self._employ_inputs()
         unattended_keys = self._read_unattended(path, task_vars)
 
-        result = RawResult(keys={})
-        for key in unattended_keys.keys() if keys is None else keys:
+        result = RawResult(gpg={})
+        for key in keys or unattended_keys.keys():
             if key not in unattended_keys:
                 raise AnsibleActionFail(f"No such GnuPG key '{key}'")
 
-            result["keys"][key] = unattended_keys[key]
+            result["gpg"][key] = unattended_keys[key]
 
         return result

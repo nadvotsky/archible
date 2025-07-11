@@ -165,4 +165,4 @@
       vars:
         targets:
           - file: "{{ _hi_ulayout.root }}/.gpg-id"
-            content: "{{ _hi_gpg_key.keys[hi_gpg_key].fingerprint }}"
+            content: "{{ _hi_gpg_key.gpg[hi_gpg_key].fingerprint }}"
