@@ -11,17 +11,13 @@
     - name: Render ly configuration
       become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
         base: /etc/ly
       vars:
         targets:
-          - file: ./xsetup.sh
+          - file: ./setup.sh
             perms: 755:root:root
-            copy: ly/minwm.sh
-
-          - file: ./wsetup.sh
-            perms: 755:root:root
-            copy: ly/minwm.sh
+            copy: ly/setup.sh
 
           - file: ./config.ini
             perms: 644:root:root
