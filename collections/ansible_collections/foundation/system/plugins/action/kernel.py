@@ -26,10 +26,10 @@ class ActionModule(ActionBase):
 
         spec = dict(headless=dict(type="bool", required=True))
         args: Arguments = self.validate_argument_spec(spec)[1]
-        variables = self._process_vars(self._task.vars)
+        env = self._process_env(self._task.environment.pop())
 
         seed, seed_hash = self._read_current_cmdline(task_vars)
-        patch, patch_hash = self._construct_patch(seed, variables)
+        patch, patch_hash = self._construct_patch(seed, env)
         if self._task.check_mode or seed_hash == patch_hash:
             return result
 
@@ -45,10 +45,10 @@ class ActionModule(ActionBase):
 
         return RawResult(changed=True)
 
-    def _process_vars(self, raw_vars: dict) -> tuple[Arguments, Cmdline]:
-        if not isinstance(raw_vars, dict):
-            raise AnsibleActionFail("Invalid module variables, expected a mapping")
-        elif len(raw_vars) == 0:
+    def _process_env(self, raw_env: dict) -> tuple[Arguments, Cmdline]:
+        if not isinstance(raw_env, dict):
+            raise AnsibleActionFail("Invalid module environment, expected a mapping")
+        elif len(raw_env) == 0:
             raise AnsibleActionFail("No-op module invocation")
 
         def is_value_wrong(value):
@@ -58,7 +58,7 @@ class ActionModule(ActionBase):
             return None if value is True else str(value)
 
         args: Cmdline = {}
-        for key, value in raw_vars.items():
+        for key, value in raw_env.items():
             vector = value if isinstance(value, list) else [value]
             if len(vector) == 0 or any(map(is_value_wrong, vector)):
                 raise AnsibleActionFail(f"'{key}' must only allows primitives")
@@ -92,11 +92,11 @@ class ActionModule(ActionBase):
 
                 continue
 
-            cmdline[key] = val
+            cmdline[key] = None if val == "" else val
 
         return cmdline, hashlib.md5(content.encode()).digest()
 
-    def _construct_patch(self, seed: Cmdline, variables: Cmdline) -> tuple[str, bytes]:
+    def _construct_patch(self, seed: Cmdline, env: Cmdline) -> tuple[str, bytes]:
         def format_line(key: str, value: None | str | typing.Sequence[str]) -> str:
             if value is None:
                 return key
@@ -110,18 +110,20 @@ class ActionModule(ActionBase):
 
         lines = []
         for key in seed.keys():
-            if key not in variables:
+            if key not in env:
                 lines.append(format_line(key, seed[key]))
                 continue
 
-            new_value = variables[key]
+            new_value = env[key]
             was_type, new_type = type(seed[key]), type(new_value)
             if was_type is new_type:
                 if isinstance(new_value, list):
                     lines.append(format_line(key, (*seed[key], *new_value)))
                 else:
                     lines.append(format_line(key, new_value))
-            elif was_type is not str and new_type is not list:
+            elif isinstance(was_type, str) and isinstance(new_type, list):
+                lines.append(format_line(key, (seed[key], *new_value)))
+            else:
                 raise AnsibleActionFail(
                     "'{}' type mismatch: expected {}, got {}.".format(
                         key,
@@ -129,11 +131,9 @@ class ActionModule(ActionBase):
                         prettify_type(new_type),
                     )
                 )
-            else:
-                lines.append(format_line(key, (seed[key], *new_value)))
 
-        for key in filter(lambda k: k not in seed, variables.keys()):
-            lines.append(format_line(key, variables[key]))
+        for key in filter(lambda k: k not in seed, env.keys()):
+            lines.append(format_line(key, env[key]))
 
         return (ret := " ".join(lines) + "\n"), hashlib.md5(ret.encode()).digest()
 
