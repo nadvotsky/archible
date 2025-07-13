@@ -26,7 +26,7 @@
         device-strings = {{ _mapping.device }}
         description-key = {{ _mapping.label | default(_mapping_name) }}
         priority = {{ _mapping.priority }}
-        channel-map = {{ _mappings_channel_map() | relative_indent }}
+        channel-map = {{ _mappings_channel_map() | aa_relindent }}
         paths-input = {{ _mapping.outputs | join(" ") }}
         paths-output = {{ _mapping.inputs | join(" ") }}
         {##}
@@ -49,6 +49,6 @@
 [General]
 auto-profiles = no
 
-{{ _mappings_render() | relative_indent }}
+{{ _mappings_render() | aa_relindent }}
 
-{{ _profiles_render() | relative_indent }}
+{{ _profiles_render() | aa_relindent }}

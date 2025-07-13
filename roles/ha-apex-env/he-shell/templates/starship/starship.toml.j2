@@ -30,7 +30,7 @@
 {%- macro _multiline(_lines) -%}
     {%- for _line in _lines -%}
         {{- _line -}}{{- "\\" -}}
-        {%- if not loop.last -%}{{- "\n" -}}{%- endif -%}
+        {%- if not loop.last -%}{{ "" | aa_newline }}{%- endif -%}
     {%- endfor -%}
 {%- endmacro -%}
 

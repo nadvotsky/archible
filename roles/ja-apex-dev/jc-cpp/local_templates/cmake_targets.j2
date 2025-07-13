@@ -18,7 +18,7 @@
 
     {%- do _acc.append({
         "file": "./config/toolchains/{}.cmake".format(_name),
-        "content": _lines | join("\n") | newline,
+        "content": _lines | join("" | aa_newline) | aa_newline,
     }) -%}
 {%- endfor -%}
 

@@ -27,7 +27,7 @@ context.properties = {
     loop.rt-prio = -1
     context.num-data-loops = 1
 
-    {{ _gd_context | relative_indent(times=1, **_indent) }}
+    {{ _gd_context | aa_relindent(times=1, **_indent) }}
 }
 
 context.spa-libs = {
@@ -54,7 +54,7 @@ context.spa-libs = {
 
 context.modules = [
 
-    {{ _gd_realtime | relative_indent(times=1, **_indent) }}
+    {{ _gd_realtime | aa_relindent(times=1, **_indent) }}
 
     {
         name = libpipewire-module-protocol-native
@@ -98,7 +98,7 @@ context.modules = [
     {
         name = libpipewire-module-loopback
         args = {
-            audio.position = {{ _position_render() | relative_indent }}
+            audio.position = {{ _position_render() | aa_relindent }}
             capture.props = {
                 node.name = loopback-input
                 node.description = "Loopback Input"
@@ -163,13 +163,13 @@ context.modules = [
             jack.connect = true
             tunnel.mode = duplex
             source.props = {
-                audio.channels = {{ _channels_render() | relative_indent }}
-                audio.position = {{ _position_render() | relative_indent }}
+                audio.channels = {{ _channels_render() | aa_relindent }}
+                audio.position = {{ _position_render() | aa_relindent }}
                 midi.ports = {{ gd_midi is true | ternary(1, 0) }}
             }
             sink.props = {
-                audio.channels = {{ _channels_render() | relative_indent }}
-                audio.position = {{ _position_render() | relative_indent }}
+                audio.channels = {{ _channels_render() | aa_relindent }}
+                audio.position = {{ _position_render() | aa_relindent }}
                 midi.ports = {{ gd_midi is true | ternary(1, 0) }}
             }
         }

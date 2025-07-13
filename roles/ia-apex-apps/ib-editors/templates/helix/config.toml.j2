@@ -281,7 +281,7 @@
         {% for _bind, _action in _group_binds.items() %}
         {{ _bind }} = {{ (_action | quote) if _action is string else (_action | tojson) }}
         {% endfor %}
-        {% if not loop.last %}{{ "\n" }}{% endif %}
+        {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
 {%- endmacro -%}
 

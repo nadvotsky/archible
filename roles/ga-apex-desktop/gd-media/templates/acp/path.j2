@@ -55,7 +55,7 @@
         {% set _element_meta = _units.elements[_element_name] %}
         {##}
         [Element {{ _element_name }}]
-        {{ _elements_type_handle(_element_meta.type, true) | relative_indent(times=2, **_indent) }}
+        {{ _elements_type_handle(_element_meta.type, true) | aa_relindent(times=2, **_indent) }}
         override-map.1 = all
         override-map.2 = all-left,all-right
         direction = {{ _element_meta.direction | default(_direction) }}
@@ -65,7 +65,7 @@
         #}
         {% for _key, _value in (_props is mapping | ternary(_props, {})).items() %}
         {{ _key }} = {{ _value }}
-        {% endmacro %}
+        {% endfor %}
         {##}
         {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
@@ -74,7 +74,7 @@
 {%- macro _blacklist_elements_render() -%}
     {% for _element_name, _element in _blacklist.elements.items() %}
         [Element {{ _element_name }}]
-        {{ _elements_type_handle(_element.type | default(_path.type), false) | relative_indent(times=2, **_indent) }}
+        {{ _elements_type_handle(_element.type | default(_path.type), false) | aa_relindent(times=2, **_indent) }}
         direction = {{ _element.direction | default(_direction) }}
         direction-try-other = no
         {##}
@@ -103,12 +103,12 @@
 priority = {{ _path.priority }}
 description-key = {{ _path.label | default(_path_name) }}
 
-{{ _whitelist_jack_render() | relative_indent }}
+{{ _whitelist_jack_render() | aa_relindent }}
 
-{{ _whitelist_elements_render() | relative_indent }}
+{{ _whitelist_elements_render() | aa_relindent }}
 
-{{ _whitelist_enumerations_render() | relative_indent }}
+{{ _whitelist_enumerations_render() | aa_relindent }}
 
-{{ _blacklist_jack_render() | relative_indent }}
+{{ _blacklist_jack_render() | aa_relindent }}
 
-{{ _blacklist_elements_render() | relative_indent }}
+{{ _blacklist_elements_render() | aa_relindent }}

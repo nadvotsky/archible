@@ -41,7 +41,7 @@
 
     {%- do _acc.append({
         "file": "./config/profiles/{}".format(_name),
-        "content": _lines | join("\n") | newline,
+        "content": _lines | join("" | aa_newline) | aa_newline,
     }) -%}
 {%- endfor -%}
 

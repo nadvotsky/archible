@@ -97,17 +97,17 @@
         },
         {##}
         "custom/workspaces-{{ _mon_name }}-icon": {
-            {{ _section_render(_icon=_mon_icon) | relative_indent(times=3, **_indent) }}
+            {{ _section_render(_icon=_mon_icon) | aa_relindent(times=3, **_indent) }}
         },
         {##}
         "hyprland/workspaces#{{ _mon_name }}": {
             "active-only": true,
             "all-outputs": true,
             "persistent-workspaces": {
-                {{ _workspaces_persistent(_mon, _ws_prefix) | relative_indent(times=4, **_indent) }}
+                {{ _workspaces_persistent(_mon, _ws_prefix) | aa_relindent(times=4, **_indent) }}
             },
             "ignore-workspaces": [
-                {{ _workspaces_ignore(_mon_name, loop.first) | relative_indent(times=4, **_indent) }}
+                {{ _workspaces_ignore(_mon_name, loop.first) | aa_relindent(times=4, **_indent) }}
             ],
             "show-special": true,
             "sort-by": "name",
@@ -131,7 +131,7 @@
 
     "reload_style_on_change": false,
 
-    {{ _modules_render() | relative_indent(times=1, **_indent) }}
+    {{ _modules_render() | aa_relindent(times=1, **_indent) }}
 
     // margin: "",
     // margin-<top|left|bottom|right>: 0,
@@ -144,8 +144,8 @@
             "warn": 90,
         },
 
-        {{ _section_render(_icon="f4bc", _mini=true) | relative_indent }}
-        {{ _section_render(_icon="f4bc", _mini=true, _ns="warn", _warn=true) | relative_indent }}
+        {{ _section_render(_icon="f4bc", _mini=true) | aa_relindent }}
+        {{ _section_render(_icon="f4bc", _mini=true, _ns="warn", _warn=true) | aa_relindent }}
     },
 
     "memory#ram": {
@@ -155,8 +155,8 @@
             "warn": 90,
         },
 
-        {{ _section_render(_icon="efc5", _content="{used} GiB") | relative_indent }}
-        {{ _section_render(_icon="efc5", _content="{used} GiB", _ns="warn", _warn=true) | relative_indent }}
+        {{ _section_render(_icon="efc5", _content="{used} GiB") | aa_relindent }}
+        {{ _section_render(_icon="efc5", _content="{used} GiB", _ns="warn", _warn=true) | aa_relindent }}
     },
 
     "memory#swap": {
@@ -166,17 +166,17 @@
             "warn": 90,
         },
 
-        {{ _section_render(_icon="f0fb7", _content="{swapUsed} GiB") | relative_indent }}
-        {{ _section_render(_icon="f0fb7", _content="{swapUsed} GiB", _ns="warn", _warn=true) | relative_indent }}
+        {{ _section_render(_icon="f0fb7", _content="{swapUsed} GiB") | aa_relindent }}
+        {{ _section_render(_icon="f0fb7", _content="{swapUsed} GiB", _ns="warn", _warn=true) | aa_relindent }}
     },
 
-    {{ _workspaces_render() | relative_indent(times=1, **_indent) }}
+    {{ _workspaces_render() | aa_relindent(times=1, **_indent) }}
 
     "clock": {
         "interval": 1,
 
-        {{ _section_render(_icon="e383", _content="{:%a %b %d %r}") | relative_indent }}
-        {{ _section_render(_icon="e383", _content="{:%F %r %Z}", _ns="alt") | relative_indent }}
+        {{ _section_render(_icon="e383", _content="{:%a %b %d %r}") | aa_relindent }}
+        {{ _section_render(_icon="e383", _content="{:%F %r %Z}", _ns="alt") | aa_relindent }}
 
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
@@ -184,10 +184,10 @@
             "weeks-pos": "",
             "on-scroll": 1,
             "format": {
-                "months": "<span color=\"{{ preset.accent }}\"><b>{}</b></span>",
-                "days": "<span color=\"{{ preset.foreground }}\"><b>{}</b></span>",
-                "weekdays": "<span color=\"{{ preset.alternative }}\"><b>{}</b></span>",
-                "today": "<span color=\"{{ preset.important }}\"><b><u>{}</u></b></span>"
+                "months": "<span color=\"{{ ga_preset.accent }}\"><b>{}</b></span>",
+                "days": "<span color=\"{{ ga_preset.foreground }}\"><b>{}</b></span>",
+                "weekdays": "<span color=\"{{ ga_preset.alternative }}\"><b>{}</b></span>",
+                "today": "<span color=\"{{ ga_preset.important }}\"><b><u>{}</u></b></span>"
             },
         },
         "actions": {
@@ -207,13 +207,13 @@
 
         {{ 
             _section_render(_icon="f413", _content="{specific_used:0.0f} / {specific_total:0.0f} GB")
-                | relative_indent 
+                | aa_relindent 
         }}
         {{ 
             _section_render(
                 _icon="f413", _content="{specific_used:0.0f} / {specific_total:0.0f} GB", _ns="warn", _warn=true
             )
-                | relative_indent
+                | aa_relindent
         }}
     },
 
@@ -222,7 +222,7 @@
         "interval": 60,
         "exec": "{{ ga_uptime }}",
 
-        {{ _section_render(_icon="f1ae1", _content="{}") | relative_indent }}
+        {{ _section_render(_icon="f1ae1", _content="{}") | aa_relindent }}
     },
 
     "mpris": {
@@ -241,7 +241,7 @@
         "on-click-right": "playerctl previous",
         "on-click-middle": "playerctl play-pause",
 
-        {{ _section_render(_icon="ec1b", _content="{dynamic}") | relative_indent }}
+        {{ _section_render(_icon="ec1b", _content="{dynamic}") | aa_relindent }}
     },
 
     "wireplumber": {
@@ -249,10 +249,10 @@
         "tooltip": false,
         "on-click": "wpctl set-mute @DEFAULT_SINK@ toggle",
 
-        {{ _section_render(_icon="f0580", _content="{volume}%") | relative_indent }}
+        {{ _section_render(_icon="f0580", _content="{volume}%") | aa_relindent }}
         {{ 
             _section_render(_icon="f0581", _content="Muted", _ns="muted", _important=true)
-                | relative_indent
+                | aa_relindent
         }}
     },
 
@@ -269,7 +269,7 @@
         "tooltip": false,
         "exec": "{{ ga_netns }} || (echo default)",
 
-        {{ _section_render(_icon="f0484", _content="{}") | relative_indent }}
+        {{ _section_render(_icon="f0484", _content="{}") | aa_relindent }}
     },
 
     "tray": {

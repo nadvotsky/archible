@@ -27,12 +27,12 @@
 {%- macro _code_with_me_render() -%}
     [Desktop Action CodeWithMe]
     Name=Code With Me Guest Launcher
-    Exec={{ _build_exec("JETBRAINS_CLIENT", "jetbrains_client.sh", []) | aa_relident() }}
+    Exec={{ _build_exec("JETBRAINS_CLIENT", "jetbrains_client.sh", []) | aa_relindent() }}
 
     {% if ic_wayland %}
     [Desktop Action CodeWithMeWayland]
     Name=Code With Me Guest Launcher, with Wayland Support
-    Exec={{ _build_exec("JETBRAINS_CLIENT", "jetbrains_client.sh", [_wayland]) | aa_relident() }}
+    Exec={{ _build_exec("JETBRAINS_CLIENT", "jetbrains_client.sh", [_wayland]) | aa_relindent() }}
 
     {% endif %}
 {%- endmacro -%}
@@ -40,7 +40,7 @@
 {%- macro _wayland_render() -%}
 [Desktop Action Wayland]
 Name=Wayland display server support
-Exec={{ _build_exec(_codename | upper, _codename, [_wayland]) | aa_relident() }}
+Exec={{ _build_exec(_codename | upper, _codename, [_wayland]) | aa_relindent() }}
 {%- endmacro -%}
 
 
@@ -50,18 +50,18 @@ Version={{ _ide.dist_ver }}
 Name={{ _ide.info_name }}
 Comment={{ _ide.info_comm }}
 Icon={{ _ide.dist_ico }}
-Exec={{ _build_exec(_codename | upper, _codename, []) | aa_relident() }}
+Exec={{ _build_exec(_codename | upper, _codename, []) | aa_relindent() }}
 Categories=Development;IDE;
 Terminal=false
 StartupWMClass=jetbrains-{{ _codename }}
 StartupNotify=true
-Actions={{ _actions_render() | aa_relident() }};
+Actions={{ _actions_render() | aa_relindent() }};
 {##}
 {% if ic_code_with_me is true %}
 
-{{ _code_with_me_render() | aa_relident() }}
+{{ _code_with_me_render() | aa_relindent() }}
 {% endif %}
 {% if ic_wayland is true %}
 
-{{ _wayland_render() | aa_relident() }}
+{{ _wayland_render() | aa_relindent() }}
 {% endif %}

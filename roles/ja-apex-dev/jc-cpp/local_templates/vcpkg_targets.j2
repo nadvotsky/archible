@@ -20,12 +20,12 @@
                 _var, _val if _val is string else (_val | join(" ")),
             )) -%}
         {%- endfor -%}
-        {%- do _acc.append({"file": _file, "content": _lines | join("\n") | newline}) -%}
+        {%- do _acc.append({"file": _file, "content": _lines | join("" | aa_newline) | aa_newline}) -%}
     {%- endfor -%}
 
     {%- do _acc.append({
-        "file": "./config/vcpkg/toolchains/{}.cmake".format(_name),
-        "content": _tchain.toolchain | join("\n") | newline,
+        "file": "./config/vcpkg-toolchains/{}.cmake".format(_name),
+        "content": _tchain.toolchain | join("" | aa_newline) | aa_newline,
     }) -%}
 {%- endfor -%}
 

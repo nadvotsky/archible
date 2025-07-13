@@ -48,7 +48,7 @@
 {%- set _acc = [
     {
         "file": "./.bazelrc",
-        "content": _rc_lines | join("\n"),
+        "content": _rc_lines | join("" | aa_newline),
     },
     {
         "file": "./src/BUILD",

@@ -76,11 +76,11 @@
 
 {%- macro _devices_render() -%}
     {% for _card_name, _card in gd_cards.items() %}
-        {{ _device_render(_card_name, _card) | relative_indent(times=2, **_indent) }}
+        {{ _device_render(_card_name, _card) | aa_relindent(times=2, **_indent) }}
 
-        {{ _node_render("input", _card_name, _card) | relative_indent(times=2, **_indent) }}
+        {{ _node_render("input", _card_name, _card) | aa_relindent(times=2, **_indent) }}
 
-        {{ _node_render("output", _card_name, _card) | relative_indent(times=2, **_indent) }}
+        {{ _node_render("output", _card_name, _card) | aa_relindent(times=2, **_indent) }}
     {% endfor %}
 {%- endmacro -%}
 
@@ -175,9 +175,9 @@ access.rules = [
 
 monitor.alsa.rules = [
 
-    {{ _exclusive_render() | relative_indent(times=1, **_indent) }}
+    {{ _exclusive_render() | aa_relindent(times=1, **_indent) }}
 
-    {{ _devices_render() | relative_indent(times=1, **_indent) }}
+    {{ _devices_render() | aa_relindent(times=1, **_indent) }}
 
     {
         matches = [
@@ -188,7 +188,7 @@ monitor.alsa.rules = [
         ]
         actions = {
             update-props = {
-                {{ __stream_properties | relative_indent(times=4, **_indent) }}
+                {{ _gd_stream | aa_relindent(times=4, **_indent) }}
             }
         }
     }
