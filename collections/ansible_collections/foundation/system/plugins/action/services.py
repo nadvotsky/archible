@@ -47,16 +47,16 @@ type State = typing.Mapping[str, bool | None]
 @dataclasses.dataclass
 class DomainState:
     META: typing.ClassVar[dict[str, tuple[str, str]]] = {
-        "masking": ("unmask", "mask"),
+        "unmasking": ("unmask", "mask"),
         "autostart": ("enable", "disable"),
         "runtime": ("start", "stop"),
     }
     IMPLIES: typing.ClassVar[dict[str, str]] = {
-        "masking": "runtime",
+        "unmasking": "runtime",
         "autostart": "runtime",
     }
 
-    masking: bool | None = None
+    unmasking: bool | None = None
     autostart: bool | None = None
     runtime: bool | None = None
     reload: bool | None = None
@@ -149,8 +149,8 @@ class ActionModule(ActionBase):
             local_module_args: SystemdModuleArgs = module_args | dict(name=service)
             if domain_state.autostart is not None:
                 local_module_args["enabled"] = domain_state.autostart
-            if domain_state.masking is not None:
-                local_module_args["masked"] = domain_state.masking
+            if domain_state.unmasking is not None:
+                local_module_args["masked"] = not domain_state.unmasking
             if domain_state.runtime is not None:
                 local_module_args["state"] = "restarted" if domain_state.runtime is True else "stopped"
 
