@@ -1,8 +1,12 @@
 ---
 #
-# Command-lines.
+# Uptime shell command.
 #
 ga_uptime: uptime -p | sed -E 's/up //; s/ days?,?/d/; s/ hours?,?/h/; s/ minutes?,?/m/'
+
+#
+# Network namespace shell command.
+#
 ga_netns: (ip netns list | grep -q .) && (ip netns list | tr '\\n' ' ')
 
 #
@@ -19,13 +23,9 @@ ga_keyboard_layout: us
 ga_keyboard_options: grp:terminate:ctrl_alt_bksp
 
 #
-# Monitors stacking.
-#
-ga_monitors_stack: horizontal
-#
 # Monitor devices.
 #
-ga_monitors: "{{ omit() }}"
+ga_monitors: "{{ undef() }}"
   # <name>:
   #   workspaces: 4
   #   width: 1920
@@ -36,8 +36,13 @@ ga_monitors: "{{ omit() }}"
   #   #
   #   # Must only be defined for one particular monitor.
   #   #
-  #   notification: true
+  #   notifications: true
   #   scratch: ScratchName
+
+#
+# Monitors stacking.
+#
+ga_monitors_stack: horizontal
 
 #
 # Assuming that a virtual perfect monitor has the following DPI.
@@ -50,14 +55,14 @@ ga_scaling_ethalon: 96
 #
 # Dpi is a very tricky metric, because it is up to the application how to implement scaling. For example:
 #  herbstluftwm
-#   scales font,
-#   does not scale paddings, offsets, etc.
+#   + scales font,
+#   - does not scale paddings, offsets, etc.
 #  polybar
-#   scales spaces, points, both :size and :pixelsize,
-#   does not scale pixels and font offsets.
+#   + scales spaces, points, both :size and :pixelsize,
+#   - does not scale pixels and font offsets.
 #  dunst
-#   scales sizes, spacings, and font when dpi is greater than 96,
-#   but only (down)scales font when dpi is smaller than 96
+#   + scales sizes, spacings, and font when dpi is greater than 96,
+#   - but only (down)scales font when dpi is smaller than 96
 #  and so on.
 #
 #  While it is okay for the regular user applications to be scaled arbitrary, it is not the case for the WM & related
@@ -73,14 +78,14 @@ ga_scaling_ethalon: 96
 ga_scaling: 0.9
 
 #
-# Sizing for notifications.
+# Sizing for popups (i.e. notifications).
 #
 ga_popup_height: 0.3
 ga_popup_width: 0.6
 ga_popup_icon: 0.1
 
 #
-# Spacing.
+# Various elements spacing categories.
 #
 ga_space_thin: 1
 ga_space_small: 2
@@ -136,7 +141,7 @@ ga_fonts_emoji_off_medium: "{{ ga_fonts_mono_off_medium }}"
 ga_fonts_emoji_off_big: "{{ ga_fonts_mono_off_big }}"
 
 #
-# Icon fonts (nerd, powerline, etc).
+# Icon font (nerd, powerline, etc).
 #
 ga_fonts_icon: Symbols Nerd Font Mono
 ga_fonts_icon_package: ttf-nerd-fonts-symbols-mono
@@ -153,7 +158,7 @@ ga_fonts_icon_off_big: 3
 ga_icons_main: Zorin
 ga_icons_main_package: zorin-icon-themes
 ga_icons_launcher: Nordzy
-ga_icons_url: https://github.com/MolassesLover/Nordzy-icon/releases/latest/download/Nordzy.tar.gz
+ga_icons_launcher_url: https://github.com/MolassesLover/Nordzy-icon/releases/latest/download/Nordzy.tar.gz
 
 #
 # This only used here in-place via YAML anchors.
@@ -238,7 +243,10 @@ ga_ansi:
     - *snow3
 
 #
-# Keys configuration.
+# Global keys configuration for various applications.
+#
+# Its mission is to unify complicated application configurations to more complicated templates with a single source
+#  of truth.
 #
 ga_keys:
   #
@@ -269,7 +277,7 @@ ga_keys:
       select: SHIFT
 
   #
-  # List of binds.
+  # List of binds. Must be in the format: :modifier [:alt] key
   #
   binds:
     escape:

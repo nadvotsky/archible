@@ -1,5 +1,20 @@
 ---
-hg_wm_compositor: true
-hg_wm_bar: true
-hg_wm_notify: true
-hg_wm_launcher: true
+#
+# Whether integrate compositor functionality in the window manager.
+#
+gh_wm_compositor: true
+
+#
+# Whether integrate status bar functionality in the window manager.
+#
+gh_wm_bar: true
+
+#
+# Whether integrate notification daemon functionality in the window manager.
+#
+gh_wm_notify: true
+
+#
+# Whether integrate application launcher functionality in the window manager.
+#
+gh_wm_launcher: true

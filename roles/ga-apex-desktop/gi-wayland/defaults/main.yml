@@ -1,4 +1,15 @@
 ---
+#
+# Whether integrate application launcher functionality in the compositor.
+#
 gi_compositor_launcher: true
+
+#
+# Whether integrate notification daemon functionality in the compositor.
+#
 gi_compositor_notify: true
+
+#
+# Whether integrate status bar functionality in the compositor.
+#
 gi_compositor_bar: true

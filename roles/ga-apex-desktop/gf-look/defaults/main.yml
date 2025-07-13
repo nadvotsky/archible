@@ -1,4 +1,7 @@
 ---
+#
+# GTK theme name and the corresponding package.
+#
 gf_gtk: Arc-Dark-solid
 gf_gtk_package: arc-solid-gtk-theme
 

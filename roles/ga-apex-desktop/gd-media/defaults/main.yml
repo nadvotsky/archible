@@ -26,12 +26,9 @@ gd_jack: false
 gd_bluetooth: false
 
 #
-# Noise suppression device.
+# Noise suppression, and its VAD Threshold.
 #
 gd_rnnoise: true
-#
-# VAD Threshold.
-#
 gd_rnnoise_threshold: 50.0
 
 #
@@ -106,13 +103,16 @@ gd_cards: "{{ undef() }}"
   #   #
   #   # Sample rate.
   #   #
+  #   # Can be examined with `grep rates /proc/asound/card0/codec\#0`.
+  #   #
   #   frequency: <int>
   #   #
   #   # Sample format (https://docs.pipewire.org/page_pulse_modules.html).
-  #   # Examples:
-  #   #  S32LE
-  #   #  S16BE
-  #   #  U8
+  #   #
+  #   # Can be examined with `grep bits /proc/asound/card0/codec\#0`. Examples:
+  #   #  - S32LE
+  #   #  - S16BE
+  #   #  - U8
   #   #
   #   format: <depth>
   #   #
@@ -157,23 +157,30 @@ gd_cards: "{{ undef() }}"
   #     #
   #     # Dictionary of jacks.
   #     #
+  #     # Can be examined via `amixer -c0 contents | grep Jack`.
+  #     #
   #     jacks:
   #     #
   #     # Dictionary of enumerations.
+  #     #
+  #     # Can be examined via `amixer -c0 scontents | grep enum -B1 -A1`.
   #     #
   #     enumerations:
   #     #
   #     # Dictionary of elements.
   #     #
+  #     # Can be examined with `amixer -c0 scontents | grep -P 'pswitch|pvolume' -B1 -A2`
+  #     #
   #     elements:
   #       <element>:
   #         #
   #         # Type of elements. Usually, boost have only volume, while microphones and speakers have both switch and
-  #         #  volume. (listed in the 'Capabilities:' section of `amixer` output).
+  #         #  volume. (listed in the `Capabilities:` section of the `amixer` output).
   #         #
   #         type: [<switch|volume>, ...]
   #         #
-  #         # Element direction. Optional, should only be used for those element that are bugged.
+  #         # Element direction. Optional, should only be used for those element that are bugged. (listed in the
+  #         # `Playback channels:` and `Capture channels:` sections of the `amixer` output).
   #         #
   #         direction: <playback|capture>
   #   outputs:
