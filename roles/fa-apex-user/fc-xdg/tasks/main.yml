@@ -1,4 +1,23 @@
 ---
+- name: Configure base directories
+  tags: apex-user-xdg-base
+  block:
+    - name: Create XDG base directories
+      become: true
+      foundation.files.install:
+        wipe: never
+        create: true
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        #
+        # By default, ansible will create parent directories with default umask.
+        # Because of that, using the lookup plugin to extract every directory, including intermediate ones.
+        #
+        targets: >-
+          {{
+            lookup('fa_homedirs', fa_dir_home, [fa_dir_config, fa_dir_cache, fa_dir_share, fa_dir_state, fa_dir_bin])
+          }}
+
 - name: Configure user directories
   tags: apex-user-xdg-dirs
   block:
@@ -11,7 +30,7 @@
 
     - name: Create XDG user directories
       foundation.files.install:
-        wipe: "{{ aa_wipe }}"
+        wipe: never
         create: true
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
@@ -49,9 +68,15 @@
 
 - name: Configure XDG mime applications
   tags: apex-user-xdg-mime
-  become: true
   block:
+    - name: Install XDG Mime packages
+      foundation.system.packages:
+      vars:
+        install:
+          - desktop-file-utils
+
     - name: Reset XDG Mime Applications
+      become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
       vars:
@@ -61,6 +86,7 @@
           - file: /usr/local/share/applications/mimeinfo.cache
 
     - name: Update XDG desktop database
+      become: true
       ansible.builtin.command:
         argv:
           - update-desktop-database

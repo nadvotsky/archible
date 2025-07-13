@@ -1,11 +1,11 @@
 ---
 - name: Configure user authentication
   tags: apex-user-skel-auth
-  become: true
   block:
     - name: Render pam_faillock configuration
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/security/faillock.conf
@@ -13,6 +13,7 @@
             copy: files/faillock/faillock.conf
 
     - name: Add nodelay to pam_unix in system-auth
+      become: true
       ansible.builtin.lineinfile:
         path: /etc/pam.d/system-auth
         regexp: ^(?P<prep>auth\s+.*\s+pam_unix\.so\s+)(?P<flags>[\w ]+)(?<!nodelay)$
@@ -24,12 +25,12 @@
 
 - name: Configure user environment
   tags: apex-user-skel-env
-  become: true
   block:
     - name: Render default pam_env
       when: aa_wipe == 'always'
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/security/pam_env.conf
@@ -46,6 +47,7 @@
               #
 
     - name: Commit env change
+      become: true
       foundation.user.env:
         section: "!important"
         home: "{{ fa_dir_home }}"
@@ -53,32 +55,13 @@
       environment:
         PATH: "{{ fa_dir_bin }}:/usr/local/sbin:/usr/local/bin:/usr/bin"
 
-- name: Configure base directories
-  tags: apex-user-skel-base
-  become: true
-  block:
-    - name: Create XDG base directories
-      foundation.files.install:
-        wipe: never
-        create: true
-        perms: "750:{{ ca_name }}:{{ ca_name }}"
-      vars:
-        #
-        # By default, ansible will create parent directories with default umask.
-        # Because of that, using the lookup plugin to extract every directory,
-        #  including intermediate ones (e.g. .local).
-        #
-        targets: >-
-          {{
-            query('fa_homedirs', fa_dir_home, [fa_dir_config, fa_dir_cache, fa_dir_share, fa_dir_state, fa_dir_bin])
-          }}
-
 - name: Configure user profile
   tags: apex-user-skel-profile
   block:
-    - name: Wipe bash user profile files
+    - name: Wipe shell user profile files
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: "{{ fa_dir_home }}/.profile"
