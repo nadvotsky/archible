@@ -1,7 +1,6 @@
 import typing
 
 import dataclasses
-import os.path
 import base64
 import re
 import enum
@@ -133,7 +132,8 @@ class PAM:
         for regex in self.EXPR_REGEX:
             for assign, value in regex.findall(values):
                 if assign not in ("OVERRIDE", "DEFAULT"):
-                    raise ValueError(f"Variable '{variable}' uses unknown qualifier {assign}")
+                    continue
+
                 setattr(entry, assign.lower(), value)
 
         if not entry.default and not entry.override:
@@ -162,7 +162,7 @@ class PAM:
         return (f"# {com}" for com in comments)
 
     def _export_entry(self, variable: str, entry: PAMEntry):
-        lines = [variable.ljust(30)]
+        lines = [variable.ljust(40)]
         for name, value in (
             ("DEFAULT", entry.default),
             ("OVERRIDE", entry.override),
