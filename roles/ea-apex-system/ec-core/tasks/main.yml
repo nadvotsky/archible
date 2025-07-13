@@ -1,11 +1,11 @@
 ---
 - name: Configure session manager
   tags: apex-system-core-session
-  become: true
   block:
     - name: Render logind configuration file
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/systemd/logind.conf
@@ -13,6 +13,7 @@
             copy: logind/logind.conf
 
     - name: Enable logind service
+      become: true
       foundation.system.services:
         headless: "{{ ba_headless }}"
       vars:
@@ -23,11 +24,11 @@
 
 - name: Configure logging
   tags: apex-system-core-log
-  become: true
   block:
     - name: Render journald configuration file
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/systemd/journald.conf
@@ -35,6 +36,7 @@
             copy: journald/journald.conf
 
     - name: Wipe previous journals
+      become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
       vars:
@@ -42,6 +44,7 @@
           - dir: /var/log/journal
 
     - name: Disable useless journald services and sockets
+      become: true
       foundation.system.services:
         headless: "{{ ba_headless }}"
       vars:
@@ -56,6 +59,7 @@
           disable: true
 
     - name: Modify kernel command line
+      become: true
       foundation.system.kernel:
         headless: "{{ ba_headless }}"
       environment:
@@ -63,11 +67,11 @@
 
 - name: Configure dump
   tags: apex-system-core-dump
-  become: true
   block:
     - name: Render coredump configuration
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/systemd/coredump.conf
@@ -75,6 +79,7 @@
             copy: coredump/coredump.conf
 
     - name: Wipe previous coredumps
+      become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
       vars:
@@ -83,11 +88,11 @@
 
 - name: Configure time sync
   tags: apex-system-core-timesync
-  become: true
   block:
     - name: Render timesyncd configuration
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/systemd/timesyncd.conf
@@ -95,6 +100,7 @@
             copy: timesyncd/timesyncd.conf
 
     - name: Enable timesyncd service
+      become: true
       foundation.system.services:
         headless: "{{ ba_headless }}"
       vars:

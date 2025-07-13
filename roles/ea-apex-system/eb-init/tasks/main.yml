@@ -1,25 +1,27 @@
 ---
 - name: Configure init
   tags: apex-system-init-main
-  become: true
   block:
     - name: Render systemd configuration files
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
         perms: 755:644:root:root
       vars:
         targets:
           - file: /etc/systemd/system.conf
-            src: systemd/system.conf
+            copy: systemd/system.conf
           - file: /etc/systemd/sleep.conf
-            src: systemd/sleep.conf
+            copy: systemd/sleep.conf
 
     - name: Modify kernel command line
+      become: true
       foundation.system.kernel:
         headless: "{{ ba_headless }}"
       environment: "{{ eb_cmdline }}"
 
     - name: Mask useless services
+      become: true
       foundation.system.services:
         headless: "{{ ba_headless }}"
       vars:
@@ -39,6 +41,7 @@
           mask: true
 
     - name: Disable useless services
+      become: true
       foundation.system.services:
         headless: "{{ ba_headless }}"
       vars:
@@ -46,9 +49,6 @@
           - systemd-oomd.service
           - systemd-homed-firstboot.service
           - systemd-homed.service
-
-          - avahi-daemon.socket
-          - avahi-daemon.service
         state:
           disable: true
 
@@ -64,7 +64,7 @@
     - name: Render vconsole configuration file
       become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/vconsole.conf
@@ -75,11 +75,11 @@
 
 - name: Configure huge pages
   tags: apex-system-init-hugepage
-  become: true
   block:
     - name: Render tmpfiles entry to always transparent pages for shmem
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/tmpfiles.d/shmem-transparent-hugepage.conf
