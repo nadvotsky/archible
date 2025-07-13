@@ -1,2 +1,5 @@
 ---
-cc_comment: "{{ ca_user_info_full }}"
+#
+# User comment field.
+#
+cc_comment: "{{ ca_info_full }}"

@@ -1,9 +1,9 @@
 ---
 - name: Configure privilege escalation
   tags: catalyst-user-privilege
-  become: true
   block:
     - name: Render sudo configuration
+      become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         base: /etc/sudoers.d
@@ -19,11 +19,22 @@
 - name: Configure user skeleton
   tags: catalyst-user-skel
   block:
+    - name: Hash user password via the yescrypt KDF
+      ansible.builtin.command:
+        argv:
+          - mkpasswd
+          - --method=yescrypt
+          - --stdin
+        stdin: "{{ ca_password }}"
+      register: _cc_mkpasswd_invocation
+      changed_when: _cc_mkpasswd_invocation.rc == 0
+
     - name: Create user skeleton
+      become: true
       ansible.builtin.user:
         name: "{{ ca_name }}"
         groups: "{{ ca_groups }}"
         comment: "{{ cc_comment }}"
         expires: -1
         create_home: true
-        password: "{{ ca_password }}"
+        password: "{{ _cc_mkpasswd_invocation.stdout }}"
