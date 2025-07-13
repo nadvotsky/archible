@@ -7,21 +7,30 @@
       vars:
         install:
           - booster
+          #
+          # Filesystems support, for fsck.
+          #
+          - btrfs-progs
+          - e2fsprogs
+          - exfatprogs
+          - xfsprogs
+          - ntfs-3g
+          - dosfstools
 
     - name: Render booster configuration
       become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /etc/booster.yaml
-            perm: 644:root:root
+            perms: 644:root:root
             copy: booster/booster.yaml
 
     - name: Remove built-in pacman hooks
       become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
         base: /usr/share/libalpm/hooks
       vars:
         targets:
@@ -39,16 +48,18 @@
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         base: /etc/kernel
-        create: true
         perms: 755:644:root:root
       vars:
         targets:
           - dir: ./
+            create: true
           - file: ./install.conf
             copy: kernel-install/install.conf
 
           - dir: ./install.d
+            create: true
           - file: ./install.d/60-booster.install
+            perms: 755:root:root
             copy: kernel-install/60-booster.install
 
     - name: Install kernel-install pacman hook
@@ -80,16 +91,17 @@
 
     - name: Remove previous kernels and initrd images
       when: aa_wipe == 'always'
+      become: true
       ansible.builtin.file:
-        path: "{{ item.path }}"
+        path: "{{ item }}"
         state: absent
-      loop: "{{ _dc_kernels.files }}"
+      loop: "{{ _dc_kernels.files | selectattr('path') }}"
 
 - name: Configure bootloader
   tags: apex-prep-bootloader-main
-  become: true
   block:
     - name: Invoke systemd-boot
+      become: true
       ansible.builtin.command:
         argv:
           - bootctl
@@ -99,8 +111,9 @@
       changed_when: _db_bootctl_invocation.rc == 0
 
     - name: Render systemd-boot configuration
+      become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /boot/loader/loader.conf
@@ -109,6 +122,7 @@
 
     - name: Remove systemd-boot directories that have no use
       when: aa_wipe == 'always'
+      become: true
       ansible.builtin.file:
         path: "/boot/EFI/{{ item }}"
         state: absent

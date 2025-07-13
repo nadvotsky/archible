@@ -1,73 +1,74 @@
 #!/hint/bash
 
 #
-# use aria2 instead of curl
+# Download agents.
 #
-DLAGENTS=('ftp::/usr/bin/aria2c -UWget -s4 -x4 %u -o %o --follow-metalink=mem'
-          'http::/usr/bin/aria2c -UWget -s4 -x4 %u -o %o --follow-metalink=mem'
-          'https::/usr/bin/aria2c -UWget -s4 -x4 %u -o %o --follow-metalink=mem'
-          'rsync::/usr/bin/rsync --no-motd -z %u %o'
-          'scp::/usr/bin/scp -C %u %o')
+DLAGENTS=(
+	'ftp::/usr/bin/aria2c -UWget -s4 -x4 %u -o %o --follow-metalink=mem'
+	'http::/usr/bin/aria2c -UWget -s4 -x4 %u -o %o --follow-metalink=mem'
+	'https::/usr/bin/aria2c -UWget -s4 -x4 %u -o %o --follow-metalink=mem'
+	'rsync::/usr/bin/rsync --no-motd -z %u %o'
+	'scp::/usr/bin/scp -C %u %o'
+)
 
 #
-# standart vcs tools
+# VCS tools.
 #
-VCSCLIENTS=('bzr::breezy'
-            'fossil::fossil'
-            'git::git'
-            'hg::mercurial'
-            'svn::subversion')
+VCSCLIENTS=(
+	'bzr::breezy'
+	'fossil::fossil'
+	'git::git'
+	'hg::mercurial'
+	'svn::subversion'
+)
 
 #
-# target arch
+# Target arch.
 #
 CARCH="x86_64"
 CHOST="x86_64-pc-linux-gnu"
 
 #
-# c/cpp: use optimizations and compile for the target CPU for the best performance
+# C/C++ optimizations.
 #
-CFLAGS="-march=native -mtune=native -Ofast -pipe \
-        -Wall -Wextra -Wpedantic -Wformat=2 -Werror=format-security \
-        -Wp,-D_FORTIFY_SOURCE=3  \
-        -fno-plt -fexceptions"
+CFLAGS="-march=native -mtune=native -Ofast -pipe -Wall -Wextra -Wpedantic -Wformat=2 -Werror=format-security \
+-Wp,-D_FORTIFY_SOURCE=3 -fno-plt -fexceptions"
 CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"
 
 #
-# rust: use optimizations and compile for the target CPU for the best performance
+# Rust optimizations.
 #
 RUSTFLAGS="-C opt-level=3 -C target-cpu=native"
 
 #
-# linker: enable lto and linker optimizations 
+# Linker optimizations.
 #
 LDFLAGS="-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now \
-        -Wl,-z,pack-relative-relocs"
+-Wl,-z,pack-relative-relocs"
 LTOFLAGS="-flto=auto"
 
 #
-# parallelize make
+# Make flags.
 #
 MAKEFLAGS="-j{{ db_build_jobs }}"
 
 #
-# use colors when building
+# Build options.
 #
 BUILDENV=(!distcc color !ccache check !sign)
 
 #
-# disable stripping binaries and do not set debugging flags
+# Packaging options.
 #
-OPTIONS=(!strip docs !libtool !staticlibs emptydirs zipman purge !debug lto)
+OPTIONS=(!strip docs !libtool !staticlibs emptydirs zipman purge !debug lto !autodeps)
 
 #
-# do not check integrity (many AUR packages cannot keep up with direct download links)
+# Integrity configuration.
 #
 INTEGRITY_CHECK=()
 
 #
-# do not compress packages, since they are going to be instantly installed
-# and then deleted
+# Packaging compression.
 #
 PKGEXT='.pkg.tar'
 SRCEXT='.src.tar'
