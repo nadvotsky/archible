@@ -42,13 +42,19 @@
         install: "{{ ['hicolor-icon-theme'] + [ga_icons_main_package, ga_icons_launcher_package] | select('defined') }}"
 
     - name: Install icons from direct link
+      become: true
       foundation.files.net_archive:
-        url: "{{ item }}"
+        url: "{{ item.value }}"
         dest: /usr/share/icons
         perms: root:root
         creates:
-          - ./
-      loop: "{{ [ga_icons_main_url, ga_icons_launcher_url] | select('defined') }}"
+          - "./{{ item.key }}"
+      loop: >-
+        {%- set _accoc = [
+          dict(key=ga_icons_main, value=ga_icons_main_url),
+          dict(key=ga_icons_launcher, value=ga_icons_launcher_url),
+        ]-%}
+        {{ _accoc | selectattr('value', 'defined') }}
 
 - name: Configure Qt
   tags: apex-look-qt
@@ -63,6 +69,12 @@
           - kvantum-qt5
           - qt6ct
           - qt5ct
+
+    - name: Install Kvanutm theme packages
+      when: gf_kvantum_package is defined
+      foundation.system.packages:
+      vars:
+        install:
           - "{{ gf_kvantum_package }}"
 
     - name: Set Qt environment variables
@@ -93,7 +105,7 @@
         targets:
           - dir: ./Kvantum
             create: true
-          - file: Kvantum/kvantum.kvconfig
+          - file: ./Kvantum/kvantum.kvconfig
             content: |
               theme={{ gf_kvantum }}
 
@@ -132,6 +144,12 @@
         install:
           - gtk3
           - gtk4
+
+    - name: Install GTK theme packages
+      when: gf_gtk_package is defined
+      foundation.system.packages:
+      vars:
+        install:
           - "{{ gf_gtk_package }}"
 
     - name: Set GTK environment variables

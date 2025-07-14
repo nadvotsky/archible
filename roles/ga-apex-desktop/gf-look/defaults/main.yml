@@ -5,5 +5,8 @@
 gf_gtk: Arc-Dark-solid
 gf_gtk_package: arc-solid-gtk-theme
 
-gf_kvantum: ArcDark
-gf_kvantum_package: kvantum-theme-arc
+#
+# Kvantum (Qt) theme name and the corresponding package.
+#
+gf_kvantum: KvArcDark
+gf_kvantum_package: "{{ undef() }}"
