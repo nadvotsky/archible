@@ -1,7 +1,7 @@
 {%- set _font_family = "monospace" -%}
 {%- set _font_size = ga_fonts_mono_sz_big | ga_scale(ga_scaling) -%}
 
-{%- set _monitor = ga_monitors | selectattr("notifications", "true") | first -%}
+{%- set _monitor = ga_monitors.values() | selectattr("notifications", "true") | first -%}
 
 {%- set _width = (_monitor.width * ga_popup_width) | ga_scale(ga_scaling) -%}
 {%- set _height = (_monitor.height * ga_popup_height) | ga_scale(ga_scaling)-%}
@@ -66,7 +66,7 @@ icon_position = left
 min_icon_size = {{ _icon_size }}
 max_icon_size = {{ _icon_size }}
 enable_recursive_icon_lookup = true
-icon_theme = {{ icons.launcher.name }}
+icon_theme = {{ ga_icons_launcher }}
 default_icon = /usr/share/icons/{{ ga_icons_launcher }}/categories/32/applications-other.svg
 # icon_path
 

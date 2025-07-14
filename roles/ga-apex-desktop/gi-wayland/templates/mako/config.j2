@@ -1,21 +1,19 @@
+{%- set _monitor = ga_monitors.values() | selectattr("notifications", "true") | first -%}
 
-{%- set _monitor = monitors.outputs[notifications.monitor] -%}
-
-{%- set _width = (_monitor.width * notifications.width) | scale(scaling.real) -%}
-{%- set _height = (_monitor.height * notifications.height) | scale(scaling.real)-%}
+{%- set _width = (_monitor.width * ga_popup_width) | ga_scale(ga_scaling) -%}
+{%- set _height = (_monitor.height * ga_popup_height) | ga_scale(ga_scaling)-%}
 {%- set _limit = (_monitor.height / _height) | round | int -%}
-{%- set _icon_size = (_monitor.width * notifications.icon) | scale(scaling.real) -%}
+{%- set _icon_size = (_monitor.width * ga_popup_icon) | ga_scale(ga_scaling) -%}
 
-{%- set _spacing_small = spacing.small | scale(scaling.real) -%}
-{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
-{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
+{%- set _spacing_small = ga_space_small | ga_scale(ga_scaling) -%}
+{%- set _spacing_medium = ga_space_medium | ga_scale(ga_scaling) -%}
+{%- set _spacing_big = ga_space_big | ga_scale(ga_scaling) -%}
 
-{%- set _font_name = "monospace" -%}
-{%- set _font_size = fonts[_font_name].sizes.big | scale(scaling.real) -%}
-{%- set _font_pango = "{} {}px".format(_font_name, _font_size) -%}
-{%- set _font_lh = "1.{}".format(fonts[_font_name].offsets.big) -%}
+{%- set _font_size = ga_fonts_mono_sz_big | ga_scale(ga_scaling) -%}
+{%- set _font_pango = "monospace {}px".format(_font_size) -%}
+{%- set _font_lh = "1.{}".format(ga_fonts_mono_off_big) -%}
 
-{%- set _gap = (spacing.big * 2) | scale(scaling.real) -%}
+{%- set _gap = (ga_space_big * 2) | ga_scale(ga_scaling) -%}
 
 {%- macro _format_render(_color) -%}
     <span line_height="{{ _font_lh }}"><span weight="bold" color="{{ _color }}">%a</span> (%g)\n<b>%s</b>\n%b</span>
@@ -33,8 +31,8 @@ on-button-right=dismiss
 on-button-middle=exec makoctl menu -n "$id" rofi -show drun -display-drun "Notification action"
 
 font={{ _font_pango }}
-background-color={{ preset.inactive }}
-text-color={{ preset.foreground }}
+background-color={{ ga_preset.inactive }}
+text-color={{ ga_preset.foreground }}
 
 width={{ _width }}
 height={{ _height }}
@@ -44,7 +42,7 @@ height={{ _height }}
 # i.e. only gap is required
 #
 # however:
-#  1. hyprland werdly adds some margin to the top of the tap, thus fixing by adding spacing.light
+#  1. hyprland werdly adds some margin to the top of the tap, thus fixing by adding small space
 #  2. outer-margin is added to the margin, thus decreasing margin from the top gap
 #
 outer-margin={{ _gap - _spacing_big + _spacing_small }},{{ _gap }},0,0
@@ -52,14 +50,14 @@ margin={{ _spacing_big }},0,{{ _spacing_big }},0
 padding={{ _spacing_big }}
 
 border-size={{ _spacing_medium }}
-border-color={{ preset.active }}
+border-color={{ ga_preset.active }}
 border-radius=0
 
-progress-color=over {{ preset.active }}
+progress-color=over {{ ga_preset.active }}
 
 markup=1
 text-alignment=center
-format={{ _format_render(preset.accent) }}
+format={{ _format_render(ga_preset.accent) }}
 
 default-timeout=0
 ignore-timeout=1
@@ -74,19 +72,19 @@ anchor=top-right
 icons=1
 icon-location=left
 max-icon-size={{ _icon_size }}
-icon-path=/usr/share/icons/{{ icons.launcher.name }}:/usr/share/icons/{{ icons.main.name }}
+icon-path=/usr/share/icons/{{ ga_icons_launcher }}:/usr/share/icons/{{ ga_icons_main }}
 
 
 [urgency=low]
-border-color={{ preset.active }}
-format={{ _format_render(preset.foreground) }}
+border-color={{ ga_preset.active }}
+format={{ _format_render(ga_preset.foreground) }}
 
 
 [urgency=normal]
-border-color={{ preset.accent }}
-format={{ _format_render(preset.accent) }}
+border-color={{ ga_preset.accent }}
+format={{ _format_render(ga_preset.accent) }}
 
 
 [urgency=critical]
-border-color={{ preset.important }}
-format={{ _format_render(preset.important) }}
+border-color={{ ga_preset.important }}
+format={{ _format_render(ga_preset.important) }}

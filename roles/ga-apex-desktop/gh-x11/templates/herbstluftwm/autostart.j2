@@ -1,6 +1,6 @@
 {%- set _indent = {"space": 4} -%}
 
-{%- set _scratch_name = (ga_monitors | selectattr("scratch", "defined") | first).scratch -%}
+{%- set _scratch_name = (ga_monitors.values() | selectattr("scratch", "defined") | first).scratch -%}
 
 {%- set _dpi = ga_scaling_ethalon | ga_scale(ga_scaling) -%}
 
@@ -23,11 +23,11 @@
 {%- set _preset_border = ga_preset.border | quote -%}
 
 {%- set _extras = [
-    hg_wm_compositor is true | ternary(["picom", "--daemon"], false),
+    gh_wm_compositor is true | ternary(["picom", "--daemon"], false),
     ["hsetroot", "-solid", "'{}'".format(ga_preset.background)],
     ["xsetroot", "-cursor_name", "left_ptr"],
-    hg_wm_bar is true | ternary(["polybar", "--quiet", "&"], false),
-    hg_wm_notify is true | ternary(["dunst", "&"], false),
+    gh_wm_bar is true | ternary(["polybar", "--quiet", "&"], false),
+    gh_wm_notify is true | ternary(["dunst", "&"], false),
     ["numlockx", "on"],
 ] -%}
 {# ["/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"] #}
@@ -46,7 +46,7 @@
             name = "{{ _mon_name }}",
             index = {{ loop.index0 }},
             dims = "{{ _mon.width }}x{{ _mon.height }}+{{ _acc.width }}+{{ _acc.height }}",
-            first_tag = "{{ _mon_name | workspace_prefix(loop.first) }}1",
+            first_tag = "{{ _mon_name | ga_workspace_prefix(loop.first) }}1",
         },
         {% set _ = _acc.__setitem__(_dim, _acc[_dim] + _mon[_dim]) %}
     {% endfor %}
@@ -105,7 +105,7 @@
     {% endfor %}
     {##}
     {% for _bind in (
-        keys
+        ga_keys
         | ga_parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     )[:_tags_map.index]
@@ -118,7 +118,7 @@
     {% endfor %}
 
     {% for _bind in (
-        keys
+        ga_keys
             | ga_parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
             | selectattr("mode_name", "eq", "wm")
     )[:_tags_map.index]
@@ -126,7 +126,7 @@
         [{{ _bind.line | quote }}] = {"move", "{{ _tags_map[loop.index0].name }}"},
     {% endfor %}
 
-    {% for _bind in keys
+    {% for _bind in ga_keys
         | ga_parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
@@ -246,12 +246,9 @@
     ("move", "move"),
     ("zoom", "zoom"),
     ("resize", "resize"),
-     | ternary(
-        ["picom", "--daemon"], false,
-    ),
-] + hg_wm_launcher is true | ternary(
+] + gh_wm_launcher is true | ternary(
     [("run", "spawn rofi -show drun"), ("windows", "spawn rofi -show window")], [],
-) + hg_wm_notify is true | ternary(
+) + gh_wm_notify is true | ternary(
     [("notifications", _notifications)], [],
 ) -%}
 
@@ -263,8 +260,8 @@
 ] -%}
 
 {%- macro _keybinds_render(_keybinds, _filter) -%}
-    {% for _bind in keys
-        | parse_binds(actions_map=_keybinds, **_parse_kwargs)
+    {% for _bind in ga_keys
+        | ga_parse_binds(actions_map=_keybinds, **_parse_kwargs)
         | selectattr("mode_name", "in", _filter)
     %}
         {% set _action = _bind.action.subs %}

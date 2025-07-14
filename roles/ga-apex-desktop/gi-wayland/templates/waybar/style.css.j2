@@ -1,19 +1,19 @@
-{%- set _spacing_thin = "{}px".format([spacing.thin | scale(scaling.real), 1] | max) -%}
-{%- set _spacing_small = "{}px".format(spacing.small | scale(scaling.real)) -%}
-{%- set _spacing_medium = "{}px".format(spacing.medium | scale(scaling.real)) -%}
-{%- set _spacing_big = "{}px".format(spacing.big | scale(scaling.real)) -%}
+{%- set _spacing_thin = "{}px".format([ga_space_thin | ga_scale(ga_scaling), 1] | max) -%}
+{%- set _spacing_small = "{}px".format(ga_space_small | ga_scale(ga_scaling)) -%}
+{%- set _spacing_medium = "{}px".format(ga_space_medium | ga_scale(ga_scaling)) -%}
+{%- set _spacing_big = "{}px".format(ga_space_big | ga_scale(ga_scaling)) -%}
 
-{%- set _spacing_text = spacing.small | scale(scaling.real) -%}
-{%- set _spacing_icon = (spacing.small * 2) | scale(scaling.real) -%}
+{%- set _spacing_text = ga_space_small | ga_scale(ga_scaling) -%}
+{%- set _spacing_icon = (ga_space_small * 2) | ga_scale(ga_scaling) -%}
 
-{%- set _font_sans_serif_size = "{}px".format(fonts.sans_serif.sizes.medium | scale(scaling.real)) -%}
-{%- set _font_icon_size = "{}px".format(fonts.icon.sizes.medium | scale(scaling.real)) -%}
+{%- set _font_sans_serif_size = "{}px".format(ga_fonts_sans_sz_medium | ga_scale(ga_scaling)) -%}
+{%- set _font_icon_size = "{}px".format(ga_fonts_icon_sz_medium | ga_scale(ga_scaling)) -%}
 
 window#waybar {
     font: 600 {{ _font_sans_serif_size }} sans-serif;
 
-    color: {{ preset.foreground }};
-    background-color: {{ preset.inactive }};
+    color: {{ ga_preset.foreground }};
+    background-color: {{ ga_preset.inactive }};
 }
 
 window#waybar > box {
@@ -25,11 +25,11 @@ window#waybar > box {
 }
 
 .module, #workspaces {
-    border: 1px solid {{ preset.active }};
+    border: 1px solid {{ ga_preset.active }};
 }
 
 .module.warn, .module.muted {
-    border: 1px solid {{ preset.important }};
+    border: 1px solid {{ ga_preset.important }};
 }
 
 #tray {
@@ -38,7 +38,7 @@ window#waybar > box {
 }
 
 button {
-    color: {{ preset.foreground }};
+    color: {{ ga_preset.foreground }};
 
     border: 0;
     margin: 0;
@@ -57,16 +57,16 @@ button {
 }
 
 button.active {
-    color: {{ preset.accent }};
+    color: {{ ga_preset.accent }};
 }
 
 button.urgent {
-    color: {{ preset.important }};
+    color: {{ ga_preset.important }};
 }
 
 tooltip {
     border-radius: 0;
-    border: {{ _spacing_thin }} solid {{ preset.active }};
+    border: {{ _spacing_thin }} solid {{ ga_preset.active }};
 }
 
 tooltip * {
@@ -75,5 +75,5 @@ tooltip * {
 }
 
 tooltip.background {
-    background: {{ preset.inactive }};
+    background: {{ ga_preset.inactive }};
 }

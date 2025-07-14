@@ -30,7 +30,7 @@ class FilterModule:
         }
 
     @classmethod
-    def parse_ansi(cls, preset, ansi, replacements={}, mod="bright", sep="-"):
+    def parse_ansi_presets(cls, preset, ansi, replacements={}, mod="bright", sep="-"):
         assert all((len(item) == cls.ANSI_TABLE_SIZE for item in ansi.values())), (
             "Size of the ansi table must be exactly 8 elements"
         )

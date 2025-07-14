@@ -1,13 +1,15 @@
 {%- set _indent = {"space": 4} -%}
 
-{%- set _spacing_medium = spacing.medium | scale(scaling.real) -%}
-{%- set _spacing_big = spacing.big | scale(scaling.real) -%}
-{%- set _spacing_text = " " * (spacing.thin | scale(scaling.real)) -%}
-{%- set _spacing_icon = " " * (spacing.small | scale(scaling.real)) -%}
+{%- set _spacing_medium = ga_space_medium | ga_scale(ga_scaling) -%}
+{%- set _spacing_big = ga_space_big | ga_scale(ga_scaling) -%}
+{%- set _spacing_text = " " * (ga_space_thin | ga_scale(ga_scaling)) -%}
+{%- set _spacing_icon = " " * (ga_space_small | ga_scale(ga_scaling)) -%}
 
-{%- set _icon_size = fonts.icon.sizes.medium | scale(scaling.real) -%}
-{%- set _icon_pango = "{} {}px".format(fonts.icon.name, _icon_size) -%}
-{%- set _icon_lheight = "1.{}".format(fonts.icon.offsets.medium) -%}
+{%- set _icon_size = ga_fonts_icon_sz_small | ga_scale(ga_scfaling) -%}
+{%- set _icon_pango = "{} {}px".format(ga_fonts_icon, _icon_size) -%}
+{%- set _icon_lheight = "1.{}".format(ga_fonts_icon_off_medium) -%}
+
+{%- set _scratch_name = (ga_monitors.values() | selectattr("scratch", "defined") | first).scratch -%}
 
 {%- macro _icon_encode(_icon) -%}
     {{ ("\\U{:>08}".format(_icon).encode().decode("unicode-escape") | tojson)[1:-1] }}
@@ -16,7 +18,7 @@
 {%- set _icon_warn = _icon_encode("f071") -%}
 {%- set _icon_sep = _icon_encode("2012") -%}
 
-{%- set _output_name = monitors.outputs.values() | map(attribute="wayland") | first -%}
+{%- set _output_name = ga_monitors.values() | map(attribute="wayland") | first -%}
 {%- set _modules_left = ["cpu", "memory#ram", "memory#swap", "disk", "custom/uptime"] -%}
 {%- set _modules_center = ["clock"] -%}
 {%- set _modules_right = ["mpris", "wireplumber", "hyprland/language", "custom/netns", "tray"] -%}
@@ -25,7 +27,7 @@
     "modules-left": {{ _modules_left | tojson }},
     {##}
     {% set _ws = _modules_center %}
-    {% for _mon_name in monitors.outputs %}
+    {% for _mon_name in ga_monitors %}
         {% set _ws_name = "group/workspaces-{}".format(_mon_name) %}
         {% if loop.first %}
             {% set _ = _ws.insert(0, _ws_name) %}
@@ -46,7 +48,7 @@
     {% set _parts = namespace(
         prefix=_section_span(
             "{0}{1}{0}".format(_spacing_icon, _icon_encode(_icon)),
-            preset.important if _warn or _important else preset.active,
+            ga_preset.important if _warn or _important else ga_preset.active,
         ),
         middle="",
         suffix="",
@@ -59,7 +61,7 @@
         {% endif %}
         {##}
         {% if _warn %}
-            {% set _parts.suffix = _section_span("{0}{1}{0}".format(_spacing_icon, _icon_warn), preset.important) %}
+            {% set _parts.suffix = _section_span("{0}{1}{0}".format(_spacing_icon, _icon_warn), ga_preset.important) %}
         {% endif %}
     {% endif %}
     {##}
@@ -73,20 +75,20 @@
 {%- endmacro -%}
 
 {%- macro _workspaces_ignore(_ignored_mon_name, _is_first) %}
-    {% for _mon_name, _mon in monitors.outputs.items() %}
+    {% for _mon_name, _mon in ga_monitors.items() %}
         {% if _mon_name != _ignored_mon_name %}
-            "^{{ _mon_name | workspace_prefix(loop.first) }}[0-9]+$",
+            "^{{ _mon_name | ga_workspace_prefix(loop.first) }}[0-9]+$",
         {% endif %}
         {% if not _is_first %}
-            "^{{ wms.scratch }}$",
+            "^{{ _scratch_name }}$",
         {% endif %}
     {% endfor %}
 {%- endmacro -%}
 
 {%- macro _workspaces_render() -%}
-    {% for _mon_name, _mon in monitors.outputs.items() %}
+    {% for _mon_name, _mon in ga_monitors.items() %}
         {% set _mon_icon = "f1104" if loop.first else "f0ddc" %}
-        {% set _ws_prefix = _mon_name | workspace_prefix(loop.first) %}
+        {% set _ws_prefix = _mon_name | ga_workspace_prefix(loop.first) %}
         {##}
         "group/workspaces-{{ _mon_name }}": {
             "orientation": "horizontal",

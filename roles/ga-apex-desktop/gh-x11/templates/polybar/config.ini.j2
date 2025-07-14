@@ -98,22 +98,22 @@
     {% endif %}
 {%- endmacro -%}
 
-{%- macro _workspaces_icons(_primary, _mon_name, _ws) -%}
+{%- macro _workspaces_icons(_primary, _scratch, _mon_name, _ws) -%}
     {% set _ns = namespace() %}
     {% for _i in range(_ws) %}
-        icon-{{ _i }} = {{ _mon_name | workspace_prefix(_primary) }}{{ _i + 1 }};{{ _i + 1 }}
+        icon-{{ _i }} = {{ _mon_name | ga_workspace_prefix(_primary) }}{{ _i + 1 }};{{ _i + 1 }}
         {% set _ns.i = _i %}
     {% endfor %}
     {##}
-    {% if _primary %}
-        icon-{{ _ns.i + 1 }} = {{ wms.scratch }};{{ _icon_scratch }}
+    {% if _scratch is defined %}
+        icon-{{ _ns.i + 1 }} = {{ _scratch }};{{ _icon_scratch }}
     {% endif %}
 {%- endmacro -%}
 
-{%- macro _workspaces_monitors(_primary, _mon_name, _ws) -%}
+{%- macro _workspaces_monitors(_primary, _scratch, _mon_name, _ws) -%}
     {{ _section_render(_icon="f1104" if _primary else "f0ddc") | aa_relindent(times=1, **_indent) }}
 
-    {{ _workspaces_icons(_primary, _mon_name, _ws) | aa_relindent(times=1, **_indent) }}
+    {{ _workspaces_icons(_primary, _scratch, _mon_name, _ws) | aa_relindent(times=1, **_indent) }}
 {%- endmacro -%}
 
 {%- macro _workspaces_styles() %}
@@ -124,11 +124,11 @@
 {%- endmacro -%}
 
 {%- macro _workspaces_render() -%}
-    {% for _mon_name, _mon in monitors.outputs.items() %}
+    {% for _mon_name, _mon in ga_monitors.items() %}
         [module/workspaces-{{ _mon_name }}]
         type = internal/xworkspaces
 
-        {{ _workspaces_monitors(loop.first, _mon_name, _mon.workspaces) | aa_relindent(times=2, **_indent) }}
+        {{ _workspaces_monitors(loop.first, _mon.scratch, _mon_name, _mon.workspaces) | aa_relindent(times=2, **_indent) }}
         icon-default = ""
 
         label-active-foreground = "{{ ga_preset.accent }}"
@@ -285,9 +285,6 @@ type = custom/script
 exec = "{{ ga_netns }}"
 
 
-{% endif %}
-{##}
-{##}
 [module/tray]
 type = internal/tray
 

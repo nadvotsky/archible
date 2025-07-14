@@ -26,17 +26,17 @@ configuration {
     modes: [ "window", "drun", "run", "emoji" ];
     plugins: false;
 
-    dpi: {{ scaling.ethalon }};
+    dpi: {{ ga_scaling_ethalon }};
     scroll-method: 1;
 
-    icon-theme: "{{ icons.launcher.name }}";
+    icon-theme: "{{ ga_icons_launcher }}";
     show-icons: true;
     run,drun {
         fallback-icon: "application-gnunet-directory";
     }
 
     matching: "prefix";
-    //matching-negate-char: '!';
+    // matching-negate-char: '!';
     tokenize: true;
 
     drun-display-format: "{name} [<small><i>({exec})</i></small>]";

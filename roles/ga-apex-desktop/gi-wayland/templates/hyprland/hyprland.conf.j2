@@ -10,6 +10,7 @@
 
 {%- set _dpi = ga_scaling_ethalon | ga_scale(ga_scaling) -%}
 {%- set _monitor = ga_monitors.values() | first -%}
+{%- set _scratch_name = (ga_monitors.values() | selectattr("scratch", "defined") | first).scratch -%}
 
 {%- set _font_pango = "{} SemiBold".format(ga_fonts_sans) -%}
 {%- set _font_size_px = (ga_fonts_sans_sz_medium - ga_fonts_sans_off_medium) | ga_scale(ga_scaling) -%}
@@ -73,7 +74,7 @@
 
 {%- macro _workspaces_keybinds_render() -%}
     {% for _bind in (
-        keys
+        ga_keys
             | ga_parse_binds(actions_map=[("workspaces", None)], **_parse_kwargs)
             | selectattr("mode_name", "eq", "wm")
     )[:_ws_map.index]
@@ -82,7 +83,7 @@
     {% endfor %}
 
     {% for _bind in (
-        keys
+        ga_keys
             | ga_parse_binds(actions_map=[("workspaces_move", None)], **_parse_kwargs)
             | selectattr("mode_name", "eq", "wm")
     )[:_ws_map.index]
@@ -90,7 +91,7 @@
         bind = {{ _bind.line }}, movetoworkspacesilent, {{ _ws_map[loop.index0].name }}
     {% endfor %}
 
-    {% for _bind in keys
+    {% for _bind in ga_keys
         | ga_parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
@@ -129,7 +130,7 @@
     ("screenshot_clipboard", "execr, grim -g \"$(slurp -d)\" - | wl-copy"),
     (
         "screenshot_file",
-        "execr, grim -g \"$(slurp -d)\" \"{}/{}/shot-$(date +%s).png\"".format(
+        "execr, grim -g \"$(slurp -d)\" \"{}/shot-$(date +%s).png\"".format(
             fa_dir_xdg.pictures
         ),
     ),
@@ -140,7 +141,7 @@
     ("floating", "togglefloating"),
     ("group", "togglegroup"),
     ("layout_group", "moveoutofgroup"),
-    ("scratch", "togglespecialworkspace, {}".format(wms.scratch)),
+    ("scratch", "togglespecialworkspace, {}".format(_scratch_name)),
     ("layout_master", "layoutmsg, swapwithmaster"),
     ("layout_v", "layoutmsg, swapnext"),
     ("layout_h", "layoutmsg, swapprev"),
@@ -149,8 +150,8 @@
 
     ("output_next", "focusmonitor, +1"),
     ("output_prev", "focusmonitor, -1"),
-    ("workspace_next", _workspace_cycle_keybind("next") | ga_relindent()),
-    ("workspace_prev", _workspace_cycle_keybind("prev") | ga_relindent()),
+    ("workspace_next", _workspace_cycle_keybind("next") | aa_relindent()),
+    ("workspace_prev", _workspace_cycle_keybind("prev") | aa_relindent()),
     ("group_next", "cyclenext, next tiled"),
     ("group_prev", "cyclenext, prev tiled"),
     ("tab_next", "changegroupactive, f"),
@@ -162,7 +163,7 @@
 ) -%}
 
 {%- macro _keybinds_render() -%}
-    {% for _bind in keys
+    {% for _bind in ga_keys
         | ga_parse_binds(actions_map=_keybinds, **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
@@ -183,7 +184,7 @@
 ] -%}
 
 {%- macro _special_keybinds_render() -%}
-    {% for _bind in keys
+    {% for _bind in ga_keys
         | ga_parse_binds(actions_map=_special_keybindings, **_parse_kwargs)
         | selectattr("mode_name", "in", ["wm", "bare"])
     %}
@@ -197,12 +198,12 @@
 #
 monitor = Unknown-1, disabled
 
-{{ _monitors_render() | ga_relindent() }}
+{{ _monitors_render() | aa_relindent() }}
 
 #
 # Workspaces configuration.
 #
-{{ _workspaces_render() | ga_relindent() }}
+{{ _workspaces_render() | aa_relindent() }}
 
 #
 # Enviromental variables.
