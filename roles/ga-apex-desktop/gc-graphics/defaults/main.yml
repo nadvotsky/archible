@@ -1,0 +1,26 @@
+---
+gc_nvidia_cmdline:
+  nvidia.NVreg_InitializeSystemMemoryAllocations: "0"
+  nvidia.NVreg_UsePageAttributeTable: "1"
+  nvidia_drm.modeset: "1"
+
+  #
+  # NVidia ships its own framebuffer driver that may stuck in case of multiple monitors with different resolution.
+  #
+  # Parameter below would fallback on using efifb driver (https://docs.kernel.org/fb/efifb.html), which would simply
+  #  pick up the first monitor and keep others black.
+  #
+  nvidia_drm.fbdev: "0"
+  #
+  # If UEFI does not pass correct mode due to the CMS or bug, it can be set manually from `video=efifb:list`:
+  #
+  # video: "efifb:mode=0"
+
+  #
+  # Alternatively, if lowering resolution is considered acceptable, manual resolution downgrading may be set:
+  #
+  # {%- set _width = ga_monitors | map(attribute='width') | min() -%}
+  # {%- set _height = ga_monitors | map(attribute='height') | min() -%}
+  # {%- for _mon in ga_monitors -%}
+  #   video={{ _mon.wayland }}:{{ _width }}x{{ _height }}
+  # {%- endfor -%}
