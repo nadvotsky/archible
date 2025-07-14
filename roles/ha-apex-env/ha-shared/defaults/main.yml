@@ -1,12 +1,18 @@
 ---
+#
+# Vault is a user directory used for storing sensitive data such as password.
+#
 ha_vault_user_layout:
   default: "{{ fa_dir_home }}/.password-store"
   #
-  # Some of the utility packages seem to not respect PASSWORD_STORE_DIR
+  # Some of the utility packages seem to not respect PASSWORD_STORE_DIR, linking instead.
   #
   xdg:
-    link: "{{ user_state }}/password-store"
+    link: "{{ fa_dir_share }}/password-store"
 
+#
+# GnuPG user layout.
+#
 ha_gpg_user_layout:
   default: "{{ fa_dir_home }}/.gnupg"
   xdg: "{{ fa_dir_share }}/gnupg"

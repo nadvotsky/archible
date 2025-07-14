@@ -1,10 +1,23 @@
 ---
+#
+# Default key server.
+#
+# It is not used directly unless manually invoked with `--send-keys`.
+#
 hb_keyserver: hkps://keys.openpgp.org
+
+#
+# Supported digest algorithms, order represents priority.
+#
 hb_digests:
   - SHA512
   - SHA384
   - SHA256
   - SHA224
+
+#
+# Supported ciphers, order represents priority.
+#
 hb_ciphers:
   - AES
   - AES-192
@@ -14,6 +27,10 @@ hb_ciphers:
   - CAMELLIA256
   - CAST5
   - IDEA
+
+#
+# Supported compression algorithms, order represents priority.
+#
 hb_compressions:
   - Uncompressed
   - ZIP
@@ -53,4 +70,7 @@ hb_generate: "{{ undef() }}"
   #       hint: <>
   #
 
+#
+# Whether to integrate gpg-agent to the further SSH use.
+#
 hb_ssh_agent: true

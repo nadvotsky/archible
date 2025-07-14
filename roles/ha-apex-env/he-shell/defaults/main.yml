@@ -1,8 +1,35 @@
 ---
+#
+# Integrate prompt in shell.
+#
 he_shell_prompt: true
+
+#
+# Integrate fetch autostart in shell.
+#
 he_shell_fetch: true
+
+#
+# Integrate history manager in shell.
+#
 he_shell_history: true
+
+#
+# Integrate argument completion in shell.
+#
 he_shell_completion: true
+
+#
+# Integrate directory navigator in shell.
+#
 he_shell_navigator: true
+
+#
+# Integrate user version manager in shell.
+#
 he_shell_vermen: true
+
+#
+# Integrate GnuPG in shell.
+#
 he_shell_gpg: true

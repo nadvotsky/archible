@@ -1,4 +1,7 @@
 ---
+#
+# Supported ciphers, order represents priority.
+#
 hc_ciphers:
   - aes128-gcm@openssh.com
   - aes128-cbc
@@ -8,6 +11,9 @@ hc_ciphers:
   - aes256-ctr
   - chacha20-poly1305@openssh.com
 
+#
+# Supported public key algorithms, order represents priority.
+#
 hc_public_keys:
   - ecdsa-sha2-nistp256
   - ssh-ed25519
@@ -16,6 +22,9 @@ hc_public_keys:
   - rsa-sha2-512
   - rsa-sha2-512-cert-v01@openssh.com
 
+#
+# Supported key exchange algorithms, order represents priority.
+#
 hc_key_exchangers:
   - ecdh-sha2-nistp256
   - curve25519-sha256
@@ -23,6 +32,9 @@ hc_key_exchangers:
   - sntrup761x25519-sha512@openssh.com
   - diffie-hellman-group-exchange-sha256
 
+#
+# Supported message authentication algorithms, order represents priority.
+#
 hc_message_auths:
   - umac-64-etm@openssh.com
   - umac-128-etm@openssh.com
@@ -31,4 +43,7 @@ hc_message_auths:
   - hmac-sha2-512
   - hmac-sha2-256
 
+#
+# Whether to integrate gpg-agent.
+#
 hc_gpg_agent: true
