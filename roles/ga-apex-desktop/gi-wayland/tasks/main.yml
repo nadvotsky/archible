@@ -1,7 +1,4 @@
 ---
-#
-# TODO: unset DISPLAY
-#
 - name: Configure wayland seat manager
   tags: apex-desktop-wayland-seat
   block:
@@ -35,7 +32,72 @@
         units:
           - seatd.service
         state:
-          - enable
+          enable: true
+
+- name: Configure bar
+  tags: apex-desktop-wayland-bar
+  block:
+    - name: Install waybar packages
+      foundation.system.packages:
+      vars:
+        install:
+          - waybar
+
+    - name: Disable waybar service
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - waybar.service
+        state:
+          disable: true
+
+    - name: Render waybar configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/waybar"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config.jsonc
+            template: waybar/config.jsonc.j2
+
+          - file: ./style.css
+            template: waybar/style.css.j2
+
+- name: Configure notification daemon
+  tags: apex-desktop-wayland-notify
+  block:
+    - name: Install mako packages
+      foundation.system.packages:
+      vars:
+        install:
+          - mako
+
+    - name: Disable mako service
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - mako.service
+        state:
+          disable: true
+
+    - name: Render mako configuration
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: "{{ fa_dir_config }}/mako"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - file: ./config
+            template: mako/config.j2
 
 - name: Configure compositor
   tags: apex-desktop-wayland-compositor
@@ -73,91 +135,3 @@
               org.freedesktop.impl.portal.Screenshot=hyprland
               org.freedesktop.impl.portal.ScreenCast=hyprland
               org.freedesktop.impl.portal.GlobalShortcuts=hyprland
-
-- name: Configure XWaylandLess shortcut
-  tags: apex-desktop-wayland-nox
-  become: true
-  block:
-    - name: Render No-X wayland session
-      foundation.files.install:
-        wipe: never
-        perm: 755:644:root:root
-      vars:
-        targets:
-          - file: "{{ ea_dir_stubs }}/Xwayland"
-            link: /usr/bin/false
-
-          - file: /usr/share/wayland-sessions/hyprland-nox.desktop
-            content: |
-              [Desktop Entry]
-              Name=Hyprland (no XWayland)
-              Comment=An intelligent dynamic tiling Wayland compositor
-              Exec=/bin/sh -c "PATH={{ ea_dir_stubs }}:$PATH Hyprland"
-              Type=Application
-
-- name: Configure bar
-  tags: apex-desktop-wayland-bar
-  block:
-    - name: Install waybar packages
-      foundation.system.packages:
-      vars:
-        install:
-          - waybar
-
-    - name: Disable waybar service
-      become: true
-      foundation.system.services:
-        headless: "{{ ba_headless }}"
-      vars:
-        units:
-          - waybar.service
-        status:
-          disable: true
-
-    - name: Render waybar configuration
-      foundation.files.install:
-        wipe: "{{ aa_wipe }}"
-        base: "{{ fa_dir_config }}/waybar"
-        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
-      vars:
-        targets:
-          - dir: ./
-            create: true
-
-          - file: ./config.jsonc
-            template: waybar/config.jsonc.j2
-
-          - file: ./style.css
-            template: waybar/style.css.j2
-
-- name: Configure notification daemon
-  tags: apex-desktop-wayland-mako
-  block:
-    - name: Install mako packages
-      foundation.system.packages:
-      vars:
-        install:
-          - mako
-
-    - name: Disable mako service
-      become: true
-      foundation.system.services:
-        headless: "{{ ba_headless }}"
-      vars:
-        units:
-          - mako.service
-        status:
-          disable: true
-
-    - name: Render mako configuration
-      foundation.files.install:
-        wipe: "{{ aa_wipe }}"
-        base: "{{ fa_dir_config }}/mako"
-        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
-      vars:
-        targets:
-          - dir: ./
-            create: true
-
-          - file: ./config
-            template: mako/config.j2

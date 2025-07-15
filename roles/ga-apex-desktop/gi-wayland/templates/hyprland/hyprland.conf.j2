@@ -268,7 +268,15 @@ general {
     resize_corner = 0
 
     # sensitivity = 1.0
-    apply_sens_to_raw = false
+
+    snap {
+        enabled = true
+        respect_gaps = true
+
+        # border_overlap = false
+        # monitor_gap = 10
+        # window_gap = 10
+    }
 }
 
 
@@ -281,14 +289,7 @@ decoration {
     inactive_opacity = 1.0
     fullscreen_opacity = 1.0
 
-    drop_shadow = false
-    # shadow_range =
-    # shadow_render_power =
-    # shadow_ignore_window =
-    # col.shadow =
-    # col.shadow_inactive =
-    # shadow_offset
-    # shadow_scale =
+    border_part_of_window = true
 
     dim_inactive = false
     # dim_strength = 0.5
@@ -312,12 +313,27 @@ decoration {
         # special =
         # popups =
         # popups_ignorealpha =
+        # input_methods =
+        # input_methods_ignorealph =
+    }
+
+    shadow {
+        enabled = false
+        # range =
+        # render_power =
+        # sharp =
+        # ignore_window =
+        # color =
+        # color_inactive =
+        # offset =
+        # scale =
     }
 }
 
 animations {
     enabled = false
     first_launch_animation = false
+    workspace_wraparound = false
 }
 
 
@@ -352,18 +368,32 @@ input {
     # emulate_discrete_scroll =
 
     follow_mouse = 1
+    # follow_mouse_threshold
     mouse_refocus = true
+    focus_on_close = 0
 
     float_switch_override_focus = 2
-    special_fallthrough = false 
+    special_fallthrough = false
+}
+
+gestures {
+    workspace_swipe = false
+    workspace_swipe_create_new = false
 }
 
 #
 # Groups configuration.
 #
 group {
+    auto_group = true
     insert_after_current = true
     focus_removed_window = true
+
+    drag_into_group = 1
+    merge_groups_on_drag = true
+    merge_groups_on_groupbar = true
+    merge_floated_into_tiled_on_groupbar = false
+    group_on_movetoworkspace = false
 
     col.border_active = {{ _preset_active }}
     col.border_locked_active = {{ _preset_active}}
@@ -418,7 +448,10 @@ misc {
     new_window_takes_over_fullscreen = 2
     # exit_window_retains_fullscreen =
     initial_workspace_tracking = 1
-    middle_click_paste = true
+    middle_click_paste = false
+
+    enable_anr_dialog = false
+    # anr_missed_pings = 1
 
     enable_swallow = false
     #? swallow_regex = .*
@@ -430,6 +463,7 @@ misc {
 
     render_ahead_of_time = false
     # render_ahead_safezone =
+    render_unfocused_fps = 15
 }
 
 binds {
@@ -443,25 +477,43 @@ binds {
     allow_workspace_cycles = true
     focus_preferred_method = 1
     window_direction_monitor_fallback = false
+    hide_special_on_workspace_change = true
 
     ignore_group_lock = false
     movefocus_cycles_fullscreen = false
+    movefocus_cycles_groupfirst = false
 }
 
 xwayland {
+    enabled = false
     use_nearest_neighbor = true
     force_zero_scaling = true
+    create_abstract_socket = false
 }
 
 opengl {
     nvidia_anti_flicker = false
-    force_introspection = 2
+}
+
+render {
+    direct_scanout = 1
+    expand_undersized_textures = true
+    xp_mode = false
+
+    ctm_animation = 0
+    cm_fs_passthrough = 0
+    cm_enabled = flase
+    cm_auto_hdr = 0
+    send_content_type = false
+
+    new_render_scheduling = false
 }
 
 cursor {
     default_monitor = {{ _monitor.wayland }}
 
     no_hardware_cursors = false
+    use_cpu_buffer = 2
     enable_hyprcursor = false
     # no_break_fs_vrr =
     # min_refresh_rate =
@@ -478,6 +530,13 @@ cursor {
     no_warps = false
     persistent_warps = false
     warp_on_change_workspace = false
+    warp_back_after_non_mouse_input = false
+}
+
+ecosystem {
+    no_update_news = true
+    no_donation_nag = true
+    enforce_permissions = false
 }
 
 debug {
