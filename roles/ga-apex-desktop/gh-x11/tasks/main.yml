@@ -48,7 +48,7 @@
   block:
     - name: Render XDG Desktop Portal configuration for herbstluftwm
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: "{{ fa_dir_config }}/xdg-desktop-portal/herbstluftwm.conf"
@@ -107,7 +107,7 @@
       vars:
         units:
           - dunst.service
-        status:
+        state:
           disable: true
 
 - name: Configure compositor
@@ -156,7 +156,7 @@
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         base: "{{ fa_dir_config }}/herbstluftwm"
-        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        perms: "755:755:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:
           - dir: ./
