@@ -152,7 +152,7 @@ class Defaults:
         self._mapping = mapping
         Assertations.base(self._mapping["base"])
 
-        perms = tuple((self._mapping["perms"]).split(":", maxsplit=3))
+        perms = tuple((self._mapping["perms"] or "").split(":", maxsplit=3))
         self._perms = {
             k: perms[i] if i < len(perms) else None for i, k in enumerate(("dirmod", "filemod", "owner", "group"))
         }
@@ -234,35 +234,14 @@ class TargetKind(enum.Enum):
     DIR = 2
 
 
-class Perms:
-    def __init__(self, packed: str, defaults: Defaults, kind: TargetKind, ignored: bool):
-        parts = iter(packed.split(":", maxsplit=2))
-
-        self.mod = next(parts, None)
-        match (ignored, kind):
-            case True, TargetKind.FILE:
-                self.mod = defaults.perms_filemod
-            case True, TargetKind.DIR:
-                self.mod = defaults.perms_dirmod
-            case False, _:
-                pass
-            case _:
-                raise AnsibleActionFail(f"Unreachable kind {kind}")
-
-        Assertations.perms_mod(self.mod)
-
-        self.owner = next(parts, None) or defaults.perms_owner
-        self.group = next(parts, None) or defaults.perms_group
-
-
 class TargetProcessor:
+    COMMON_ACTIONS: typing.ClassVar[typing.Sequence[str]] = ("wipe", "create")
     DIR_ACTIONS: typing.ClassVar[typing.Sequence[str]] = ["link"]
     FILE_ACTIONS: typing.ClassVar[typing.Sequence[str]] = (
         "link",
         "copy",
         "template",
         "content",
-        "link",
         "url",
     )
     ALL_ACTIONS: typing.ClassVar[typing.Sequence[str]] = set((*DIR_ACTIONS, *FILE_ACTIONS))
@@ -279,7 +258,7 @@ class TargetProcessor:
         return os.path.normpath(os.path.join(defaults.base, path))
 
     @classmethod
-    def postprocess_actions(cls, model: object, kind: TargetKind) -> tuple[TargetKind, bool]:
+    def postprocess_actions(cls, model: object, kind: TargetKind) -> TargetKind:
         def count_defined_actions(attrs: typing.Sequence[str]) -> int:
             return sum((getattr(model, attr) is not None for attr in attrs))
 
@@ -294,21 +273,33 @@ class TargetProcessor:
             )
 
         allowed = count_defined_actions(allowed_actions)
-        is_wipe = getattr(model, "wipe") == "always"
-        is_create = getattr(model, "create") is True
         if allowed > 1:
             raise AnsibleActionFail("More than one action '{}'".format(", ".join(allowed_actions)))
-        elif allowed + is_wipe + is_create == 0:
+
+        common = count_defined_actions(cls.COMMON_ACTIONS)
+        if allowed + common == 0:
             raise AnsibleActionFail("Target is no-op")
 
-        return kind, (is_wipe and not is_create and not allowed)
+        return kind
+
+    @staticmethod
+    def postprocess_perms(perms: str | None) -> tuple[str | None, str | None, str | None]:
+        if perms is None:
+            return (None, None, None)
+
+        iterator = iter(perms.split(":", maxsplit=2))
+        return (
+            Assertations.perms_mod(next(iterator)),
+            next(iterator, None),
+            next(iterator, None)
+        )
 
 
 @dataclasses.dataclass
 class Target:
     wipe: bool
     create: bool
-    perms: Perms
+    perms: tuple[str | None, str | None, str | None]
 
     copy: str | None = None
     template: str | None = None
@@ -318,25 +309,25 @@ class Target:
 
     dir: dataclasses.InitVar[str | None] = None
     file: dataclasses.InitVar[str | None] = None
-    defaults: dataclasses.InitVar[Defaults] = None
 
+    defaults: Defaults = None
     kind: TargetKind = dataclasses.field(init=False)
     path: str = dataclasses.field(init=False)
 
-    def __post_init__(self, _dir: str | None, _file: str | None, _defaults: Defaults) -> None:
+    def __post_init__(self, _dir: str | None, _file: str | None) -> None:
         try:
-            self.path = TargetProcessor.postprocess_path(_dir or _file, _defaults)
+            self.path = TargetProcessor.postprocess_path(_dir or _file, self.defaults)
 
             if self.create is None:
-                self.create = _defaults.create
+                self.create = self.defaults.create
 
             if self.wipe is None or self.wipe == "auto":
-                self.wipe = _defaults.wipe
+                self.wipe = self.defaults.wipe
 
-            self.kind, perms_ignored = TargetProcessor.postprocess_actions(
+            self.kind = TargetProcessor.postprocess_actions(
                 self, TargetKind.DIR if _dir is not None else TargetKind.FILE
             )
-            self.perms = Perms(self.perms or "", _defaults, self.kind, perms_ignored)
+            self.perms = TargetProcessor.postprocess_perms(self.perms)
         except AnsibleActionFail as fail:
             raise AnsibleActionFail(
                 "Target '{}' failed: {}".format(_dir or _file, str(fail)),
@@ -344,7 +335,19 @@ class Target:
 
     @functools.cached_property
     def _perms_raw(self) -> dict:
-        return dict(owner=self.perms.owner, group=self.perms.group, mode=self.perms.mod)
+        mode, owner, group = self.perms
+
+        if self.kind == TargetKind.FILE:
+            mode = Assertations.perms_mod(mode or self.defaults.perms_filemod)
+        elif self.kind == TargetKind.DIR:
+            mode = Assertations.perms_mod(mode or self.defaults.perms_dirmod)
+        else:
+            raise AnsibleActionFail(f"Unreachable kind {self.kind}")
+
+        owner = owner or self.defaults.perms_owner
+        group = group or self.defaults.perms_group
+
+        return dict(mode=mode, owner=owner, group=group)
 
     def build_wipe_context(self) -> Context:
         return Context(
@@ -359,7 +362,7 @@ class Target:
             name="create",
             dispatch="ansible.builtin.file",
             dst_attr="path",
-            raw=self._perms_raw | dict(path=self.path, state="directory"),
+            raw=self._perms_raw | dict(path=self.path, state="directory" if self.kind == TargetKind.DIR else "touch"),
         )
 
     def build_link_context(self) -> Context:
@@ -368,7 +371,7 @@ class Target:
             dispatch="ansible.builtin.file",
             dst_attr="dest",
             src_attr="src",
-            raw=self._perms_raw | dict(src=self.link, dest=self.path, state="link", follow=False, force=True),
+            raw=dict(src=self.link, dest=self.path, state="link", follow=False, force=True),
         )
 
     def build_touch_context(self) -> Context:
@@ -488,9 +491,9 @@ class ActionModule(ActionBase):
         targets: list[Target],
         task_vars: TaskVars,
     ) -> typing.Generator[tuple[Context, RawResult]]:
-        for target in filter(lambda target: target.kind == TargetKind.FILE, targets):
+        for target in targets:
             context_builder = {
-                target.create is not None: target.build_touch_context,
+                target.create is True: target.build_create_context,
                 target.link is not None: target.build_link_context,
                 target.copy is not None: target.build_copy_context,
                 target.content is not None: target.build_content_context,
@@ -500,7 +503,11 @@ class ActionModule(ActionBase):
             if True not in context_builder:
                 continue
 
-            yield self._ansible_dispatch(context_builder[True](), task_vars)
+            context = context_builder[True]()
+            if context.name == "create" and target.kind == TargetKind.DIR:
+                continue
+
+            yield self._ansible_dispatch(context, task_vars)
 
     def _ansible_dispatch(self, context: Context, task_vars: TaskVars) -> RawResult:
         return context, ansible_dispatch(self, context.dispatch, context.raw, task_vars)
