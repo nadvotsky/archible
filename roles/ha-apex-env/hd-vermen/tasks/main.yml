@@ -113,12 +113,12 @@
         data:
           default: "{{ fa_dir_share }}/mise"
           dot:
-            link: "{{ fa_dir_home }}/.mise"
+            link: "{{ fa_dir_home }}/.mise/data"
 
         state:
           default: "{{ fa_dir_state }}/mise"
           dot:
-            link: "{{ fa_dir_home }}/.mise"
+            link: "{{ fa_dir_home }}/.mise/state"
 
         cache:
           default: "{{ fa_dir_cache }}/mise"

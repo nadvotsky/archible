@@ -1,7 +1,5 @@
 [settings]
 experimental = true
-legacy_version_file = true
-
 log_level = "warn"
 
 env_file = ".env"
@@ -9,10 +7,14 @@ plugin_autoupdate_last_check_duration = "0"
 
 trusted_config_paths = ["{{ fa_dir_home }}"]
 
-python_precompiled_os = "unknown-linux-gnu"
-python_precompiled_arch = "{{ ba_arch }}"
-pipx.uvx = true
-
 [settings.status]
+missing_tools = "always"
 show_tools = true
 show_env = true
+
+[settings.python]
+precompiled_os = "unknown-linux-gnu"
+precompiled_arch = "{{ ba_arch }}"
+
+[settings.pipx]
+uvx = true
