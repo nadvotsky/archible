@@ -17,12 +17,12 @@
           - sshdgenkeys.service
           - sshd.service
         state:
-          disabled: true
+          disable: true
 
     - name: Render OpenSSH client configuration
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
-        base: "{{ users.user.home }}/.ssh"
+        base: "{{ fa_dir_home }}/.ssh"
         perms: "700:600:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:

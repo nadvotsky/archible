@@ -11,6 +11,8 @@
           - keyboxd.service
           - gpg-agent-browser.socket
           - gpg-agent-extra.socket
+        state:
+          mask: true
 
 - name: Configure GnuPG layout
   tags: apex-env-gpg-layout
@@ -32,6 +34,15 @@
         subs: "{{ fa_dir_subs }}"
       environment:
         GNUPGHOME: "{{ _hb_ulayout.home }}"
+
+    - name: Create GnuPG home directory
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: "700:600:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets:
+          - dir: "{{ _hb_ulayout.home }}"
+            create: true
 
 - name: Configure GnuPG
   tags: apex-env-gpg-main
@@ -91,6 +102,8 @@
 
 - name: Configure GnuPG keyring restoration
   tags: apex-env-gpg-restore
+  environment:
+    GNUPGHOME: "{{ _hb_ulayout.home }}"
   block:
     - name: Restore keyring from persist
       foundation.persist.from:
@@ -99,7 +112,7 @@
       vars:
         shells:
           - key: gpg/keyring
-            cmd: env 'GNUPGHOME={{ _hb_ulayout.home }}' gpg --batch --import-options restore --import -
+            cmd: gpg --batch --import-options restore --import -
         archives:
           - key: gpg/unattended-keys
             perms: "{{ ca_name }}:{{ ca_name }}"
@@ -125,18 +138,18 @@
           - --import-ownertrust
         stdin: >-
           {%- set _acc = [] -%}
-          {%- for _key in _gb_restore_unattended.gpg.values() -%}
-            {%- do _acc.append("{}:6:".format(_key.fingerprint)) -%}
+          {%- for _name, _key in _gb_restore_unattended.gpg.items() -%}
+            {%- if _name in hb_generate -%}
+              {%- do _acc.append('{}:6:'.format(_key.fingerprint)) -%}
+            {%- endif -%}
           {%- endfor -%}
-          {{ _acc | join("\n") }}
-      environment:
-        GNUPGHOME: "{{ _hb_ulayout.home }}"
+          {{ _acc | join('' | aa_newline) }}
       register: _hb_restore_ownertrust_invocation
       changed_when: _hb_restore_ownertrust_invocation.rc == 0
 
 - name: Configure GnuPG keyring generation
   tags: apex-env-gpg-generate
-  when: not (_gb_persist_restore is skipped)
+  when: not (_gb_persist_restore is defined and _gb_persist_restore is skipped)
   vars:
     _hb_re_fpr: .*KEY_CREATED.*([0-9-A-Z]{40})
     _hb_re_kgr: fpr:+{}:+\sgrp:+(\w+)
@@ -146,6 +159,7 @@
       {%- for _name, _subdict in hb_generate.items() -%}
         {%- do _acc.__setitem__(_name, _subdict.master | combine(dict(fpr=none, kgr=none))) -%}
       {%- endfor -%}
+      {{ _acc }}
     _hb_subkeys: >-
       {%- set _acc = {} -%}
       {%- for _master, _subdict in hb_generate.items() -%}
@@ -153,6 +167,7 @@
           {%- do _acc.__setitem__(_name, _subkey | combine(dict(fpr=none, kgp=none, master=_master))) -%}
         {%- endfor -%}
       {%- endfor -%}
+      {{ _acc }}
   environment:
     GNUPGHOME: "{{ _hb_ulayout.home }}"
   block:
@@ -161,7 +176,7 @@
         argv:
           - gpg
           - --batch
-          - --status-fd 1
+          - --status-fd=1
           - --generate-key
         stdin: |-
           Key-Type: {{ item.algo }}
@@ -183,7 +198,7 @@
       ansible.builtin.set_fact:
         _hb_masters: >-
           {%- for _name, _inv in _hb_masters.keys() | zip(_hb_gen_master_invocation.results) -%}
-            {%- do _hb_masters.__setitem__(_name, dict(fpr=_inv.stdout | regex_search(_hb_re_fpr, '\\1') | first)) -%}
+            {%- do _hb_masters[_name].update(dict(fpr=_inv.stdout | regex_search(_hb_re_fpr, '\\1') | first)) -%}
           {%- endfor -%}
           {{ _hb_masters }}
 
@@ -220,7 +235,7 @@
       ansible.builtin.set_fact:
         _hb_masters: >-
           {%- for _name, _master in _hb_masters.items() -%}
-            {%- do _hb_masters[_master].__setitem__(
+            {%- do _hb_masters[_name].__setitem__(
               'kgp',
               _hb_gen_keyring_invocation.stdout | regex_search(_hb_re_kgr.format(_master.fpr), '\\1') | first
             ) -%}
@@ -230,12 +245,12 @@
     - name: Extract keygrip and fingerprint for subkeys
       ansible.builtin.set_fact:
         _hb_subkeys: >-
-          {%- for _name, _inv in _hb_subkeys | zip(_hb_gen_keyring_invocation.results) -%}
+          {%- for _name, _inv in _hb_subkeys | zip(_hb_gen_subkeys_invocation.results) -%}
             {%- set _fpr = _inv.stdout | regex_search(_hb_re_fpr, '\\1') | first -%}
             {%- set _kgp = _hb_gen_keyring_invocation.stdout | regex_search(_hb_re_kgr.format(_fpr), '\\1') | first -%}
-            {%- do _hb_gen.update(dict(fpr=_fpr, kgp=_kgp)) -%}
+            {%- do _hb_subkeys[_name].update(dict(fpr=_fpr, kgp=_kgp)) -%}
           {%- endfor -%}
-          {{ _hb_gen }}
+          {{ _hb_subkeys }}
 
     - name: Apply ssh priority to subkeys
       ansible.builtin.command:
@@ -246,7 +261,7 @@
           - /bye
       register: _hb_gen_keyattr_invocation
       changed_when: _hb_gen_keyattr_invocation.rc == 0
-      loop: "{{ _hb_subkeys.values() }}"
+      loop: "{{ _hb_subkeys.values() | selectattr('priority', 'defined') }}"
 
     - name: Render unattended keys metadata into
       ansible.builtin.shell:
@@ -277,5 +292,5 @@
           {%- if hb_ssh_agent is true -%}
             {%- do _lines.append('export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)') -%}
           {%- endif -%}
-          {{ _lines | join('\n') }}
+          {{ _lines | join('' | aa_newline) }}
         marker: "# {mark} GnuPG init"

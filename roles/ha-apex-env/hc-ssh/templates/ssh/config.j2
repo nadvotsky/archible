@@ -1,14 +1,14 @@
 Host *
     AddressFamily inet
     IdentityFile none
-    Ciphers {{ security.ssh.cipher | join(",") }}
+    Ciphers {{ hc_ciphers | join(",") }}
     ForwardX11Timeout 0
     HashKnownHosts yes
 
-    HostKeyAlgorithms {{ security.ssh.public_key | join(",") }}
-    PubkeyAcceptedAlgorithms {{ security.ssh.public_key | join(",") }}
-    KexAlgorithms {{ security.ssh.key_exchange | join(",") }}
-    MACs {{ security.ssh.message_auth | join(",") }}
+    HostKeyAlgorithms {{ hc_public_keys | join(",") }}
+    PubkeyAcceptedAlgorithms {{ hc_public_keys | join(",") }}
+    KexAlgorithms {{ hc_key_exchangers | join(",") }}
+    MACs {{ hc_message_auths | join(",") }}
 
     ObscureKeystrokeTiming no
     NoHostAuthenticationForLocalhost yes
