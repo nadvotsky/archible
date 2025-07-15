@@ -45,7 +45,7 @@ Section "Device"
     # Option "ModeValidation" "NoEdidMaxPClkCheck, NoMaxPClkCheck, NoHorizSyncCheck, NoVertRefreshCheck, NoEdidModes"
     # Option "ExactModeTimingsDVI" "true"
     # Option "ModeDebug" "true"
-
+    #
     # Option "HorizSync" "DFP-1: 67.500; DFP-5: 79.976"
     # Option "VertRefresh" "DFP-1: 60; DFP-5: 75.024675"
 
@@ -65,6 +65,7 @@ Section "Device"
     Option "Interactive" "false"
     Option "SidebandSocketPath" "/tmp"
     Option "ConnectToAcpid" "0"
+    Option "Coolbits" "24"
 
     # Option "TripleBuffer" "true"
 
