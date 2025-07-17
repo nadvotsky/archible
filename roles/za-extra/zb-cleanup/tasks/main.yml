@@ -11,6 +11,7 @@
           - --quiet-unsupported
       register: _zb_fstrim_invocation
       changed_when: _zb_fstrim_invocation.rc == 0
+      failed_when: false
 
 - name: Configure package manager cleanup
   tags: extra-cleanup-packaging
@@ -26,10 +27,16 @@
       register: _zb_paru_clean_invocation
       changed_when: _zb_paru_clean_invocation.rc == 0
 
+    - name: Wipe paru cache explicitly
+      become: true
+      ansible.builtin.file:
+        path: "{{ fa_dir_cache }}/paru"
+        state: absent
+
 - name: Configure cache directories cleanup
   tags: extra-cleanup-cache
   block:
-    - name: Wipe user and system caches directory
+    - name: Wipe system and user cache directories
       become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
@@ -65,35 +72,49 @@
       vars:
         targets: "{{ zb_home }}"
 
-- name: Configure gecko-based applications cleanup
+- name: Configure gecko applications cleanup
   tags: za-cleanup-gecko
   when: aa_wipe == 'always'
+  vars:
+    _za_gecko_paths: >-
+      {%- set _acc = [] -%}
+      {%- for _gecko in ia_browsers | selectattr('type', 'eq', 'gecko') -%}
+        {%- do _acc.append(lookup('foundation.user.layout', fa_layout, _gecko.home)) -%}
+        {%- do _acc.append(lookup('foundation.user.layout', fa_layout, _gecko.cache)) -%}
+      {%- endfor -%}
+      {{ _acc }}
   block:
-    - name: Find gecko entries to clean by patterns
+    - name: Stop running Gecko instances
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
+      vars:
+        processes: "{{ ia_browsers | selectattr('type', 'eq', 'gecko') | map(attribute='package') }}"
+
+    - name: Find Gecko entries to clean by patterns
       ansible.builtin.find:
-        paths: "{{ lookup('foundation.user.layout', fa_layout, ia_firefox_ulayout_home) }}"
+        paths: "{{ _za_gecko_paths }}"
         patterns: "{{ zb_gecko }}"
         file_type: any
         depth: 2
         recurse: true
-      register: _za_gecko_dirs
+      register: _za_gecko_entries
 
-    - name: Wipe gecko entries
+    - name: Wipe Gecko entries
       ansible.builtin.file:
         path: "{{ item }}"
         state: absent
-      loop: "{{ _za_gecko_dirs.files | map(attribute='path') }}"
+      loop: "{{ _za_gecko_entries.files | map(attribute='path') }}"
 
-    - name: Find sqlite databases to clean
+    - name: Find sqlite Gecko databases to clean
       ansible.builtin.find:
-        paths: "{{ lookup('foundation.user.layout', fa_layout, ia_firefox_ulayout_home) }}"
+        paths: "{{ _za_gecko_paths }}"
         patterns: "*.sqlite"
         file_type: file
         depth: 2
         recurse: true
-      register: _za_gecko_dbs
+      register: _za_gecko_databases
 
-    - name: Vacuum sqlite databases
+    - name: Vacuum Gecko sqlite databases
       ansible.builtin.command:
         argv:
           - sqlite3
@@ -101,19 +122,26 @@
           - VACUUM
       register: _za_gecko_vacuum_invocation
       changed_when: _za_gecko_vacuum_invocation.rc == 0
-      loop: "{{ _za_gecko_dbs.files | map(attribute='path') }}"
+      loop: "{{ _za_gecko_databases.files | map(attribute='path') }}"
 
 - name: Cleanup chromium-based apps
   tags: extra-cleanup-chromium
   when: aa_wipe == 'always'
+  vars:
+    _za_chromium: >-
+      {%- set _acc = [] -%}
+      {%- for _chr in ia_browsers | selectattr('type', 'eq', 'chromium') -%}
+        {%- do _acc.append(dict(name=_chr.package, path=lookup('foundation.user.layout', fa_layout, _chr.home))) -%}
+        {%- do _acc.append(dict(name=_chr.package, path=lookup('foundation.user.layout', fa_layout, _chr.cache))) -%}
+      {%- endfor -%}
+      {%- do _acc.append(dict(name='code', path=lookup('foundation.user.layout', fa_layout, ia_vscode_user_layout))) -%}
+      {{ _acc }}
   block:
-    - name: Stop running GnuPG instance
+    - name: Stop running Chromium instance
       foundation.system.stop:
         headless: "{{ ba_headless }}"
       vars:
-        processes:
-          - chromium
-          - code
+        processes: "{{ _za_chromium | map(attribute='name') | flatten() }}"
 
     - name: Wipe Public Key Infrastructure storage
       ansible.builtin.file:
@@ -122,20 +150,18 @@
 
     - name: Find chromium entries to clean by patterns
       ansible.builtin.find:
-        paths:
-          - "{{ lookup('foundation.user.layout', fa_layout, ia_chromium_ulayout_home) }}"
-          - "{{ lookup('foundation.user.layout', fa_layout, ia_vscode_user_layout) }}"
-        patterns: "{{ zb_gecko }}"
+        paths: "{{ _za_chromium | map(attribute='path') }}"
+        patterns: "{{ za_chromium }}"
         file_type: any
         depth: 2
         recurse: true
-      register: _za_chromium_dirs
+      register: _za_chromium_entries
 
     - name: Wipe chromium entries
       ansible.builtin.file:
         path: "{{ item }}"
         state: absent
-      loop: "{{ _za_chromium_dirs.files | map(attribute='path') }}"
+      loop: "{{ _za_chromium_entries.files | map(attribute='path') }}"
 
 - name: Cleaup spotify-launcher
   tags: extra-cleanup-spotify

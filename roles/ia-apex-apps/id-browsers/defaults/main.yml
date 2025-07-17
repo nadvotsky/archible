@@ -1,7 +1,10 @@
 ---
-id_firefox_prefs:
+#
+# List of Gecko preferences.
+#
+id_gecko_prefs:
   #
-  #  Performance.
+  # Performance.
   #
   accessibility.force_disabled: 1
   browser.touchmode.auto: false
@@ -10,20 +13,20 @@ id_firefox_prefs:
   javascript.options.wasm_branch_hinting: true
   javascript.options.wasm_relaxed_simd: true
   #
-  #  GPU.
+  # GPU.
   #
   gfx.webrender.compositor: true
   gfx.webrender.all: true
   layers.gpu-process.enabled: true
   gfx.canvas.accelerated: true
   #
-  #  Startup.
+  # Startup.
   #
   browser.laterrun.enabled: false
   browser.shell.checkDefaultBrowser: false
   browser.startup.page: 3
   #
-  #  Telemetry, reports, and others.
+  # Telemetry, reports, and others.
   #
   browser.crashReports.crashPull: false
   browser.crashReporter.memtest: false
@@ -31,7 +34,7 @@ id_firefox_prefs:
   browser.tabs.crashReporting.sendReport: false
   app.shield.optoutstudies.enabled: false
   #
-  #  Recommendations and personalization.
+  # Recommendations and personalization.
   #
   browser.discovery.enabled: false
   browser.discovery.containers.enabled: false
@@ -40,12 +43,12 @@ id_firefox_prefs:
   browser.topsites.contile.enabled: false
   browser.vpn_promo.enabled: false
   #
-  #  Filters, protection.
+  # Filters, protection.
   #
   browser.safebrowsing.downloads.enabled: false
   browser.xul.error_pages.show_safe_browsing_details_on_load: true
   #
-  #  UI.
+  # UI.
   #
   middlemouse.paste: false
   browser.aboutConfig.showWarning: false
@@ -87,7 +90,7 @@ id_firefox_prefs:
       }
     }
   #
-  #  Sidebar.
+  # Sidebar.
   #
   browser.contextual-password-manager.enabled: false
   browser.ml.chat.enabled: false
@@ -95,12 +98,12 @@ id_firefox_prefs:
   sidebar.revamp: true
   sidebar.main.tools: history,bookmarks
   #
-  #  Search.
+  # Search.
   #
   browser.search.region: US
   browser.urlbar.maxHistoricalSearchSuggestions: 10
   #
-  #  Tabs.
+  # Tabs.
   #
   browser.tabs.groups.enabled: true
   browser.tabs.groups.smart.enabled: false
@@ -110,7 +113,7 @@ id_firefox_prefs:
   browser.tabs.unloadOnLowMemory: true
   browser.tabs.insertRelatedAfterCurrent: true
   #
-  #  Bookmarks.
+  # Bookmarks.
   #
   browser.bookmarks.editDialog.firstEditField: folderMenuList
   browser.bookmarks.editDialog.showForNewBookmarks: true
@@ -121,7 +124,7 @@ id_firefox_prefs:
   browser.toolbars.bookmarks.visibility: always
   browser.toolbars.bookmarks.showOtherBookmarks: true
   #
-  #  Permissions.
+  # Permissions.
   #
   dom.webnotifications.enabled: false
   dom.push.enabled: false
@@ -130,7 +133,7 @@ id_firefox_prefs:
   privacy.webrtc.globalMuteToggles: true
   dom.block_download_insecure: false
   #
-  #  Features.
+  # Features.
   #
   browser.translations.enable: false
   browser.translations.automaticallyPopup: false
@@ -145,16 +148,16 @@ id_firefox_prefs:
   extensions.pocket.enabled: false
   extensions.pictureinpicture.enable_picture_in_picture_overrides: false
   #
-  #  Containers.
+  # Containers.
   #
   privacy.userContext.enabled: false
   privacy.userContext.ui.enabled: false
   #
-  #  PDF.
+  # PDF.
   #
   pdfjs.enableScripting: false
   #
-  #  Media.
+  # Media.
   #
   media.getusermedia.audio.processing.aec.enabled: false
   media.getusermedia.audio.processing.agc.enabled: false
@@ -168,9 +171,12 @@ id_firefox_prefs:
   media.webrtc.hw.h264.enabled: true
   media.webspeech.synth.enabled: false
 
+#
+# List of chromium flags.
+#
 id_chromium_flags:
   #
-  #  Look.
+  # Look.
   #
   - disable-smooth-scrolling
   - disable-login-animations
@@ -182,7 +188,7 @@ id_chromium_flags:
   # - disable-gpu-vsync
   # - disable-frame-rate-limit
   #
-  #  GPU.
+  # GPU.
   #
   # - sync-point-graph-validation
   - disable-gpu-watchdog
@@ -200,7 +206,7 @@ id_chromium_flags:
   # - use-gl
   - use-vulkan
   #
-  #  Startup.
+  # Startup.
   #
   - disable-first-run-ui
   - no-first-run
@@ -213,13 +219,13 @@ id_chromium_flags:
   # - new-window
   # - user-data-dir
   #
-  #  Performance.
+  # Performance.
   #
   # - disable-namespace-sandbox
   - disable-stack-profiler
   - disable-logging
   #
-  #  Desktop Environment.
+  # Desktop Environment.
   #
   # kwallet, kwallet5, kwallet6, gnome-libsecret
   - password-store=basic
@@ -234,7 +240,7 @@ id_chromium_flags:
   - wayland-text-input-v3
   - use-wayland-explicit-grab
   #
-  #  Permissions and APIs.
+  # Permissions and APIs.
   #
   # - autoplay-policy=no-user-gesture-required
   - default-country-code=US
@@ -243,7 +249,7 @@ id_chromium_flags:
   - disable-notifications
   - disable-widevine
   #
-  #  Experiments.
+  # Experiments.
   #
   - enable-quic
   - enable-experimental-webassembly-features
@@ -253,7 +259,7 @@ id_chromium_flags:
   - javascript-harmony
 
 #
-# --enable-features
+# List of enabled features.
 #
 id_chromium_features_enable:
   # - MiddleClickAutoscroll
@@ -276,7 +282,7 @@ id_chromium_features_enable:
   - ZeroCopyRBPPartialRasterWithGpuCompositor
 
 #
-# --disable-features
+# List of disabled features.
 #
 id_chromium_features_disable:
   - AutofillEnableSaveAndFill

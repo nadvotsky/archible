@@ -1,161 +1,182 @@
 ---
-#
-# TODO: think about having 3 browsers for main/compat/netns
-#
-- name: Configure Firefox browser
-  tags: apex-apps-browsers-firefox
+- name: Configure Gecko browsers
+  tags: apex-apps-browsers-gecko
+  vars:
+    _id_gck: "{{ ia_browsers | selectattr('type', 'eq', 'gecko') }}"
   block:
-    - name: Install Firefox packages
+    - name: Install Gecko browser packages
       foundation.system.packages:
       vars:
-        install:
-          - firefox
+        install: "{{ _id_gck | map(attribute='package') }}"
 
-    - name: Create default root directories
-      foundation.files.install:
-        wipe: never
+    - name: Stop running Gecko instances
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
       vars:
-        targets:
-          - dir: "{{ fa_dir_home }}/.mozilla"
-            perms: "700:{{ ca_name }}:{{ ca_name }}"
-            create: true
+        processes: "{{ _id_gck | map(attribute='package') }}"
 
-    - name: Resolve Firefox user layout
+    - name: Resolve Gecko user layouts
       foundation.user.layout:
         wipe: "{{ aa_wipe }}"
         layout: "{{ fa_layout }}"
       vars:
-        home: "{{ ia_firefox_ulayout_home }}"
-        cache: "{{ ia_firefox_ulayout_cache }}"
-      register: _id_ffox_ulayout
+        home: "{{ item.home }}"
+        cache: "{{ item.cache }}"
+      register: _id_gck_ulayouts
+      loop: "{{ _id_gck }}"
 
-    - name: Stat Firefox profiles.ini
+    - name: Stat Gecko profiles.ini
       ansible.builtin.stat:
-        path: "{{ _id_ffox_ulayout.home }}/profiles.ini"
-      register: _id_ffox_profiles_ini_stat
+        path: "{{ item }}/profiles.ini"
+      register: _id_gck_profiles_stat
+      loop: "{{ _id_gck_ulayouts.results | map(attribute='home') }}"
 
-    - name: Create a new firefox profile if none exist
-      when: _id_ffox_profiles_ini_stat.exists is false
+    - name: Create a new Gecko profile if none exist
       ansible.builtin.command:
         argv:
-          - firefox
+          - "{{ item }}"
+          - -no-remote
+          - -headless
           - -CreateProfile
           - Default
-      register: _id_ffox_defprofile_invocation
-      changed_when: _id_ffox_defprofile_invocation.rc == 0
-
-    - name: Read Firefox profiles.ini content
-      ansible.builtin.slurp:
-        src: "{{ _id_ffox_ulayout.home }}/profiles.ini"
-      register: _id_ffox_profiles_ini
-
-    - name: Render Firefox user preferences to user.js
-      ansible.builtin.copy:
-        dest: "{{ _id_ffox_ulayout.home }}/{{ item }}/user.js"
-        mode: "0600"
-        content: >-
-          {%- set _acc = [] -%}
-          {%- for _key, _value in id_firefox_prefs.items() -%}
-            {%- set _json = (_value | tojson | tojson) if _value is mapping else (_value | tojson) -%}
-            {%- set _ = _acc.append("user_pref({}, {});".format(_key | tojson, _json)) -%}
-          {%- endfor -%}
-          {{ _acc | join("" | aa_newline) }}
+      register: _id_gck_profiles_invocation
+      changed_when: _id_gck_profiles_invocation.rc == 0
       loop: >-
         {%- set _acc = [] -%}
-        {%- for _line in (_id_ffox_profiles_ini.content | b64decode).splitlines() -%}
-          {%- set _matches = _line | regex_search("Path=(.*)", "\\1") -%}
-          {%- if _matches is not none -%}
-            {%- do _acc.append(_matches | first) -%}
+        {%- for _pkg, _stat in id_gck | map(attribute='package') | zip(_id_gck_profiles_stat.results) -%}
+          {%- if _stat.stat.exists is false -%}
+            {%- do _acc.append(_pkg) -%}
           {%- endif -%}
         {%- endfor -%}
         {{ _acc }}
 
+    - name: Read Gecko profiles.ini content
+      ansible.builtin.slurp:
+        src: "{{ item }}/profiles.ini"
+      register: _id_gck_profiles
+      loop: "{{ _id_gck_ulayouts.results | map(attribute='home') }}"
+
+    - name: Render Gecko user preferences to user.js
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: "700:600:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _content_lines = [] -%}
+          {%- for _key, _value in id_gecko_prefs.items() -%}
+            {%- set _json = (_value | tojson | tojson) if _value is mapping else (_value | tojson) -%}
+            {%- do _content_lines.append("user_pref({}, {});".format(_key | tojson, _json)) -%}
+          {%- endfor -%}
+          {%- set _content = _content_lines | join("" | aa_newline) -%}
+          {##}
+          {%- set _acc = [] -%}
+          {%- for _ulayout, _inv in _id_gck_ulayouts.results | zip(_id_gck_profiles.results) -%}
+            {%- for _line in (_inv.content | b64decode).splitlines() -%}
+              {%- set _matches = _line | regex_search("Path=(.*)", "\\1") -%}
+              {%- if _matches is not none -%}
+                {%- do _acc.append(dict(
+                  file=[_ulayout.home, _matches | first, 'user.js'] | path_join,
+                  content=_content
+                )) -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+          {{ _acc }}
+
 - name: Configure Chromium browser
   tags: apex-apps-browsers-chromium
+  vars:
+    _id_chr: "{{ ia_browsers | selectattr('type', 'eq', 'chromium') }}"
   block:
-    - name: Install Chromium package
+    - name: Install Chromium browser packages
       foundation.system.packages:
       vars:
-        install:
-          - chromium
-          - jq
+        install: "{{ ['jq'] + (_id_chr | map(attribute='package')) }}"
 
-    - name: Resolve Chromium ulayout
+    - name: Stop running Chromium instances
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
+      vars:
+        processes: "{{ _id_chr | map(attribute='package') }}"
+
+    #
+    # There is a CHROME_CONFIG_HOME environment variable, but it represents a prefix such as ~/.config, and not the
+    #  directory itself.
+    #
+    - name: Resolve Chromium user layouts
       foundation.user.layout:
         wipe: "{{ aa_wipe }}"
-        layout: "{{ aa_user_layout }}"
+        layout: "{{ fa_layout }}"
       vars:
-        #
-        # There is also CHROME_CONFIG_HOME, but it is a prefix such as ~/.config,
-        #  and not the directory itself.
-        #
-        home: "{{ ia_chromium_ulayout_home }}"
-        cache: "{{ ia_chromium_ulayout_cache }}"
-      register: _id_chr_ulayout
+        home: "{{ item.home }}"
+        cache: "{{ item.cache }}"
+      register: _id_chr_ulayouts
+      loop: "{{ _id_chr }}"
+
+    - name: Render Chromium flags
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _lines = [] -%}
+          {%- for _flag in id_chromium_flags -%}
+            {%- do _lines.append('--{}'.format(_flag)) -%}
+          {%- endfor -%}
+          {%- do _lines.append('--enable-features={}'.format(id_chromium_features_enable | join(','))) -%}
+          {%- do _lines.append('--disable-features={}'.format(id_chromium_features_disable | join(','))) -%}
+          {##}
+          {%- set _acc = [] -%}
+          {%- for _browser, _ulayout in _id_chr | zip(_id_chr_ulayouts.results) -%}
+            {%- set _flags = (
+              _lines +
+              ['--user-data-dir={}'.format(_ulayout.home)] +
+              ['--disk-cache-dir={}'.format(_ulayout.cache)]
+            ) -%}
+            {%- do _acc.append(dict(file=_browser.flags, content=_flags | join('' | aa_newline))) -%}
+          {%- endfor -%}
+          {{ _acc }}
+
+    - name: Ensure default Chromium profiles exist
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: "700:600:{{ ca_name }}:{{ ca_name }}"
+        create: true
+      vars:
+        targets: >-
+          {%- set _acc = [] -%}
+          {%- for _ulayout in _id_chr_ulayouts.results -%}
+            {%- do _acc.extend([
+              dict(dir=_ulayout.home),
+              dict(dir=[_ulayout.home, 'Default'] | path_join),
+              dict(file=[_ulayout.home, 'Default', 'Preferences'] | path_join),
+            ]) -%}
+          {%- endfor -%}
+          {{ _acc }}
 
     - name: Find all Chromium profiles
       ansible.builtin.find:
-        paths: "{{ _id_chr_ulayout.home }}"
+        paths: "{{ item.home }}"
         patterns: "Preferences"
         recurse: true
       register: _id_chr_profiles
-
-    - name: Process Chromium profiles results
-      ansible.builtin.set_fact:
-        _id_chr_pending: >-
-          {%- set _acc = [] -%}
-          {%- for _profile in _id_chr_profiles -%}
-            {%- if not _profile.path.endswith('/System Profile') -%}
-              {%- do _acc.append(_profile.path) -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {%- if _acc.creates | length == 0 -%}
-            {{ dict(default=true, creates=['{}/{}'.format(_id_chr_ulayout.home, 'Default')]) }}
-          {%- else -%}
-            {{ dict(default=false, creates=_acc) }}
-          {%- endif -%}
-
-    - name: Create default Chromium profile if missing
-      when: _id_chr_pending.default is true
-      ansible.builtin.file:
-        path: "{{ _id_chr_ulayout.home }}/Default"
-        state: directory
-        mode: "0700"
+      loop: "{{ _id_chr_ulayouts.results }}"
 
     - name: Render initial_preferences for Chromium profiles
       ansible.builtin.copy:
         dest: "{{ item }}/initial_preferences"
         content: "{{ id_chromium_prefs | tojson }}"
         mode: "0600"
-      loop: "{{ _id_chr_pending.creates }}"
+      loop: "{{ _id_chr_profiles.results | map(attribute='files') | flatten | map(attribute='path') | map('dirname') }}"
 
-    - name: Try to patch existing preferences for Chromium profiles
+    - name: Patch existing preferences for Chromium profiles
+      when: aa_wipe == 'always'
       ansible.builtin.shell:
         cmd: >-
-          test -f "{{ item }}" &&
           jq -s add "{{ item }}/initial_preferences" "{{ item }}/Preferences" > "{{ item }}/Preferences"
       register: _id_chr_jq_invocation
       changed_when: _id_chr_jq_invocation.rc == 0
-      loop: "{{ _id_chr_pending.creates }}"
-
-    - name: Render chromium flags
-      foundation.files.install:
-        wipe: never
-      vars:
-        targets:
-          - file: "{{ fa_dir_config }}/chromium-flags.conf"
-            content: >-
-              {%- set _acc = [] -%}
-              {%- for _flag in id_chromium_flags -%}
-                {%- do _acc.append('--{}'.format(_flag)) -%}
-              {%- endfor -%}
-              {%- do _acc.extend([
-                '--enable-features={}'.format(id_chromium_features_enable | join(',')),
-                '--disable-features={}'.format(id_chromium_features_disable | join(',')),
-                '--user-data-dir={}'.format(_id_chr_ulayout.home),
-                '--disk-cache-dir={}'.format(_id_chr_ulayout.cache),
-              ]) -%}
-              {{ _acc | join('\n') }}
+      loop: "{{ _id_chr_profiles.results | map(attribute='files') | flatten | map(attribute='path') | map('dirname') }}"
 
 #
 # Alternatively, there is a dedicated launcher https://browsers.software/ (browsers-bin AUR)
@@ -190,9 +211,9 @@
           - update-desktop-database
           - /usr/local/share/applications
       register: _ic_desktop_database_invocation
-      changed_when: _id_desktop_database_invocation.rc == 0
+      changed_when: _ic_desktop_database_invocation.rc == 0
 
-    - name: Make stub default browser
+    - name: Make stub browser default
       ansible.builtin.command:
         argv:
           - xdg-settings
