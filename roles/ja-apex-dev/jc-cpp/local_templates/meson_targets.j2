@@ -7,13 +7,12 @@
         "file": "./conanfile.py",
         "template": "meson/conanfile.py.j2",
     },
-
     {
         "dir": "./config/natives",
         "create": true,
     },
 ] -%}
-{%- for _name, _tchain in _jc_template.builds.items() -%}
+{%- for _name, _tchain in _jc_template.toolchains.items() -%}
     {%- if _tchain.default is true -%}
         {%- continue -%}
     {%- endif -%}

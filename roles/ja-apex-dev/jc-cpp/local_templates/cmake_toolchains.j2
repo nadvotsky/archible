@@ -1,4 +1,4 @@
-{%- set _acc = lookup("jc_cmake_toolchains") -%}
+{%- set _acc = lookup("jc_toolchains") -%}
 {%- for _name, _tchain in _acc.items() -%}
     {%- if _tchain.default is true -%}
         {%- continue -%}

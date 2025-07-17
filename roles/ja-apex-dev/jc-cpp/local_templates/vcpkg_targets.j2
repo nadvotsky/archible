@@ -1,9 +1,9 @@
 {%- set _acc = [
     dict(file="./vcpkg.json", template="vcpkg/vcpkg.json.j2"),
 
-    dict(dir="./config/vcpkg", create=true),
-    dict(dir="./config/vcpkg/toolchains", create=true),
-    dict(dir="./config/vcpkg/triplets", create=true),
+    dict(dir="./config/cmake-toolchains", create=true),
+    dict(dir="./config/vcpkg-toolchains", create=true),
+    dict(dir="./config/vcpkg-triplets", create=true),
 ] -%}
 {%- for _name, _tchain in _jc_template.toolchains.items() -%}
     {%- if _tchain.default is true -%}
@@ -11,8 +11,8 @@
     {%- endif -%}
 
     {%- for _prop, _file in {
-        "cmake": "./config/toolchains/{}.cmake".format(_name),
-        "triplet": "./config/vcpkg/triplets/{}.cmake".format(_name),
+        "cmake": "./config/cmake-toolchains/{}.cmake".format(_name),
+        "triplet": "./config/vcpkg-triplets/{}.cmake".format(_name),
     }.items() -%}
         {%- set _lines = [] -%}
         {%- for _var, _val in _tchain[_prop].items() -%}

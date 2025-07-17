@@ -100,7 +100,7 @@
 
     - name: Bootstrap vcpkg
       ansible.builtin.git:
-        repo: git@github.com:microsoft/vcpkg.git
+        repo: https://github.com/microsoft/vcpkg.git
         dest: "{{ _jc_vcpkg_ulayout.root }}"
         single_branch: true
         version: master

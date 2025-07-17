@@ -1,5 +1,5 @@
 {%- set _rc_lines = [] -%}
-{%- for _name, _tchain in lookup("jc_cmake_toolchains").items() -%}
+{%- for _name, _tchain in lookup("jc_toolchains").items() -%}
     {%- if _tchain.default is true -%}
         {%- continue -%}
     {%- endif -%}
