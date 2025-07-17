@@ -30,7 +30,7 @@
           - dir: /var/lib/containerd
 
     - name: Wipe nft tables
-      when: aa_wipe == 'always'
+      when: aa_wipe == 'always' and ba_headless is false
       become: true
       ansible.builtin.command:
         argv:
@@ -43,12 +43,14 @@
     - name: Configure crictl and containerd
       become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
         perms: 755:644:root:root
       vars:
         targets:
           - file: /etc/crictl.yaml
             copy: cri/crictl.yml
+          - dir: /etc/containerd
+            create: true
           - file: /etc/containerd/config.toml
             copy: containerd/config.toml
 
@@ -72,7 +74,7 @@
         units:
           - containerd.service
         state:
-          disabled: true
+          disable: true
 
 - name: Configure docker container platform
   tags: apex-dev-containers-docker
@@ -117,9 +119,13 @@
       become: true
       foundation.files.install:
         wipe: never
+        base: /etc/docker
+        perms: 755:644:root:root
       vars:
         targets:
-          - file: /etc/docker/daemon.json
+          - dir: ./
+            create: true
+          - file: ./daemon.json
             copy: docker/daemon.json
 
     - name: Disable docker services
@@ -130,7 +136,7 @@
         units:
           - docker.service
         state:
-          disabled: true
+          disable: true
 
 - name: Configure kubernetes conatiner orchestrator
   tags: apex-dev-containers-k8s
@@ -233,12 +239,12 @@
           - kubelet.service
           - cni-dhcp.service
         state:
-          disabled: true
+          disable: true
 
     - name: Render kubernetes-kubeadm template
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
-        base: "{{ fa_dir_xdg.templates }}"
+        base: "{{ fa_dir_xdg.templates }}/kubernetes-kubeadm"
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:

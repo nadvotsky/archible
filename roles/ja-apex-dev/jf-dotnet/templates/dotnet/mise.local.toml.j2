@@ -13,7 +13,7 @@
             {
                 "PackageId": "DotnetTemplate",
                 "Version": "1.0.0",
-                "Authors": users.user.full,
+                "Authors": ca_info_full,
                 "PackageLicenseExpression": "MIT",
                 "PackageProjectUrl": "https://github.com/dotnet/runtime",
             } | ansible.builtin.combine(_project_patch_common),
@@ -46,7 +46,7 @@
                 [
                     "-g", "PropertyGroup",
                     "-n", _prop,
-                    "-v", _value | squote,
+                    "-v", _value | quote,
                 ]
             )
         }}",
@@ -70,7 +70,7 @@
                 "-g", "ItemGroup",
                 "-n", "AdditionalFiles",
                 "-a", "Include",
-                "-v", "../../stylecop.json" | squote,
+                "-v", "../../stylecop.json" | quote,
             ],
         )
     }}"

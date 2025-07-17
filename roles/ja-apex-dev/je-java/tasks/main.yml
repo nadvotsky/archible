@@ -42,7 +42,7 @@
           - dir: ./src/test/java/com/example
           - dir: ./src/test/java/com/example/util
           - file: ./src/test/java/com/example/util/UtilTests.java
-            copy: java/src/main/java/com/example/util/UtilTests.java
+            copy: java/src/test/java/com/example/util/UtilTests.java
 
 - name: Configure Apache Maven
   tags: apex-dev-java-maven

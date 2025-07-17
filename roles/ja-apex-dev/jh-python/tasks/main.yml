@@ -2,14 +2,6 @@
 - name: Configure Python
   tags: apex-dev-python-main
   block:
-    - name: Install Python user packages
-      foundation.user.packages:
-        wipe: "{{ aa_wipe }}"
-        home: "{{ fa_dir_home }}"
-      vars:
-        install:
-          - python@latest
-
     - name: Resolve Python user layout
       foundation.user.layout:
         wipe: "{{ aa_wipe }}"
@@ -24,6 +16,7 @@
       register: _jh_python_ulayout
 
     - name: Apply Python layout
+      become: true
       foundation.user.env:
         section: dev
         home: "{{ fa_dir_home }}"
@@ -58,6 +51,7 @@
 
     - name: Apply uv dot layout
       when: fa_layout == 'dot'
+      become: true
       foundation.user.env:
         section: dev
         home: "{{ fa_dir_home }}"
@@ -81,6 +75,7 @@
 
     - name: Apply IPython XDG layout
       when: fa_layout == 'xdg'
+      become: true
       foundation.user.env:
         section: dev
         home: "{{ fa_dir_home }}"
@@ -101,6 +96,7 @@
       register: _jh_ruff_ulayout
 
     - name: Apply ruff layout
+      become: true
       foundation.user.env:
         section: dev
         home: "{{ fa_dir_home }}"
@@ -125,6 +121,7 @@
       register: _jh_mypy_ulayout
 
     - name: Apply ruff layout
+      become: true
       foundation.user.env:
         section: dev
         home: "{{ fa_dir_home }}"
@@ -169,10 +166,14 @@
     - name: Render pdm configuration
       foundation.files.install:
         wipe: never
+        base: "{{ fa_dir_config }}/pdm"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:
+          - dir: ./
+            create: true
+
           - file: "{{ fa_dir_config }}/pdm/config.toml"
-            perms: "644:{{ ca_name }}:{{ ca_name }}"
             content: |
               use_uv = true
               venv.location = {{ _jh_pdm_ulayout.venv }}
@@ -200,8 +201,13 @@
       when: fa_layout == 'dot'
       foundation.files.install:
         wipe: never
+        base: "{{ fa_dir_config }}/pypoetry"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:
+          - dir: ./
+            create: true
+
           - file: "{{ fa_dir_config }}/pypoetry/config.toml"
             content: |
               data-dir = "{{ _jh_poetry_ulayout.data }}"

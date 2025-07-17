@@ -73,6 +73,7 @@
       register: _ji_node_ulayout
 
     - name: Apply Node.js layout
+      become: true
       foundation.user.env:
         section: dev
         home: "{{ fa_dir_home }}"
@@ -81,13 +82,19 @@
         NPM_CONFIG_CACHE: "{{ _ji_node_ulayout.npm_cache }}"
         PNPM_HOME: "{{ _ji_node_ulayout.pnpm_store }}"
 
-    - name: Apply Node.js DOT layout
+    - name: Apply Node.js dot layout
       when: fa_layout == 'dot'
+      become: true
       foundation.files.install:
         wipe: never
+        base: "{{ fa_dir_config }}/pnpm"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:
-          - file: "{{ fa_dir_config }}/pnpm/rc"
+          - dir: ./
+            create: true
+
+          - file: ./rc
             content: |
               stateDir = {{ _ji_node_ulayout.pnpm_state }}
               storeDir = {{ _ji_node_ulayout.pnpm_store }}
@@ -154,6 +161,7 @@
 
     - name: Apply Deno XDG layout
       when: fa_layout == 'xdg'
+      become: true
       foundation.user.env:
         section: dev
         home: "{{ fa_dir_home }}"
@@ -187,7 +195,7 @@
           - file: ./mise.toml
             content: |
               [tools]
-              node = "latest"
+              deno = "latest"
 
 - name: Configure Bun
   tags: apex-dev-javascript-bun
@@ -222,11 +230,13 @@
 
     - name: Apply Bun XDG layout
       when: fa_layout == 'dot'
+      become: true
       foundation.files.install:
         wipe: never
       vars:
         targets:
           - file: "{{ fa_dir_config }}/.bunfig.toml"
+            perms: "644:{{ ca_name }}:{{ ca_name }}"
             content: |
               [install]
               globalDir = "{{ _ji_bun_ulayout.store }}"

@@ -41,7 +41,6 @@
         subs: "{{ fa_dir_subs }}"
       environment:
         GOPATH: "{{ _jg_ulayout.path }}"
-        GOBIN: "{{ _jg_ulayout.bin }}"
 
 - name: Configure Go template
   tags: apex-dev-go-template
@@ -49,7 +48,7 @@
     - name: Render Go template
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
-        base: "{{ fa_dir_xdg.templates }}/dotnet-template"
+        base: "{{ fa_dir_xdg.templates }}/go-template"
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
         create: true
       vars:
@@ -62,9 +61,9 @@
           - file: ./README.md
             template: go/README.md.j2
 
-          - file: go/mise.toml
-            template: go/mise.toml
-          - file: go/mise.local.toml
+          - file: ./mise.toml
+            template: go/mise.toml.j2
+          - file: ./mise.local.toml
             content: |
               [env]
               _.path = [
