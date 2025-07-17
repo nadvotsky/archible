@@ -167,7 +167,7 @@
     ("line_end", "extend_to_line_end"),
 ] -%}
 
-{%- set _space = ga_keys.binds.space | first | ga_parse_bind(None, keys, **_parse_binds_kwargs) -%}
+{%- set _space = ga_keys.binds.space | first | ga_parse_bind(None, ga_keys, **_parse_binds_kwargs) -%}
 {%- set _overlays = {
     "normal": {
         "bare": _overlay_common_bare + _overlay_edit_bare,
@@ -240,7 +240,7 @@
         {% set _ = _binds.__setitem__(_prefix, {}) %}
     {% endif %}
     {##}
-    {% for _bind in keys
+    {% for _bind in ga_keys
         | ga_parse_binds(_action_map, **_parse_binds_kwargs)
         | selectattr("mode_name", "in", _selector)
     %}

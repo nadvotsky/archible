@@ -40,13 +40,13 @@
     "light": "One Light",
     "dark": "Nord"
   },
-  "buffer_font_family": "{{ fonts.monospace.name }}",
+  "buffer_font_family": "{{ ga_fonts_mono }}",
   "buffer_font_fallbacks": [
-    "{{ fonts.icon.name }}",
-    "{{ fonts.emoji.name }}"
+    "{{ ga_fonts_icon }}",
+    "{{ ga_fonts_emoji }}"
   ],
-  "buffer_font_size": {{ fonts.monospace.sizes.medium | scale(scaling.real) }},
-  "ui_font_size": {{ fonts.monospace.sizes.big | scale(scaling.real) }},
+  "buffer_font_size": {{ ga_fonts_mono_sz_small | ga_scale(ga_scaling) }},
+  "ui_font_size": {{ ga_fonts_mono_sz_big |  ga_scale(ga_scaling) }},
 
   //
   // Startup.

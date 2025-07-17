@@ -1,4 +1,7 @@
 ---
+#
+# List of vscode extensions unique identifiers to install.
+#
 ib_vscode_extensions:
   - arcticicestudio.nord-visual-studio-code
   - davidanson.vscode-markdownlint

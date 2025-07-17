@@ -35,7 +35,7 @@
     - name: Resolve spotify-launcher user layout
       foundation.user.layout:
         wipe: "{{ aa_wipe }}"
-        layout: "{{ aa_user_layout }}"
+        layout: "{{ fa_layout }}"
       vars:
         installs: "{{ ia_spotify_launcher_user_layout }}"
 

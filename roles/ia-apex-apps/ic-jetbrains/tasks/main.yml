@@ -28,9 +28,9 @@
         _ic_ctx: >-
           {%- set _acc = {} -%}
           {%- set _arch = {'x86_64_v3': 'linux', 'x86_64_v2': 'linux', 'aarch64': 'linuxARM64'}[ba_arch] -%}
-          {%- for _codename, _inv in ic_install | zip(_ic_ide_releases) -%}
-            {%- set _release = _inv.json[_codename] | first -%}
+          {%- for _codename, _inv in ic_install | zip(_ic_ide_releases.results) -%}
             {%- set _prod = ic_products[_codename] -%}
+            {%- set _release = _inv.json[_prod.release] | first -%}
             {%- set _plugins = [] -%}
             {%- for _id in (ic_plugins + _prod.get('plugins', [])) -%}
               {%- set _meta = _ic_plugins.results | selectattr('item', 'eq', _id) | first -%}
@@ -69,7 +69,9 @@
           jre_bin: /opt/jetbrains/jre/bin/java
 
           agent_dir: /opt/jetbrains/agent
-          agent_jar: /opt/jetbrains/agent/jetbra-agent.jar
+          agent_jar: /opt/jetbrains/agent/com.intellij.agent.jar
+          agent_key: /opt/jetbrains/agent/certs/private/main.pem
+          agent_crt: /opt/jetbrains/agent/certs/main.crt
 
           vmopts_dir: /opt/jetbrains/vmoptions
           vmopts_file: /opt/jetbrains/vmoptions/ide.vmoptions
@@ -79,13 +81,13 @@
 
           dist_dir: /opt/jetbrains/ide
 
-          ide_cfg: "${user.home}{{ fa_dir_config.removeprefix(fa_dir_home) }}${ide.codename}"
-          ide_sys: "${user.home}{{ fa_dir_cache.removeprefix(fa_dir_home) }}${ide.codename}"
+          ide_cfg: "{{ ['${user.home}', fa_dir_config.removeprefix(fa_dir_home), '${ide.codename}'] | path_join }}"
+          ide_sys: "{{ ['${user.home}', fa_dir_cache.removeprefix(fa_dir_home), '${ide.codename}'] | path_join }}"
           ide_plg: >-
             {{
-              '${user.home}{}${ide.codename}'.format(fa_dir_state.removeprefix(fa_dir_home))
+              (['${user.home}', fa_dir_state.removeprefix(fa_dir_home), '${ide.codename}'] | path_join)
               if fa_layout == 'xdg' else
-              '${user.home}.${ide.codename}'
+              '${user.home}/${ide.codename}'
             }}
           ide_tmp: ${java.io.tmpdir}/${ide.codename}
 
@@ -145,33 +147,23 @@
 
 - name: Configure JetBrains agent
   tags: apex-apps-jetbrains-agent
-  when: ic_agentize > 0
+  when: (ic_agentize > 0) and ([role_path, "files", "nonfree", "com.intellij.agent.jar"] | path_join | fileglob | length == 1)
   block:
-    - name: Create agent directories
+    - name: Prepare agent hierarchy
       become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
-        base: "{{ _ic_paths.agent_dir }}"
         perms: 755:644:root:root
         create: true
       vars:
         targets:
-          - dir: ./
-          - dir: ./trust-crt
+          - dir: "{{ _ic_paths.agent_dir }}"
+          - file: "{{ _ic_paths.agent_jar }}"
+            copy: nonfree/com.intellij.agent.jar
 
-    - name: Download and unpack agent
-      become: true
-      foundation.files.net_archive:
-        url: https://github.com/novitechie/jetbra/releases/latest/download/jetbra-all.zip
-        dest: /opt/jetbrains/agent
-        perms: root:root
-        strip: 1
-        exclude:
-          - script
-          - vmoptions
-          - trust-crt
-        creates:
-          - "{{ _ic_paths.agent_jar }}"
+          - dir: "{{ _ic_paths.agent_crt | ansible.builtin.dirname() }}"
+          - dir: "{{ _ic_paths.agent_key | ansible.builtin.dirname() }}"
+            perms: 600:root:root
 
     - name: Generate agent certificate
       become: true
@@ -183,23 +175,16 @@
           -not_after {{ now(fmt='%Y') | int + ic_agentize }}0101000000Z
           -sha256
           -newkey rsa:4096
-          -keyform pem -keyout "{{ _ic_paths.agent_dir }}/trust-crt/cert.pem"
-          -outform pem -out "{{ _ic_paths.agent_dir }}/trust-crt/cert.crt"
+          -keyform pem -keyout "{{ _ic_paths.agent_key }}"
+          -outform pem -out "{{ _ic_paths.agent_crt }}"
       register: _ic_agent_cert_invocation
       changed_when: _ic_agent_cert_invocation.rc == 0
-
-    - name: Ensure private key is inaccessible by world
-      become: true
-      ansible.builtin.file:
-        path: "{{ _ic_paths.agent_dir }}/trust-crt/cert.pem"
-        mode: "0600"
-        owner: root
-        group: root
 
 - name: Configure JetBrains IDE distributions
   tags: apex-apps-jetbrains-dist
   block:
     - name: Create base IDE directories
+      become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         perms: 755:644:root:root
@@ -226,6 +211,7 @@
       loop: "{{ _ic_ctx.values() }}"
 
     - name: Render IDE vmoptions and properties
+      become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         perms: 755:644:root:root
@@ -298,13 +284,13 @@
               'assigneeEmail': '',
               'checkConcurrentUse': false,
               'products': [dict(code=_ide.code_lic, paidUpTo=_up_to)],
-              'metadata': "01{}0101PPAM000005".format(now(fmt='%Y')),
+              'metadata': '01{}0101PPAM000005'.format(now(fmt='%Y')),
             } -%}
             {%- if ic_code_with_me -%}
               {%- do _lic.products.append(dict(code='PCWMP', paidUpTo=_up_to)) -%}
             {%- endif -%}
             {%- for _plugin in _ide.plugins -%}
-              {%- if _plugin.model != "FREE" -%}
+              {%- if _plugin.model != 'FREE' -%}
                 {%- do _lic.products.append(dict(code=_plugin.code, paidUpTo=_up_to)) -%}
               {%- endif -%}
             {%- endfor -%}
@@ -321,7 +307,7 @@
         cmd: >-
           set -o pipefail &&
           echo -n '{{ item | to_json(separators=(',', ':')) }}'
-          | openssl dgst -sha1 -sign "{{ _ic_paths.agent_dir }}/trust-crt/cert.pem" -keyform pem
+          | openssl dgst -sha1 -sign "{{ _ic_paths.agent_key }}" -keyform pem
           | openssl base64 -A
       loop: "{{ _ic_lic }}"
       register: _ic_agent_sign_invocation
@@ -330,32 +316,33 @@
     - name: Load agent certificate
       become: true
       ansible.builtin.slurp:
-        src: "{{ _ic_paths.agent_dir }}/trust-crt/cert.crt"
+        src: "{{ _ic_paths.agent_crt }}"
       register: _ic_agent_cert
 
-    - name: Render JetBrain IDE key
-      ansible.builtin.copy:
-        dest: "{{ item.dest }}"
-        mode: "0755"
-        content: "{{ item.content }}"
-      loop: >-
-        {%- set _acc = [] -%}
-        {%- for _ide, _lic, _sign in _ic_ctx.values() | zip(_ic_lic, _ic_agent_sign_invocation.results) -%}
-          {%- set _cert = [] -%}
-          {%- for _line in (_ic_agent_cert.content | b64decode).split("\n") -%}
-            {%- if not _line.startswith("-") -%}
-              {%- do _cert.append(_line) -%}
-            {%- endif -%}
+    - name: Render IDE key
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+      vars:
+        targets: >-
+          {%- set _acc = [] -%}
+          {%- for _ide, _lic, _sign in _ic_ctx.values() | zip(_ic_lic, _ic_agent_sign_invocation.results) -%}
+            {%- set _cert = [] -%}
+            {%- for _line in (_ic_agent_cert.content | b64decode).split('' | aa_newline) -%}
+              {%- if not _line.startswith('-') -%}
+                {%- do _cert.append(_line) -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- set _prefix = (0xFFFF).to_bytes(2) + '<certificate-key>'.encode('utf-16le') + (0xA).to_bytes(2, 'little') -%}
+            {%- set _key = [
+              _lic.licenseId, _lic | to_json(separators=(',', ':')) | b64encode, _sign.stdout, _cert | join('')
+            ] -%}
+            {%- set _key_encoded = (_key | join('-')).encode('utf-16le') -%}
+            {%- do _acc.append(dict(
+              file=_ide.ide_key, content=_prefix + _key_encoded,
+            )) -%}
           {%- endfor -%}
-          {%- set _key = [
-            _lic.licenseId, _lic | to_json(separators=(',', ':')) | b64encode, _sign.stdout, _cert | join("")
-          ] -%}
-          {%- set _prefix = (0xFFFF).to_bytes(2) + "<certificate-key>".encode('utf-16le') + (0xA).to_bytes(2, 'little') -%}
-          {%- do _acc.append(dict(
-            dest=_ide.ide_key, content='{}{}'.format(_prefix, (_key | join('-')).encode('utf-16le'))
-          )) -%}
-        {%- endfor -%}
-        {{ _acc }}
+          {{ _acc }}
 
 - name: Configure JetBrains IDE
   tags: apex-apps-jetbrains-config
@@ -365,28 +352,28 @@
         argv: >-
           {%- set _acc = [
             '/usr/bin/env',
-            '{}_JDK={}'.format(item.key | upper(), ic_paths.jre_dir),
-            '{}_PROPERTIES={}'.format(item.key | upper(), ic_paths.props_file),
+            '{}_JDK={}'.format(item.key | upper(), _ic_paths.jre_dir),
+            '{}_PROPERTIES={}'.format(item.key | upper(), _ic_paths.props_file),
             item.value.dist_bin,
             '-Dide.codename={}'.format(item.key),
             'installPlugins',
           ] -%}
-          {{ _acc + item.value.plugins | map(attribute="id") }}
+          {{ _acc + item.value.plugins | map(attribute='id') }}
       loop: "{{ _ic_ctx | dict2items() }}"
       register: _ic_install_plugins_invocation
       changed_when: _ic_install_plugins_invocation.rc == 0
 
     - name: Remove third party plugins warning
       ansible.builtin.file:
-        path: "{{ item.ide_cfg }}/alien_plugins.txt"
+        path: "{{ item }}/alien_plugins.txt"
         state: absent
-      loop: "{{ _ic_ctx.values() }}"
+      loop: "{{ _ic_ctx.values() | map(attribute='ide_cfg') }}"
 
-    - name: Render JetBrains IDE configuration
+    - name: Render IDE configuration
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
-        base: "{{ item.ide_cfg }}"
+        base: "{{ item }}"
       vars:
         targets:
           - file: ./disabled_plugins.txt
@@ -414,4 +401,4 @@
             copy: jetbrains/trust.xml
           - file: ./options/rainbow_brackets.xml
             copy: jetbrains/brackets.xml
-      loop: "{{ _ic_ctx | dict2items() }}"
+      loop: "{{ _ic_ctx.values() | map(attribute='ide_cfg') }}"

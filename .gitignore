@@ -112,7 +112,16 @@ __pypackages__
 # Ansible.
 #
 /.ansible
+
+#
+# Ansible persist.
+#
 /persist
+
+#
+# Ansible non-free extensions.
+#
+non-free/
 
 #
 # Ansible user inventories, keeping only example.

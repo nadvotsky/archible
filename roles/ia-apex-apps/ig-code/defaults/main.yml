@@ -1,12 +1,12 @@
 ---
-ig_git_name: "{{ ab_user_info_full }}"
-ig_git_mail: "{{ ab_user_info_mail }}"
+ig_git_name: "{{ undef() }}"
+ig_git_mail: "{{ undef() }}"
 
-ig_git_gpgsign: primary_sign
+ig_git_gpgsign: "{{ undef() }}"
 
 ig_git_userconf:
-  user.name: "{{ hd_git_name }}"
-  user.email: "{{ hd_git_email }}"
+  user.name: "{{ ig_git_name }}"
+  user.email: "{{ ig_git_mail }}"
 
   commit.gpgSign: "true"
   push.gpgSign: if-asked

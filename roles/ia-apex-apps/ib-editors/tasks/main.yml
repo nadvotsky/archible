@@ -73,9 +73,9 @@
           - dir: ./
             create: true
           - file: ./bindings.json
-            template: micro/bindings.json
-          - file: ./config.toml
-            template: micro/settings.json
+            copy: micro/bindings.json
+          - file: ./settings.json
+            copy: micro/settings.json
 
           - dir: ./colorschemes
             create: true
@@ -106,7 +106,7 @@
             create: true
 
           - file: ./Packages/User/Preferences.sublime-settings
-            template: editors/Preferences.sublime-settings.j2
+            template: sublime/Preferences.sublime-settings.j2
 
     - name: Wipe sublime-text state
       foundation.files.install:
@@ -131,7 +131,7 @@
       vars:
         data: "{{ ia_vscode_user_layout }}"
         extensions:
-          default: "{{ users.user.home }}/.vscode"
+          default: "{{ fa_dir_home }}/.vscode"
           xdg: "{{ fa_dir_share }}/vscode"
       register: _ib_vscode_ulayout
 
@@ -155,11 +155,11 @@
             create: true
           - dir: ./User
             create: true
-          - dir: ./User/settings.json
+          - file: ./User/settings.json
             template: vscode/settings.json.j2
 
           - file: "{{ fa_dir_config }}/code-flags.conf"
-            content: "{{ _ib_vscode_flags | join('\n') }}"
+            content: "{{ _ib_vscode_flags | join('' | aa_newline) }}"
 
     - name: Install vscode extensions
       ansible.builtin.command:
@@ -183,12 +183,12 @@
         layout: "{{ fa_layout }}"
       vars:
         extensions:
-          default: "{{ users.user.share }}/zed"
+          default: "{{ fa_dir_share }}/zed"
           dot:
-            link: "{{ users.user.home }}/.zed"
+            link: "{{ fa_dir_home }}/.zed"
 
         cache:
-          default: "{{ fa_dir_cahce }}/zed"
+          default: "{{ fa_dir_cache }}/zed"
       register: _ib_zed_ulayout
 
     - name: Render zed configuration

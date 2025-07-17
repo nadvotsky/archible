@@ -25,6 +25,7 @@
           - dir: "{{ fa_dir_config }}/vopono"
             wipe: "{{ aa_wipe }}"
             perms: "755:{{ ca_name }}:{{ ca_name }}"
+            create: true
 
           - file: "{{ fa_dir_config }}/vopono/config.toml"
             perms: "644:{{ ca_name }}:{{ ca_name }}"
@@ -37,7 +38,7 @@
     - name: Render vopono rofi launcher script
       become: true
       foundation.files.install:
-        wipe: never
+        wipe: "{{ aa_wipe }}"
       vars:
         targets:
           - file: /usr/local/bin/vopono-rofi
