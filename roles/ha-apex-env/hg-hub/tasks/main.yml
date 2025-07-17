@@ -8,7 +8,8 @@
         targets:
           - dir: "{{ fa_dir_xdg.hub }}"
             wipe: "{{ aa_wipe }}"
-            perms: "755:{{ fa_name }}:{{ fa_name }}"
+            perms: "755:{{ ca_name }}:{{ ca_name }}"
+            create: true
 
     - name: Restore hub from persist
       foundation.persist.from:
@@ -160,6 +161,7 @@
   block:
     - name: Install drawio packages
       foundation.system.packages:
+      vars:
         install:
           - drawio-desktop
 
