@@ -53,7 +53,7 @@
           mime: audio/*
         - app: imv.desktop
           mime: image/*
-        - app: evince
+        - app: org.gnome.Evince.desktop
           mime: application/pdf
       register: _ih_xdg_mime_invocation
       changed_when: _ih_xdg_mime_invocation.rc == 0

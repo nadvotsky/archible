@@ -11,7 +11,9 @@
           # Helpers.
           #
           - lazygit
-          - tgit
+          - gitui
+          - gitu
+          - serie
           - sublime-merge
           #
           # Changelog.
@@ -34,7 +36,7 @@
           - dir: "{{ fa_dir_config }}/sublime-merge"
           - dir: "{{ fa_dir_cache }}/sublime-merge"
 
-    - name: Prepare XDG user layout
+    - name: Prepare XDG Git user layout
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         base: "{{ fa_dir_share }}/git"
@@ -45,16 +47,16 @@
           - dir: ./
           - file: ./config
 
-    - name: Prepare dot user layout
+    - name: Prepare dot Git user layout
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
         create: "{{ fa_layout == 'dot' }}"
       vars:
         targets:
-          - file: "{{ aa_user_dir_home }}/.gitconfig"
+          - file: "{{ fa_dir_home }}/.gitconfig"
 
-    - name: Retrieve signing key information
+    - name: Retrieve Git signing key information
       when: ig_git_gpgsign is defined
       foundation.persist.gpg:
         home: "{{ fa_dir_home }}"
@@ -64,7 +66,7 @@
           - "{{ ig_git_gpgsign }}"
       register: _ig_git_signkey
 
-    - name: Set git config options
+    - name: Set Git configuration options
       ansible.builtin.command:
         argv:
           - git
@@ -82,10 +84,10 @@
       register: _ig_git_config_invocation
       changed_when: _ig_git_config_invocation.rc == 0
 
-- name: Configure database
-  tags: apex-apps-code-database
+- name: Configure diff tools
+  tags: apex-apps-code-diff
   block:
-    - name: Install database packages
+    - name: Install diff packages
       foundation.system.packages:
       vars:
         install:
@@ -95,7 +97,7 @@
           - git-delta
           - vbindiff
 
-- name: Configure lines of code (LOC)
+- name: Configure lines of code (LOC) tools
   tags: apex-apps-code-loc
   block:
     - name: Install LOC packages
@@ -104,7 +106,7 @@
         install:
           - tokei
 
-- name: Configure build
+- name: Configure build tools
   tags: apex-apps-code-build
   block:
     - name: Install build packages
@@ -113,7 +115,7 @@
         install:
           - just
 
-- name: Configure runtime
+- name: Configure runtime tools
   tags: apex-apps-code-runtime
   block:
     - name: Install runtime packages
@@ -122,12 +124,23 @@
         install:
           - pm2
           - hyperfine
-          # https://github.com/F1bonacc1/process-compose/releases
+          - busybox
           #
           # Logs viewer.
           #
           - tailspin
           - lnav
+
+    - name: Download runtime packages directly
+      foundation.files.net_archive:
+        url: https://github.com/F1bonacc1/process-compose/releases/latest/download/process-compose_linux_amd64.tar.gz
+        dest: "{{ fa_dir_bin }}"
+        perms: "{{ ca_name }}:{{ ca_name }}"
+        exclude:
+          - LICENSE
+          - README.md
+        creates:
+          - ./process-compose
 
 - name: Configure container
   tags: apex-apps-code-container
@@ -152,7 +165,7 @@
           - dbeaver
           - sqlitebrowser
 
-- name: Configure LLM
+- name: Configure LLM tools
   tags: apex-apps-code-llm
   block:
     - name: Install LLM packages
@@ -161,7 +174,7 @@
         install:
           - tgpt
           - aichat
-          - goose
+          - codename-goose-bin
 
     - name: Wipe LLM configuration
       foundation.files.install:
@@ -209,7 +222,7 @@
 #    disadvantages:
 #     - deps (requires electron from aur)
 #
-- name: Configure API utilities
+- name: Configure API tools
   tags: apex-apps-code-api
   block:
     - name: Install API packages
