@@ -96,7 +96,7 @@
             create: true
 
           - file: ./config.toml
-            template: atuin/config.toml
+            template: atuin/config.toml.j2
 
 - name: Configure shell completion
   tags: apex-env-shell-completion
@@ -155,15 +155,6 @@
         install:
           - nushell
           - vivid
-
-    - name: Retrieve default nushell config
-      ansible.builtin.uri:
-        url:
-          "https://raw.githubusercontent.com/nushell/nushell/refs/heads/main/\
-          crates/nu-utils/src/default_files/default_config.nu"
-        method: GET
-        return_content: true
-      register: _he_nushell_default
 
     - name: Render nushell configuration
       foundation.files.install:

@@ -1,6 +1,6 @@
 {%- set _indent = {"space": 4} -%}
 
-{%- set _preset = ga_preset | ga_ansi_preset(ga_ansi, mod="light", sep="_") -%}
+{%- set _preset = ga_preset | ga_parse_ansi(ga_ansi, mod="light", sep="_") -%}
 {%- set _preset_fix = {
     "light_white": "light_gray",
     "light_black": "dark_gray",
@@ -269,11 +269,13 @@
 {%- macro _binds_construct() -%}
     {#
         Parse default nu config bindings to unbind them later.
+        https://raw.githubusercontent.com/nushell/nushell/refs/heads/main/crates/nu-utils/src/default_files/default_config.nu
 
         Until some particular keybinding's `event` is explicitly set to `null`
          (not commented out or set to empty array),
          it is going to be picked from the `keybindings default`.
     #}
+    {#
     {% for _bind in _he_nushell_default.content | regex_findall(
         "modifier: (?P<mod>\\w*)\\s*keycode: (?P<key>\\w*)"
     ) %}
@@ -284,10 +286,11 @@
             },
         ) %}
     {% endfor %}
+    #}
     {#
         Overlay main binds.
     #}
-    {% for _bind in keys
+    {% for _bind in ga_keys
         | ga_parse_binds(actions_map=_binds_actions_map, modifiers_map={"ctrl": "control"}, sep=("_", "-"))
         | selectattr("mode_name", "in", ["bare", "common", "vim", "emacs"])
     %}
@@ -511,25 +514,21 @@ def --wrapped --env mise [...rest: string] {
 
 {% endif %}
 $env.config = {
-    ls: {
-        use_ls_colors: true,
-        clickable_links: true,
-    },
-
-    rm: {
-        always_trash: false,
-    }
+    show_banner: false,
+    footer_mode: never,
+    float_precision: 3,
+    use_ansi_coloring: true,
+    bracketed_paste: true,
+    edit_mode: vi,
+    use_kitty_protocol: true,
+    highlight_resolved_externals: true,
 
     table: {
         mode: compact,
-        index_mode: always,
-        show_empty: true,
-        padding: { left: 1, right: 1 },
         trim: {
             methodology: wrapping,
             truncating_suffix: "...",
         }
-        header_on_separator: false,
     },
 
     datetime_format: {
@@ -549,10 +548,6 @@ $env.config = {
     },
 
     completions: {
-        case_sensitive: false,
-        quick: true,
-        partial: true,
-        algorithm: prefix,
         external: {
             enable: true,
             max_results: 100,
@@ -584,55 +579,24 @@ $env.config = {
                 }
             },
         }
-        use_ls_colors: true,
     },
 
     filesize: {
-        metric: true,
-        format: auto,
+        precision: 2,
     },
 
-    cursor_shape: { 
+    cursor_shape: {
         vi_insert: line,
         vi_normal: underscore,
-    },
-
-    shell_integration: {
-        osc2: true,
-        osc7: true,
-        osc8: true,
-        osc9_9: false,
-        osc133: true,
-        osc633: true,
-        reset_application_mode: true,
     },
 
     color_config: {
         {{ _theme_render() | aa_relindent(times=2, **_indent) }}
     },
 
-    show_banner: false,
-    error_style: fancy,
-    footer_mode: never,
-    float_precision: 3,
-    use_ansi_coloring: true,
-    bracketed_paste: true,
-    edit_mode: vi,
-    render_right_prompt_on_last_line: false,
-    use_kitty_protocol: true,
-    highlight_resolved_externals: true,
-    recursion_limit: 50,
-
     display_errors: {
         exit_code: true,
         termination_signal: true,
-    },
-
-    plugin_gc: {
-        default: {
-            enabled: true,
-            stop_after: 10sec,
-        },
     },
 
     hooks: {
@@ -676,8 +640,6 @@ $env.config = {
             PWD: [{|_, dir| ^zoxide add -- $dir }],
             {% endif %}
         },
-        display_output: "if (term size).columns >= 100 { table -e } else { table }",
-        command_not_found: { null },
     },
 
     menus: [

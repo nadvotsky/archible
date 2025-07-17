@@ -51,7 +51,6 @@
 {%- macro _module_render_internal() -%}
     {% for _key, _value in kwargs.items() %}
         {% set _trail = "," if not loop.last else "" %}
-        {##}
         "{{ _key.lstrip("_") }}": {{ _value | tojson }}{{ _trail }}
     {% endfor %}
 {%- endmacro -%}
@@ -100,7 +99,7 @@
 
 {%- set _key_width = _separator_width - _max_value_width + 1 -%}
 {%- set _logo_top_padding = (_modules_main | length - _logo_size) // 2 + _modules_extra_top | length -%}
-{%- set _modules = (_modules_extra_top + _modules_main + _modules_extra_bottom) | map("relative_indent") -%}
+{%- set _modules = (_modules_extra_top + _modules_main + _modules_extra_bottom) | map("aa_relindent") -%}
 
 
 {
@@ -117,9 +116,6 @@
             "1": "{{ _preset.accent.ansi }}",
             "2": "{{ _preset.alternative.ansi }}"
         }
-    },
-    "general": {
-        "multithreading": true
     },
     "display": {
         "showErrors": true,

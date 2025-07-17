@@ -17,7 +17,7 @@
 } -%}
 {%- set _parse_kwargs = dict(
     user_action=None,
-    keys=keys,
+    keys=ga_keys,
     modifiers_map=_modifiers_map,
     keys_map=_keys_map,
     sep=_sep,
@@ -119,7 +119,7 @@
 } -%}
 
 {%- macro _binds_render(_actions_map, _filter=None) -%}
-    {% set _generator = keys | ga_parse_binds(
+    {% set _generator = ga_keys | ga_parse_binds(
         actions_map=_actions_map,
         modifiers_map=_modifiers_map,
         keys_map=_keys_map,
