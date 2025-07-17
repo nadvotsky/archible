@@ -58,6 +58,17 @@
       register: _ih_xdg_mime_invocation
       changed_when: _ih_xdg_mime_invocation.rc == 0
 
+    - name: Disable mDNS services
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - avahi-daemon.socket
+          - avahi-daemon.service
+        state:
+          disable: true
+
 - name: Configure system benchmark and info utilities
   tags: apex-apps-misc-system
   block:
