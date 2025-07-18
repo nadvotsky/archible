@@ -39,3 +39,8 @@ ba_cores: "{{ undef() }}"
 #  software stack. In either case, here is some further information: https://wiki.cachyos.org/features/optimized_repos/.
 #
 ba_arch: "x86_64_v2"
+
+#
+# System locale.
+#
+ba_locale: en_US.UTF-8

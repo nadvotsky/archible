@@ -11,7 +11,7 @@
         state: present
 
 - name: Configure base system
-  tags: prelude-bootstrap-pacstrap
+  tags: prelude-bootstrap-main
   block:
     - name: Bootstrap base system with pacstrap
       become: true
@@ -99,7 +99,7 @@
         argv:
           - systemd-firstboot
           - --root={{ ba_mount_point }}
-          - --locale={{ bc_locale }}
+          - --locale={{ ba_locale }}
           - --keymap={{ bc_keymap }}
           - --timezone={{ bc_timezone }}
           - --hostname={{ ba_hostname }}

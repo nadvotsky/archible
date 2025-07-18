@@ -1,4 +1,27 @@
 ---
+- name: Configure locale
+  tags: catalyst-user-locale
+  block:
+    - name: Uncomment locale from locale.gen
+      become: true
+      ansible.builtin.replace:
+        path: /etc/locale.gen
+        regexp: "^\\#(?P<locale>{{ ba_locale }})\\s+(?P<encoding>[\\w-]+)(?P<rest>\\s+)$"
+        replace: "\\g<locale> \\g<encoding>\\g<rest>"
+        mode: "0644"
+        owner: 0
+        group: 0
+      register: _cc_uncomment_locale_invocation
+      failed_when: _cc_uncomment_locale_invocation is not changed
+
+    - name: Generate locale
+      become: true
+      ansible.builtin.command:
+        argv:
+          - locale-gen
+      register: _cc_locale_gen_invocation
+      changed_when: _cc_locale_gen_invocation.rc == 0
+
 - name: Configure privilege escalation
   tags: catalyst-user-privilege
   block:
