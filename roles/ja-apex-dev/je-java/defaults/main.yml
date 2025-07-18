@@ -1,4 +1,9 @@
 ---
+#
+# List of Java Virtual Machine options that are used in developer environment configuration.
+#
+# Refer to the https://chriswhocodes.com/ to get started.
+#
 je_jvmopts: >-
   -XX:+UnlockExperimentalVMOptions
   -XX:+UseZGC -XX:+ZGenerational

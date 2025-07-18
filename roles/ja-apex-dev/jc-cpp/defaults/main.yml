@@ -1,4 +1,7 @@
 ---
+#
+# List of C++ toolchains.
+#
 jc_toolchains:
   default:
     default: true

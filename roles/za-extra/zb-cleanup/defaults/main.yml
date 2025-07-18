@@ -1,4 +1,7 @@
 ---
+#
+# List of home elements to clenaup.
+#
 zb_home:
   #
   # Shell (most likely installation script automation).
@@ -42,6 +45,9 @@ zb_home:
   - file: ./.fehbg
   - file: ./.nvidia-settings.rc
 
+#
+# List of patterns to wipe for Gecko-based applications.
+#
 zb_gecko:
   #
   # Profile state which stores last used version in order to
@@ -216,6 +222,9 @@ zb_gecko:
   # - xulstore.json
   # - settings
 
+#
+# List of patterns to wipe for chromium-based applications.
+#
 za_chromium:
   #
   # Generic cache.

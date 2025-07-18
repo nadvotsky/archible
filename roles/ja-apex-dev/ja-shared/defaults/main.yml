@@ -1,4 +1,7 @@
 ---
+#
+# Common gitignore entries for templates.
+#
 ja_gitignore: |-
   #
   # https://git-scm.com/docs/gitignore
@@ -142,6 +145,9 @@ ja_gitignore: |-
   /run
   /.local
 
+#
+# Common editorconfig header for templates.
+#
 ja_editorconfig: |-
   #
   # https://editorconfig.org/
@@ -188,6 +194,9 @@ ja_editorconfig: |-
   indent_style = spaces
   indent_size = 4
 
+#
+# Common readme footer for templates.
+#
 ja_readme: |-
   ## Markdown Cheatsheet
 
