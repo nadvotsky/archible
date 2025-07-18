@@ -103,7 +103,7 @@
           - dir: ./yazi
             create: true
           - file: ./yazi/yazi.toml
-            content: >-
+            content: |
               [mgr]
               ratio = [0, 1, 1]
               linemode = "size"

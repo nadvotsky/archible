@@ -35,7 +35,7 @@
         targets:
           - file: /etc/security/pam_env.conf
             perms: 644:root:root
-            content: >-
+            content: |
               #
               # This is the configuration file for pam_env, a PAM module to load in
               # a configurable list of environment variables.

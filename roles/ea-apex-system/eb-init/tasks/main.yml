@@ -69,7 +69,7 @@
         targets:
           - file: /etc/vconsole.conf
             perms: 644:root:root
-            content: >-
+            content: |
               KEYMAP=us
               FONT=ter-u18n
 

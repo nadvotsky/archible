@@ -72,9 +72,9 @@ dc_cmdline:
   #
   # Linux Secure Module (LSM)
   #
+  # lsm: "capability,yama,bpf"
   apparmor: "0"
   selinux: "0"
-  lsm: "capability,yama,bpf"
 
   #
   # Blacklist.
@@ -96,7 +96,7 @@ dc_cmdline:
   #
   rootdelay: "0"
   rootfstype: "xfs"
-  rootflags: "{{ async,noatime,dev,exec,suid,rw,dax=always,nodiscard,noquota }}"
+  rootflags: "async,noatime,dev,exec,suid,rw,dax=always,nodiscard,noquota"
   rw: true
   booster.log: "error"
 
