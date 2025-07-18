@@ -101,6 +101,9 @@ class ActionModule(ActionBase):
             (raw_vars["shells"], inputs.shells, Shell),
             (raw_vars["archives"], inputs.archives, Archive),
         ):
+            if not raw_items:
+                continue
+
             dest.extend(
                 (target_class(**self._validate_target_dict(inputs.defaults, dictionary)) for dictionary in raw_items)
             )

@@ -45,6 +45,10 @@ TARGETS_SPEC = {
                 "type": "str",
                 "required": True,
             },
+            "stdin": {
+                "type": "str",
+                "required": False,
+            }
         },
     },
     "archives": {
@@ -81,6 +85,7 @@ class Shell:
     key: str
     dir: str | None
     cmd: str
+    stdin: str | None
 
 
 @dataclasses.dataclass
@@ -213,7 +218,7 @@ class ActionModule(ActionBase):
 
     def _process_shells(self, targets: Targets, persist: Persist) -> None:
         for shell in targets.shells:
-            content = self._binary_command_wrapped(shell, shell.cmd)
+            content = self._binary_command_wrapped(shell, shell.cmd, shell.stdin.encode() if shell.stdin else None)
             if content is not None:
                 persist.write(shell.key, content)
 
@@ -231,7 +236,7 @@ class ActionModule(ActionBase):
             if content is not None:
                 persist.write(archive.key, content)
 
-    def _binary_command_wrapped(self, target: Shell | Archive, command: str) -> bytes | None:
+    def _binary_command_wrapped(self, target: Shell | Archive, command: str, stdin: bytes | None = None) -> bytes | None:
         context = "({}:{}) => ({}, {})".format(
             type(target).__name__.lower(),
             target.key,
@@ -242,7 +247,7 @@ class ActionModule(ActionBase):
             self._display.display(f"ok: {context}", COLOR_OK)
             return None
 
-        rc, stdout, stderr = ansible_binary_command(self, command, target.dir)
+        rc, stdout, stderr = ansible_binary_command(self, command, target.dir, stdin)
         if rc != 0:
             raise AnsibleActionFail(
                 message="Non-zero return code",

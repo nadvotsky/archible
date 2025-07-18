@@ -12,7 +12,7 @@
 
     - name: Define GnuPG keys context
       ansible.builtin.set_fact:
-        _zc_keys: >-
+        _zc_masters: >-
           {%- set _acc = {} -%}
           {%- for _name, _meta in _zc_unattended.gpg.items() -%}
             {%- for _master, _subdict in hb_generate.items() -%}
@@ -33,17 +33,15 @@
         shells:
           - key: gpg/keyring
             cmd: >-
-              printf "%s\n" {{ _zc_keys.values() | map(attribute='password') | map('quote') | join(' ') }} |
-              gpg --batch
-                --passphrase-fd 0 --pinentry-mode loopback
-                --export-secret-keys --export-options backup --output -
-                {{ _zc_keys.values() | map(attribute='fingerprint') | join(' ') }}
+              gpg --batch --passphrase-fd 0 --pinentry-mode loopback --export-secret-keys --export-options backup --output -
+              {{ _zc_masters.values() | map(attribute='fingerprint') | join(' ') }}
+            stdin: "{{ _zc_masters.values() | map(attribute='password') | join('' | aa_newline) }}"
         archives:
           - key: gpg/private-keys
             include: >-
               {%- set _acc = [] -%}
-              {%- for _key in _zc_keys.keys() -%}
-                {%- do _acc.append('private-keys-v1.d/{}.key'.format(_key)) -%}
+              {%- for _key in _zc_unattended.gpg.values() -%}
+                {%- do _acc.append('private-keys-v1.d/{}.key'.format(_key.keygrip)) -%}
               {%- endfor -%}
               {{ _acc }}
 
