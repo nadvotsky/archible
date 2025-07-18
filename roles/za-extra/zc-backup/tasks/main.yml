@@ -59,7 +59,7 @@
       vars:
         archives:
           - key: hub/store
-            include: []
+            include: ["*"]
 
 - name: Configure vault backup
   tags: extra-backup-vault
@@ -71,4 +71,4 @@
       vars:
         archives:
           - key: vault/store
-            include: []
+            include: ["*"]

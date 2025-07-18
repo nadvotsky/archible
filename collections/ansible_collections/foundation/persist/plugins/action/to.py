@@ -152,6 +152,7 @@ class ActionModule(ActionBase):
     TAR_CMD = " ".join(
         (
             "/usr/bin/tar",
+            "--no-recursion",
             "--numeric-owner",
             "--group=0",
             "--owner=0",
