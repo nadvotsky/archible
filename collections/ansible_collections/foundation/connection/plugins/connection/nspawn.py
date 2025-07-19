@@ -1,10 +1,9 @@
-# Based on chroot.py (community.general.chroot):
-# (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
-# (c) 2013, Maykel Moya <mmoya@speedyrails.com>
-# (c) 2015, Toshio Kuratomi <tkuratomi@ansible.com>
-# Copyright (c) 2017 Ansible Project
-# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
-# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# foundation.connection.nspawn - systemd-nspawn connection plugin for Ansible.
+#
+# Based on chroot.py (community.general.chroot).
+# Refer to https://github.com/ansible-collections/community.general/blob/main/plugins/connection/chroot.py for details.
+#
 
 import os
 import subprocess
@@ -24,34 +23,50 @@ from ansible_collections.community.general.plugins.connection.chroot import (
 
 
 DOCUMENTATION = """
-    name: nspawn
-    short_description: Interact with systemd-nspawn container.
-    description:
-      - Run commands or put/fetch files to an systemd-nspawn container on the Ansible controller.
-    options:
-      nspawn_root:
-        description:
-          - The path to the root directory to start container from.
-        vars:
-          - name: foundation_nspawn_root
+---
+name: foundation.connection.nspawn
+short_description: Interact with systemd-nspawn container.
+description:
+    - Run commands or put/fetch files to a systemd-nspawn container on the Ansible controller.
+options:
+    nspawn_root:
         type: path
         default: /mnt
-      nspawn_exe:
         description:
-          - User specified executable binary for systemd-nspawn.
+            - The path to the root directory to start container from.
         vars:
-          - name: foundation_nspawn_exe
+            - name: foundation_nspawn_root
+    nspawn_exe:
         type: path
         default: /usr/bin/systemd-nspawn
-      nspawn_args:
         description:
-            - Additional arguments passed to the systemd-nspawn. 
-            - Note that there is no need to specify --directory or --user,
-              as they are controlled by V(nspawn_root) and V(ansible_user).
+            - User specified executable binary for systemd-nspawn.
         vars:
-          - name: foundation_nspawn_args
+            - name: foundation_nspawn_exe
+    nspawn_args:
         type: str
         default: --quiet --as-pid2 --pipe
+        description:
+            - Additional arguments passed to the systemd-nspawn.
+            - Note that there is no need to specify --directory or --user, as they are controlled by V(nspawn_root) and
+              V(ansible_user).
+        vars:
+            - name: foundation_nspawn_args
+"""
+
+EXAMPLES = """
+# Standard host declaration.
+main:
+    hosts:
+        main_prelude:
+            ansible_user: user
+            ansible_become_password: password
+            ansible_connection: foundation.connection.nspawn
+            foundation_nspawn_root: /mnt
+            foundation_nspawn_args: >-
+                --quiet --register=no --as-pid2 --pipe
+                --hostname=example --machine=example
+                --resolv-conf=bind-host --timezone=off --link-journal=no
 """
 
 
@@ -64,19 +79,17 @@ class Connection(ChrootConnection):
     default_user = None
 
     #
-    # A constructor that only calls corresponding base constructor of class
-    #  hierarchy
+    # A constructor that only calls corresponding base constructor of class hierarchy.
     #
-    # The actual initializion of desired variables and stuff is implemented
-    #  in the `_connect` method as other plugins usually do
+    # The actual initializion of desired variables and stuff is implemented in the `_connect` method.
     #
     def __init__(self, *args, **kwargs):
-        # Note the super() call:
-        #  it calls not the direct base class ChrootConnection,
-        #  but the ConnectionBase instead
         #
-        # The purpose of this is to omit useless operations (and also errors)
-        #  that are not related to the nspawn functionality
+        # Note the `super()` call:
+        #  it calls not the direct base class `ChrootConnection`, but the `ConnectionBase` instead.
+        #
+        # The purpose of this is to omit useless operations (and also errors) that are not related to the nspawn
+        #  functionality.
         #
         super(ChrootConnection, self).__init__(*args, **kwargs)
 
@@ -85,7 +98,7 @@ class Connection(ChrootConnection):
             raise AnsibleError("nspawn connection requires running ansible as root")
 
         #
-        # `self.chroot` is required to be set for the chroot plugin
+        # `self.chroot` is required to be set for the chroot plugin.
         #
         self.chroot = self._nspawn_root = self.get_option("nspawn_root")
         self._nspawn_log = functools.partial(Display().vvv, host=self._nspawn_root)
@@ -102,8 +115,7 @@ class Connection(ChrootConnection):
         self._nspawn_log(f"NSPAWN ARGS {self._nspawn_args}")
 
         #
-        # Calling `ConnectionBase` because `ChrootConnection`
-        # constructs unnecessary arguments list and prints some messages.
+        # Calling `ConnectionBase` because `ChrootConnection` constructs unnecessary arguments and prints some messages.
         #
         super(ChrootConnection, self)._connect()
         if not self._connected:
@@ -111,9 +123,8 @@ class Connection(ChrootConnection):
             self._connected = True
 
     #
-    # This code is mostly taken from the ansible.plugins.connection.local
-    #  with the exception that non-bootable containers do not use sudo
-    #  cache, therefore only login may occur, which simplifies the code.
+    # This code is mostly taken from the `ansible.plugins.connection.local` with the exception that non-bootable
+    #  containers do not use sudo cache, therefore only login may occur, which simplifies the code.
     #
     def _nspawn_become(self, in_fd, out_fd):
         become_output = b""
@@ -133,8 +144,7 @@ class Connection(ChrootConnection):
 
     #
     # Slightly modifed version that additionally passes `sudoable` into the `_buffered_exec_command`.
-    # This would solve a problem when other executions (such as `put_file` which uses `dd`) are
-    # interpreted as sudo command.
+    # This would solve a problem when other commands (such as `put_file` which uses `dd`) are interpreted as sudo command.
     #
     def exec_command(self, cmd, in_data=None, sudoable=False):
         #
@@ -153,7 +163,7 @@ class Connection(ChrootConnection):
     #
     def _buffered_exec_command(self, cmd, stdin=subprocess.PIPE, sudoable=False):
         #
-        # Using `shlex_split` to skip one level of nesting /bin/sh -c
+        # Using `shlex_split` to skip one level of nesting `/bin/sh -c`.
         #
         cmdline = [to_bytes(i, errors="surrogate_or_strict") for i in self._nspawn_args + shlex_split(cmd)]
         p = subprocess.Popen(

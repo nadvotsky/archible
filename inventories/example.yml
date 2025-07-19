@@ -1,5 +1,5 @@
 ---
-main:
+example:
   hosts:
     example_prelude:
       ansible_connection: local
