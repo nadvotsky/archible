@@ -9,10 +9,7 @@ LLMNR=false
 LLDP=false
 EmitLLDP=false
 
-[Address]
-DuplicateAddressDetection=none
-
-[DHCPV4]
+[DHCPv4]
 QuickAck=true
 UseDNS=false
 UseNTP=false
