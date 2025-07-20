@@ -1,3 +1,9 @@
+#
+# foundation.files.install - action plugin for batched file management with wiping support.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import os.path
@@ -23,35 +29,19 @@ DEFAULTS_SPECS = {
     "base": {
         "type": "path",
         "required": False,
-        "description": [
-            "The base path for all targets that start with `./`.",
-        ],
     },
     "wipe": {
         "type": "str",
         "default": "never",
         "choices": ["never", "always"],
-        "description": [
-            "Default wipe policy for targets.",
-        ],
     },
     "create": {
         "type": "bool",
         "default": False,
-        "description": [
-            "For directory targets, create the provided directory (after optional wiping).",
-            "For file targets, create an empty file if no other operations specified.",
-        ],
     },
     "perms": {
         "type": "str",
         "required": False,
-        "description": [
-            "Permissions of the targets (including directory targets).",
-            "Must be in the following format: `mod:owner:group`, where:- `mod` is a numerical chmod expression",
-            "- `owner` is a name of the owner",
-            "- `group` is a name of the group",
-        ],
     },
 }
 
@@ -59,75 +49,50 @@ TARGET_SPECS = {
     "dir": {
         "type": "path",
         "required": False,
-        "description": [
-            "An absolute or relative (starting with `./`) path to the directory target.",
-        ],
     },
     "file": {
         "type": "path",
         "required": False,
-        "description": [
-            "An absolute or relative (starting with `./`) path to the file target.",
-        ],
     },
     "copy": {
         "type": "str",
         "required": False,
-        "description": [
-            "The managed node file to copy to the file target.",
-        ],
     },
     "content": {
         "type": "path",
         "required": False,
-        "description": [
-            "A string content to write to the file target.",
-        ],
     },
     "template": {
         "type": "path",
         "required": False,
-        "description": [
-            "A template to render to the file target.",
-        ],
     },
     "link": {
         "type": "path",
         "required": False,
-        "description": [
-            "The managed node filesystem object to link to the target.",
-        ],
     },
     "url": {
         "type": "str",
         "required": False,
-        "description": ["The remote network resource to download to the file target."],
     },
     "wipe": {
         "type": "str",
         "required": False,
-        "choices": ["auto", "never", "always"],
-        "description": [
-            "This setting has the same meaning as the `defaults.wipe` but on the target level.",
-        ],
+        "choices": ["never", "always"],
     },
     "create": {
         "type": "bool",
         "required": False,
-        "description": [
-            "This setting has the same meaning as the `defaults.create` but on the target level.",
-        ],
     },
     "perms": {
         "type": "str",
         "required": False,
-        "description": [
-            "This setting has the same meaning as the `defaults.perms` but on the target level.",
-        ],
     },
 }
 
 
+#
+# Assertations methods. Note that validation in not enforced, and will be ignored in case of `None` values.
+#
 class Assertations:
     @staticmethod
     def perms_mod(value: str | None) -> str | None:
@@ -146,7 +111,10 @@ class Assertations:
 
         return value
 
-
+#
+# Defaults provides fallback properties for targets. During initialization, empty values are allowed and will not raise
+#  errors. This lets targets either override parameters explicitly or omit them entirely.
+#
 class Defaults:
     def __init__(self, mapping: dict):
         self._mapping = mapping
@@ -157,6 +125,9 @@ class Defaults:
             k: perms[i] if i < len(perms) else None for i, k in enumerate(("dirmod", "filemod", "owner", "group"))
         }
 
+        #
+        # Try to validate syntax even if target may not use defaults.
+        #
         Assertations.perms_mod(self._perms["dirmod"])
         Assertations.perms_mod(self._perms["filemod"])
 
@@ -203,6 +174,9 @@ class Defaults:
         return self._perms_getter("group", "target group")
 
 
+#
+# Wrapper around target operation, with informational message hints.
+#
 @dataclasses.dataclass
 class Context:
     name: str
@@ -212,6 +186,9 @@ class Context:
     dst_attr: str
     src_attr: str | None = None
 
+    #
+    # Formats an operation message using attributes separated by '=>' and filesystem permissions.
+    #
     def format_message(self) -> str:
         def format_part(*items: list[str | None], sep: str = " ") -> str:
             return sep.join(filter(None, items))
@@ -235,6 +212,9 @@ class TargetKind(enum.Enum):
 
 
 class TargetProcessor:
+    #
+    # Common actions are not considered unique for targets and therefore are excluded from no-op assertions.
+    #
     COMMON_ACTIONS: typing.ClassVar[typing.Sequence[str]] = ("wipe", "create")
     DIR_ACTIONS: typing.ClassVar[typing.Sequence[str]] = ["link"]
     FILE_ACTIONS: typing.ClassVar[typing.Sequence[str]] = (
@@ -262,6 +242,9 @@ class TargetProcessor:
         def count_defined_actions(attrs: typing.Sequence[str]) -> int:
             return sum((getattr(model, attr) is not None for attr in attrs))
 
+        #
+        # Verify unsupported actions first.
+        #
         allowed_actions = cls.DIR_ACTIONS if kind == TargetKind.DIR else cls.FILE_ACTIONS
         forbidden_actions = cls.ALL_ACTIONS.difference(allowed_actions)
         if count_defined_actions(forbidden_actions) > 0:
@@ -272,10 +255,16 @@ class TargetProcessor:
                 )
             )
 
+        #
+        # Then verify allowed actions.
+        #
         allowed = count_defined_actions(allowed_actions)
         if allowed > 1:
             raise AnsibleActionFail("More than one action '{}'".format(", ".join(allowed_actions)))
 
+        #
+        # Otherwise, check if target requested anything at all.
+        #
         common = count_defined_actions(cls.COMMON_ACTIONS)
         if allowed + common == 0:
             raise AnsibleActionFail("Target is no-op")
@@ -344,6 +333,9 @@ class Target:
         else:
             raise AnsibleActionFail(f"Unreachable kind {self.kind}")
 
+        #
+        # Lazy evaluation: defaults are only evaluated if needed.
+        #
         owner = owner or self.defaults.perms_owner
         group = group or self.defaults.perms_group
 
@@ -477,6 +469,9 @@ class ActionModule(ActionBase):
     ) -> typing.Generator[tuple[Context, RawResult]]:
         wipe_history: set[str] = set()
         for target in targets:
+            #
+            # Do not wipe any nested directories if parent has already been wiped.
+            #
             if target.wipe == "always" and not any(
                 (os.path.commonpath((target.path, hist)) == hist for hist in wipe_history)
             ):
@@ -492,6 +487,10 @@ class ActionModule(ActionBase):
         task_vars: TaskVars,
     ) -> typing.Generator[tuple[Context, RawResult]]:
         for target in targets:
+            #
+            # File creation (touch) is listed first as a fallback, ensuring it will not run if other file-specific
+            #  actions are defined.
+            #
             context_builder = {
                 target.create is True: target.build_create_context,
                 target.link is not None: target.build_link_context,
@@ -504,6 +503,9 @@ class ActionModule(ActionBase):
                 continue
 
             context = context_builder[True]()
+            #
+            # Directory creation is already a part of early operations.
+            #
             if context.name == "create" and target.kind == TargetKind.DIR:
                 continue
 

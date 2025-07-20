@@ -1,3 +1,9 @@
+#
+# foundation.files.net_archive - download and unpack network archive with creation guards.
+#
+# Follow the project README for more information.
+#
+
 import dataclasses
 import os.path
 import shlex
@@ -43,8 +49,7 @@ class ActionModule(ActionBase):
             return unpack_result
 
         #
-        # Probably faster to invoke the module instead of transfering thousand
-        #  of lines from `bsdtar v`.
+        # Probably faster to invoke the module instead of transfering thousand of lines from `bsdtar v`.
         #
         if not self._creates_satisfied(args, task_vars):
             raise AnsibleActionFail("'{}' was not created after the unpacking".format(args.creates))
@@ -99,10 +104,8 @@ class ActionModule(ActionBase):
             "/usr/bin/bsdtar",
             "--extract",
             "--same-owner",
-            "--owner",
-            args.perms[0],
-            "--group",
-            args.perms[1],
+            "--owner", args.perms[0],
+            "--group", args.perms[1],
             "--preserve-permissions",
             "--no-acls",
             "--no-mac-metadata",
