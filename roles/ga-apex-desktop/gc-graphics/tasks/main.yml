@@ -25,6 +25,17 @@
         state:
           disable: true
 
+    - name: Enable NVIDIA suspend services
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - nvidia-resume.service
+          - nvidia-suspend.service
+        state:
+          enable: true
+
     - name: Set NVIDIA kernel command line
       become: true
       foundation.system.kernel:

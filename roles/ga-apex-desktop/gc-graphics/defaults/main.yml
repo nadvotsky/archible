@@ -2,13 +2,14 @@
 gc_nvidia_cmdline:
   nvidia.NVreg_InitializeSystemMemoryAllocations: "0"
   nvidia.NVreg_UsePageAttributeTable: "1"
+  nvidia.NVReg_PreserveVideoMemoryAllocations: "1"
   nvidia_drm.modeset: "1"
 
   #
   # NVidia ships its own framebuffer driver that may stuck in case of multiple monitors with different resolution.
   #
   # Parameter below would fallback on using efifb driver (https://docs.kernel.org/fb/efifb.html), which would simply
-  #  pick up the first monitor and keep others black.
+  #  pick up the first monitor and keep others black (or would set the highest possible resolution for all monitors).
   #
   nvidia_drm.fbdev: "0"
   #
@@ -17,7 +18,7 @@ gc_nvidia_cmdline:
   # video: "efifb:mode=0"
 
   #
-  # Alternatively, if lowering resolution is considered acceptable, manual resolution downgrading may be set:
+  # Alternatively, explicit resolution hint for nvidia_drm may be set:
   #
   # {%- set _width = ga_monitors | map(attribute='width') | min() -%}
   # {%- set _height = ga_monitors | map(attribute='height') | min() -%}
