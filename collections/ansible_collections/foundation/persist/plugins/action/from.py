@@ -1,3 +1,9 @@
+#
+# foundation.persist.from - action plugin that transfers persistance files from control node to managed node.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import dataclasses
@@ -46,6 +52,9 @@ class Inputs:
 
 
 class ActionModule(ActionBase):
+    #
+    # Note the named placeholders for target-level overrides.
+    #
     TAR_COMMAND = (
         "/usr/bin/tar",
         "--extract",
@@ -60,6 +69,10 @@ class ActionModule(ActionBase):
 
     def run(self, tmp: None = None, task_vars: TaskVars = None) -> RawResult:
         inputs = self._validate_inputs()
+
+        #
+        # If some of the persist element cannot be retrieved, prematurely give up and return skipped status instead.
+        #
         if self._premature_skipped(inputs):
             return RawResult(skipped=True)
 
@@ -84,18 +97,28 @@ class ActionModule(ActionBase):
 
     def _validate_inputs(self) -> Inputs:
         specs = self._build_spec()
+
+        #
+        # Arguments validation.
+        #
         _, raw_args = self.validate_argument_spec(dict(specs.pop("defaults")["options"]))
         if raw_args["base"] is not None and not os.path.isabs(raw_args["base"]):
             raise AnsibleActionFail("Base directory '{}' must be absolute".format(raw_args["base"]))
         if not os.path.isdir(raw_args["persist"]):
             raise AnsibleActionFail("Persist directory '{}' must exist".format(raw_args["persist"]))
 
+        #
+        # Variables validation.
+        #
         raw_vars = validate_spec(specs, self._templar.template(self._task.vars))
         if all(
             (raw_vars[collection] is None or len(raw_vars[collection]) == 0 for collection in ("shells", "archives"))
         ):
             raise AnsibleActionFail("No-op action")
 
+        #
+        # Domain object construction.
+        #
         inputs = Inputs(defaults=Defaults(**raw_args), archives=[], shells=[])
         for raw_items, dest, target_class in (
             (raw_vars["shells"], inputs.shells, Shell),
@@ -152,6 +175,9 @@ class ActionModule(ActionBase):
         directory = target["dir"]
         match defaults.base, directory:
             case _, str(d) if os.path.isabs(d):
+                #
+                # Directory is already absolute.
+                #
                 pass
             case _, str(d) if not d.startswith("./"):
                 raise AnsibleActionFail("Relative dir '{}' requires './' prefix".format(d))
@@ -160,6 +186,9 @@ class ActionModule(ActionBase):
             case _, None:
                 target["dir"] = defaults.base
             case _:
+                #
+                # Previous patterns imply that string is prefixed and base is defined.
+                #
                 target["dir"] = os.path.normpath(os.path.join(defaults.base, directory))
 
         if "perms" in target:

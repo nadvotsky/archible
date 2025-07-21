@@ -1,3 +1,9 @@
+#
+# foundation.persist.gpg - retrieve previously generated gpg keys metadata.
+#
+# Follow the project README for more information.
+#
+
 import json
 import os.path
 import base64
@@ -44,6 +50,9 @@ class ActionModule(ActionBase):
 
         keys = validate_spec(VARS_SPEC, self._templar.template(self._task.vars))["keys"]
 
+        #
+        # 'all' is a special value for retrieving all keys.
+        #
         return path, None if keys == ["all"] else keys
 
     def _read_unattended(self, path: str, task_vars: TaskVars) -> dict:
@@ -61,8 +70,14 @@ class ActionModule(ActionBase):
         path, keys = self._employ_inputs()
         unattended_keys = self._read_unattended(path, task_vars)
 
+        #
+        # Results are stored in the `gpg` subdictionary to allow for loops, filters, and other manipulations.
+        #
         result = RawResult(gpg={})
-        for key in keys or unattended_keys.keys():
+        #
+        # If no specific key is requested (`keys` is None), process all available keys.
+        #
+        for key in (keys or unattended_keys.keys()):
             if key not in unattended_keys:
                 raise AnsibleActionFail(f"No such GnuPG key '{key}'")
 

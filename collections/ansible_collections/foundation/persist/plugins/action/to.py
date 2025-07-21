@@ -1,3 +1,9 @@
+#
+# foundation.persist.to - action plugin for transfering persistance files from managed node to control node.
+#
+# Follow the project README for more information.
+#
+
 import shlex
 import dataclasses
 import os
@@ -48,7 +54,7 @@ TARGETS_SPEC = {
             "stdin": {
                 "type": "str",
                 "required": False,
-            }
+            },
         },
     },
     "archives": {
@@ -101,6 +107,9 @@ class Targets:
     archives: list[Archive]
 
 
+#
+# Dedicated class for persistence filesystem access.
+#
 class Persist:
     def __init__(self, persist: str):
         if not os.path.isdir(persist):
@@ -108,19 +117,32 @@ class Persist:
 
         self.persist = persist
 
+        #
+        # Check current persistence directory permissions to ensure the desired state, 
+        # even when Ansible runs as root (e.g., via connection plugins).
+        #
         persist_stat = os.stat(self.persist)
+        #
+        # Define a mode for directories, omitting the sticky bit if set.
+        #
         self.mode = persist_stat.st_mode & ~stat.S_ISVTX
         self.owner = persist_stat.st_uid
         self.group = persist_stat.st_gid
 
         self.changed = False
 
+    #
+    # Temporarily change effective UID and GID, so that created files wi
+    #
     @contextlib.contextmanager
     def _permissions_context(self):
         egid, euid = os.getegid(), os.geteuid()
         try:
             os.setegid(self.group), os.seteuid(self.owner)
 
+            #
+            # Return file mode without execution bits, as persistence items are plain files.
+            #
             yield self.mode & ~stat.S_IXUSR & ~stat.S_IXGRP & ~stat.S_IXOTH
         finally:
             os.setegid(egid)
@@ -131,12 +153,19 @@ class Persist:
 
         with self._permissions_context() as file_mode:
             parent = os.path.dirname(path)
+            #
+            # Ensure appropriate directory permissions are set.
+            #
             if not os.path.isdir(parent):
                 os.mkdir(parent, self.mode)
             else:
                 os.chmod(parent, self.mode)
                 os.chown(parent, self.owner, self.group)
 
+            #
+            # Manually open file with specified permissions to avoid chmod errors and possible cleanup of intermediate
+            #  files.
+            #
             fd = os.open(
                 path=path,
                 flags=os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
@@ -158,7 +187,6 @@ class ActionModule(ActionBase):
             "--owner=0",
             "--gzip",
             "--create",
-            "--to-stdout",
             "--files-from",
             "-",
         )
@@ -189,12 +217,18 @@ class ActionModule(ActionBase):
                 if os.path.isabs(entry_key) or len(entry_key.split(os.path.sep)) != 2:
                     raise AnsibleActionFail("Expected key in format 'collection/item', got {}.".format(entry_key))
 
+                #
+                # Handle target-level overrides and fallback.
+                #
                 entry["dir"] = self._validate_args_target_dir(
                     entry["dir"],
                     defaults.base,
                 )
                 getattr(targets, subclass).append(dataclass(**entry))
 
+        #
+        # Disallow empty item lists; use '*' to archive all files.
+        #
         empty = next((True for a in targets.archives if len(a.include) == 0), None)
         if empty is not None:
             raise AnsibleActionFail(
@@ -232,12 +266,14 @@ class ActionModule(ActionBase):
 
                 find_command.extend(("-path", shlex.quote(f"./{pattern}")))
 
-            subcommands = (" ".join(find_command), "cut -c3-", self.TAR_CMD)
+            subcommands = (" ".join(find_command), "cut -c3-", self.TAR_CMD, "cat")
             content = self._binary_command_wrapped(archive, "set -o pipefail && " + " | ".join(subcommands))
             if content is not None:
                 persist.write(archive.key, content)
 
-    def _binary_command_wrapped(self, target: Shell | Archive, command: str, stdin: bytes | None = None) -> bytes | None:
+    def _binary_command_wrapped(
+        self, target: Shell | Archive, command: str, stdin: bytes | None = None
+    ) -> bytes | None:
         context = "({}:{}) => ({}, {})".format(
             type(target).__name__.lower(),
             target.key,
