@@ -8,7 +8,7 @@
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         base: /etc/udev/rules.d
-        perms: "755:644:{{ ca_name }}:{{ ca_name }}"
+        perms: 755:644:root:root
       vars:
         targets:
           - dir: ./
