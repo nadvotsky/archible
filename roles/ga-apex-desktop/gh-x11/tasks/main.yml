@@ -51,7 +51,7 @@
         wipe: "{{ aa_wipe }}"
       vars:
         targets:
-          - file: "{{ fa_dir_config }}/xdg-desktop-portal/herbstluftwm.conf"
+          - file: "{{ fa_dir_config }}/xdg-desktop-portal/herbstluftwm-portals.conf"
             perms: "640:{{ ca_name }}:{{ ca_name }}"
             content: |
               [preferred]

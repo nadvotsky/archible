@@ -113,7 +113,7 @@
         [{{ _bind.line | aa_dquote() }}] = {
             "and",
                 "AND", "focus_monitor", "{{ _tags_map[loop.index0].monitor }}",
-                "AND", "use", "{{ _tags_map[loop.index0].name }}", 
+                "AND", "use", "{{ _tags_map[loop.index0].name }}",
         },
     {% endfor %}
 
@@ -191,7 +191,7 @@
         "dunstctl history-pop $(" ..
             "dunstctl history |" ..
             "jq --raw-output '.data[][] | [.id.data, .appname.data, .summary.data] | @tsv' |" ..
-            "rofi -dmenu -i | " .. 
+            "rofi -dmenu -i | " ..
             "awk '{ print ($1 ? $1 : -1); }'" ..
         ")",
 {%- endmacro -%}
@@ -267,7 +267,7 @@
         {% set _action = _bind.action.subs %}
         {% set _line = _bind.line | aa_dquote() %}
         {% if _action is string %}
-            [{{ _line }}] = {{ 
+            [{{ _line }}] = {{
                 "{}{}{}".format("{", _action | split(" ") | map("aa_dquote") | join(", "), "}")
             }},
         {% else %}
@@ -350,7 +350,7 @@ local config = {
         -- border_width acts different when outer_width is used:
         -- For top (tabs) total size = outer_width + border_width
         -- For left, right, bottom total size = border_width
-        -- 
+        --
         -- Therefore, emulating unified look with paddings
         --
         {"theme.border_width", {{ _spacing_medium }}},
@@ -455,14 +455,14 @@ function process_xresources(xresources)
 end
 
 function process_env(env)
-    local activation_env = {"DISPLAY"}
-
     for key, value in pairs(env) do
         commit("setenv", key, value)
-        activation_env[#activation_env+1] = key .. "=" .. value
     end
 
-    exec("dbus-update-activation-environment", "--systemd", unpack(activation_env))
+    exec(
+        "dbus-update-activation-environment", "--systemd",
+        "XDG_CURRENT_DESKTOP=herbstluftwm", "XDG_SESSION_TYPE=x11"
+    )
 end
 
 function process_settings(settings)
@@ -504,7 +504,6 @@ function process_monitors(monitors)
         commit("focus_monitor", mon.name)
         commit("use", mon.first_tag)
     end
-    commit("merge_tag", "default")
 end
 
 function process_binds(binds)

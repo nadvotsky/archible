@@ -218,6 +218,7 @@ env = KITTY_ENABLE_WAYLAND, 1
 env = ELECTRON_OZONE_PLATFORM_HINT, wayland
 env = _JAVA_AWT_WM_NONREPARENTING, 1
 
+exec-once = dbus-update-activation-environment --systemd XDG_SESSION_TYPE
 
 #
 # Autostart before scaling is set.
