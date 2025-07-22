@@ -26,7 +26,7 @@
         {%- for _prop, _val in _section.value.items() -%}
             {%- do _lines.append(
                 "{} = {}".format(
-                    _prop, (_val | string | quote) if _val is string else (_val | string | lower),
+                    _prop, (_val | string | aa_squote) if _val is string else (_val | string | lower),
                 ),
             ) -%}
         {%- endfor -%}

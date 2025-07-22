@@ -244,7 +244,7 @@
         | ga_parse_binds(_action_map, **_parse_binds_kwargs)
         | selectattr("mode_name", "in", _selector)
     %}
-        {% set _ = _binds[_prefix].update({(_bind.line | quote): _bind.action.subs}) %}
+        {% set _ = _binds[_prefix].update({(_bind.line | aa_dquote): _bind.action.subs}) %}
     {% endfor %}
 {%- endmacro -%}
 
@@ -279,7 +279,7 @@
     {% for _group, _group_binds in _binds.items() %}
         [keys.{{ _group }}]
         {% for _bind, _action in _group_binds.items() %}
-        {{ _bind }} = {{ (_action | quote) if _action is string else (_action | tojson) }}
+        {{ _bind }} = {{ (_action | aa_dquote) if _action is string else (_action | tojson) }}
         {% endfor %}
         {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}

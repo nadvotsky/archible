@@ -12,19 +12,19 @@
 
 {%- set _font_size = ga_fonts_sans_sz_medium | ga_scale(ga_scaling) -%}
 {%- set _font_offset = ga_fonts_sans_off_medium | ga_scale(ga_scaling) -%}
-{%- set _font_fontconfig = "sans-serif:style=semibold:pixelsize={}".format(_font_size) | quote -%}
+{%- set _font_fontconfig = "sans-serif:style=semibold:pixelsize={}".format(_font_size) | aa_dquote() -%}
 
-{%- set _preset_accent = ga_preset.accent | quote -%}
-{%- set _preset_foreground = ga_preset.foreground | quote -%}
-{%- set _preset_background = ga_preset.background | quote -%}
-{%- set _preset_important = ga_preset.important | quote -%}
-{%- set _preset_active = ga_preset.active | quote -%}
-{%- set _preset_inactive = ga_preset.inactive | quote -%}
-{%- set _preset_border = ga_preset.border | quote -%}
+{%- set _preset_accent = ga_preset.accent | aa_dquote() -%}
+{%- set _preset_foreground = ga_preset.foreground | aa_dquote() -%}
+{%- set _preset_background = ga_preset.background | aa_dquote() -%}
+{%- set _preset_important = ga_preset.important | aa_dquote() -%}
+{%- set _preset_active = ga_preset.active | aa_dquote() -%}
+{%- set _preset_inactive = ga_preset.inactive | aa_dquote() -%}
+{%- set _preset_border = ga_preset.border | aa_dquote() -%}
 
 {%- set _extras = [
     gh_wm_compositor is true | ternary(["picom", "--daemon"], false),
-    ["hsetroot", "-solid", "'{}'".format(ga_preset.background)],
+    ["hsetroot", "-solid", ga_preset.background | quote],
     ["xsetroot", "-cursor_name", "left_ptr"],
     gh_wm_bar is true | ternary(["polybar", "--quiet", "&"], false),
     gh_wm_notify is true | ternary(["dunst", "&"], false),
@@ -33,7 +33,7 @@
 {# ["/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"] #}
 {%- macro _extras_render() -%}
     {% for _line in _extras | reject("false") %}
-        {{ "{" }}{{ _line | map("quote") | join(", ") }}{{ "}" }},
+        {{ "{" }}{{ _line | map("aa_dquote") | join(", ") }}{{ "}" }},
     {% endfor %}
 {%- endmacro -%}
 
@@ -68,7 +68,7 @@
             {% set _next = "{}{}".format(_prefix, (loop.index - _min + 1) % (_max - _min + 1) + _min) %}
             {% set _prev = "{}{}".format(_prefix, (loop.index - _min - 1) % (_max - _min + 1) + _min) %}
             {##}
-            {name = {{ _name | quote }}, next = {{ _next | quote }}, prev = {{ _prev | quote }}},
+            {name = {{ _name | aa_dquote() }}, next = {{ _next | aa_dquote() }}, prev = {{ _prev | aa_dquote() }}},
         {% endfor %}
         {##}
         {% if _mon.scratch is defined %}
@@ -110,7 +110,7 @@
         | selectattr("mode_name", "eq", "wm")
     )[:_tags_map.index]
     %}
-        [{{ _bind.line | quote }}] = {
+        [{{ _bind.line | aa_dquote() }}] = {
             "and",
                 "AND", "focus_monitor", "{{ _tags_map[loop.index0].monitor }}",
                 "AND", "use", "{{ _tags_map[loop.index0].name }}", 
@@ -123,14 +123,14 @@
             | selectattr("mode_name", "eq", "wm")
     )[:_tags_map.index]
     %}
-        [{{ _bind.line | quote }}] = {"move", "{{ _tags_map[loop.index0].name }}"},
+        [{{ _bind.line | aa_dquote() }}] = {"move", "{{ _tags_map[loop.index0].name }}"},
     {% endfor %}
 
     {% for _bind in ga_keys
         | ga_parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
-        [{{ _bind.line | quote }}] = {"focus_nth", "{{ loop.index0 }}"},
+        [{{ _bind.line | aa_dquote() }}] = {"focus_nth", "{{ loop.index0 }}"},
     {% endfor %}
 {%- endmacro -%}
 
@@ -265,10 +265,10 @@
         | selectattr("mode_name", "in", _filter)
     %}
         {% set _action = _bind.action.subs %}
-        {% set _line = _bind.line | quote %}
+        {% set _line = _bind.line | aa_dquote() %}
         {% if _action is string %}
             [{{ _line }}] = {{ 
-                "{}{}{}".format("{", _action | split(" ") | map("quote") | join(", "), "}")
+                "{}{}{}".format("{", _action | split(" ") | map("aa_dquote") | join(", "), "}")
             }},
         {% else %}
             [{{ _line }}] = {
