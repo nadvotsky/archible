@@ -29,7 +29,7 @@
 {%- endmacro -%}
 
 {%- macro _monitor_index() -%}
-    {%- for _mon in ga_monitors -%}
+    {%- for _mon in ga_monitors.values() -%}
         {%- if _mon.notifications is true -%}
             {{ loop.index0 }}
         {%- endif -%} 
@@ -49,9 +49,9 @@ enable_posix_regex = false
 enable_recursive_icon_lookup = true
 
 origin = top-right
-width = {{ _width }}
-height = {{ _height }}
-offset = {{ _gap }}x{{ _bar_size + _gap }}
+width = ({{ _width }}, {{ _width }})
+height = (0, {{ _height }})
+offset = ({{ _gap }},{{ _bar_size + _gap }})
 
 progress_bar = true
 progress_bar_horizontal_alignment = center
