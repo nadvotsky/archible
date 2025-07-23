@@ -1,3 +1,9 @@
+#
+# foundation.system.stop - stop running processes and services for atomic updates.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import dataclasses
@@ -92,6 +98,10 @@ class ActionModule(ActionBase):
 
     def _stop_step(self, service: str, headless: bool, task_vars: TaskVars) -> typing.Generator[tuple[str, RawResult]]:
         status = f"(service) => {service}"
+        #
+        # In case of headless setup, return immediately. There is no reason to set SYSTEMD_OFFLINE environent variable,
+        # since headless environment cannot have running services by definition.
+        #
         result = (
             RawResult()
             if headless

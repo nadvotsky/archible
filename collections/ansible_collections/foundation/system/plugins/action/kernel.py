@@ -1,3 +1,9 @@
+#
+# foundation.system.kernel - manage kernel command-line with initramfs regeneration.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import base64
@@ -84,7 +90,9 @@ class ActionModule(ActionBase):
             key, _, val = line.partition("=")
             if any(filter(lambda v: v == "", (key, val))):
                 raise AnsibleActionFail("Empty component ({}={}).".format(key, val))
-
+            #
+            # Comma-separated values are naturally threated as list in many kernel modules.
+            #
             if val and len((vector := val.split(","))) > 1:
                 cmdline[key] = list(filter(None, vector))
                 if len(cmdline[key]) == 0:
@@ -92,6 +100,9 @@ class ActionModule(ActionBase):
 
                 continue
 
+            #
+            # None denotes boolean flags.
+            #
             cmdline[key] = None if val == "" else val
 
         return cmdline, hashlib.md5(content.encode()).digest()
@@ -99,16 +110,28 @@ class ActionModule(ActionBase):
     def _construct_patch(self, seed: Cmdline, env: Cmdline) -> tuple[str, bytes]:
         def format_line(key: str, value: None | str | typing.Sequence[str]) -> str:
             if value is None:
+                #
+                # Boolean flag, rendered as is.
+                #
                 return key
             elif isinstance(value, str):
+                #
+                # Option with value, separated with equals symbol.
+                #
                 return f"{key}={value}"
 
+            #
+            # Comma-separated list.
+            #
             return "{}={}".format(key, ",".join(tuple(dict.fromkeys(value).keys())))
 
         def prettify_type(t: typing.Type):
             return {str: "option", list: "list"}.get(t, "flag")
 
         lines = []
+        #
+        # Handle existing flags.
+        #
         for key in seed.keys():
             if key not in env:
                 lines.append(format_line(key, seed[key]))
@@ -117,10 +140,16 @@ class ActionModule(ActionBase):
             new_value = env[key]
             was_type, new_type = type(seed[key]), type(new_value)
             if was_type is new_type:
+                #
+                # Merge lists.
+                #
                 if isinstance(new_value, list):
                     lines.append(format_line(key, (*seed[key], *new_value)))
                 else:
                     lines.append(format_line(key, new_value))
+            #
+            # Allow upgrading option to list.
+            #
             elif isinstance(was_type, str) and isinstance(new_type, list):
                 lines.append(format_line(key, (seed[key], *new_value)))
             else:
@@ -132,6 +161,9 @@ class ActionModule(ActionBase):
                     )
                 )
 
+        #
+        # Append new flags.
+        #
         for key in filter(lambda k: k not in seed, env.keys()):
             lines.append(format_line(key, env[key]))
 
@@ -149,6 +181,13 @@ class ActionModule(ActionBase):
 
     def _kernel_install(self, headless: bool, task_vars: TaskVars) -> tuple[str, RawResult]:
         info_string = []
+
+        #
+        # Non-universal booster builds target the current system and loaded modules. In headless setups, this may
+        #  include unwanted modules and/or exclude critical ones (e.g., nvme).
+        #
+        # Once the system is actually booted, any system update will regenerate the optimized initramfs, as expected.
+        #
         if headless is True:
             self._task.environment.append(dict(KERNEL_INSTALL_BOOSTER_UNIVERSAL=1))
             info_string.append("KERNEL_INSTALL_BOOSTER_UNIVERSAL=1")

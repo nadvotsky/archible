@@ -1,3 +1,9 @@
+#
+# foundation.system.env - manage system environment variables via `/etc/environment`.
+#
+# Follow the project README for more information.
+#
+
 from ansible.plugins.action import ActionBase
 from ansible.errors import AnsibleActionFail
 from ansible.constants import COLOR_CHANGED, COLOR_OK, COLOR_ERROR
@@ -9,12 +15,18 @@ class ActionModule(ActionBase):
     def run(self, tmp: None = None, task_vars: TaskVars = None) -> RawResult:
         result = RawResult(changed=False)
 
+        #
+        # Actual variables must be passed to task environment.
+        #
         env = self._task.environment.pop()
         if not isinstance(env, dict):
-            raise AnsibleActionFail("This action must be given a dictionary.")
+            raise AnsibleActionFail("This action must be given an environment dictionary.")
         elif len(env) == 0:
             raise AnsibleActionFail("No-op module invocation.")
 
+        #
+        # Require strictly typed values to avoid YAML conversion issues with nulls, integers, etc.
+        #
         for key, val in env.items():
             if not isinstance(val, str):
                 raise AnsibleActionFail(f"Variable {key} have got to be a string")

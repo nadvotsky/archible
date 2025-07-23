@@ -1,3 +1,9 @@
+#
+# foundation.system.packages - manage system services with declarative syntax and headless support.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import dataclasses
@@ -41,16 +47,26 @@ class Arguments:
         self.headless = headless
 
 
+#
+# Because flag implications are dynamic, it's unnecessary to adopt the full VARS_SPEC.  Using a dictionary is actually
+#  more beneficial.
+#
 type State = typing.Mapping[str, bool | None]
 
 
 @dataclasses.dataclass
 class DomainState:
+    #
+    # Defines intermediate meta states with corresponding positive and negative actions.
+    #
     META: typing.ClassVar[dict[str, tuple[str, str]]] = {
         "unmasking": ("unmask", "mask"),
         "autostart": ("enable", "disable"),
         "runtime": ("start", "stop"),
     }
+    #
+    # Positive states also imply the associated meta state.
+    #
     IMPLIES: typing.ClassVar[dict[str, str]] = {
         "unmasking": "runtime",
         "autostart": "runtime",
@@ -63,6 +79,10 @@ class DomainState:
 
     def _process_meta_group(self, domain_attr: str, state: State, state_attrs: tuple[str, str]):
         domain_val = None
+
+        #
+        # Set domain attribute by procssing all possible states.
+        #
         for attr in state_attrs:
             value = state[attr]
             opposite = next((state for state in state_attrs if state != attr))
@@ -70,6 +90,9 @@ class DomainState:
             if value is None:
                 continue
             elif value is False:
+                #
+                # State flags are truthy booleans only, do no allow inverting.
+                #
                 raise AnsibleActionFail("'{}' flag cannot be false, use {} instead.".format(attr, opposite))
             elif domain_val is not None:
                 raise AnsibleActionFail(
@@ -81,6 +104,9 @@ class DomainState:
 
             domain_val = state_attrs.index(attr) == 0
 
+        #
+        # Skip if this attribute is not defined.
+        #
         if domain_val is None:
             return
 
@@ -94,6 +120,9 @@ class DomainState:
         if all_undefined and not state["reload"]:
             raise AnsibleActionFail("State is no-op.")
 
+        #
+        # Reload is a special state that does not proper meta states parsing.
+        #
         domain = DomainState(reload=state["reload"])
         for domain_attr, state_attrs in cls.META.items():
             domain._process_meta_group(domain_attr, state, state_attrs)
@@ -116,6 +145,9 @@ class ActionModule(ActionBase):
         args: Arguments = Arguments(**self.validate_argument_spec(argument_spec=ARGS_SPEC)[1])
         units, domain_state = self._consume_vars()
 
+        #
+        # Headless setups lack connection to the systemd socket, however still capable of managing services state.
+        #
         if args.headless is True:
             self._task.environment.append(dict(SYSTEMD_OFFLINE="1", SYSTEMD_IN_CHROOT="1"))
 
@@ -123,6 +155,9 @@ class ActionModule(ActionBase):
             scope="system" if self._task._become is True else "user",
         )
         try:
+            #
+            # Premature reload, if requested.
+            #
             if domain_state.reload is True:
                 self._run_systemd_module(task_vars, module_args | dict(daemon_reload=domain_state.reload))
 

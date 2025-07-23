@@ -1,3 +1,9 @@
+#
+# foundation.system.packages - manage system packages with AUR support.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import dataclasses
@@ -49,6 +55,10 @@ class ActionModule(ActionBase):
         inputs, result = self._validate_specs(), RawResult()
 
         for stage, (cmdline, ignore_error) in {
+            #
+            # Silently ignore errors if a package is not installed and thus cannot be removed. This supports the
+            #  idempotency philosophy of the action plugin.
+            #
             "remove": (self._remove_stage(inputs), True),
             "sync": (self._sync_stage(inputs), False),
             "install": (self._install_stage(inputs), False),
