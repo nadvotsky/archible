@@ -363,7 +363,7 @@ input {
     natural_scroll = false
     scroll_method = "on_button_down"
     scroll_button = 2
-    scroll_button_lock = true
+    scroll_button_lock = false
     # scroll_points =
     # off_window_axis_events =
     # emulate_discrete_scroll =
@@ -462,8 +462,6 @@ misc {
     focus_on_activate = false
     mouse_move_focuses_monitor = true
 
-    render_ahead_of_time = false
-    # render_ahead_safezone =
     render_unfocused_fps = 15
 }
 
@@ -503,7 +501,7 @@ render {
 
     ctm_animation = 0
     cm_fs_passthrough = 0
-    cm_enabled = flase
+    cm_enabled = false
     cm_auto_hdr = 0
     send_content_type = false
 
@@ -548,7 +546,7 @@ debug {
     colored_stdout_logs = true
 
     manual_crash = 0
-    watchdog_timeout = 0
+    # watchdog_timeout = 0
     suppress_errors = false
 
     disable_scale_checks = false
@@ -563,11 +561,11 @@ master {
     new_status = slave
     new_on_top = true
     new_on_active = none
-    no_gaps_when_only = 0
     orientation = center
+    # no_gaps_when_only = 0
 
     inherit_fullscreen = false
-    always_center_master = false
+    slave_count_for_center_master = 0
     smart_resizing = true
     drop_at_cursor = true
 }
