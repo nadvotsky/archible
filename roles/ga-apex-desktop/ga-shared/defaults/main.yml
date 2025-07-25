@@ -100,9 +100,9 @@ ga_fonts_mono_package: adobe-source-code-pro-fonts
 ga_fonts_mono_sz_small: 11
 ga_fonts_mono_sz_medium: 13
 ga_fonts_mono_sz_big: 16
-ga_fonts_mono_off_small: 11
-ga_fonts_mono_off_medium: 13
-ga_fonts_mono_off_big: 16
+ga_fonts_mono_off_small: 1
+ga_fonts_mono_off_medium: 2
+ga_fonts_mono_off_big: 3
 
 #
 # Serif font.
