@@ -1,3 +1,9 @@
+#
+# foundation.user.env - resolve preferred user layout (XDG, dot) dynamically.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import dataclasses
@@ -21,6 +27,9 @@ class Arguments:
     layout: typing.Literal["xdg", "dot"]
 
 
+#
+# Raw operation (dispatch) wrapper that aggregates informational message formatting logic.
+#
 class DispatchProfile:
     @staticmethod
     def _fmt_primary(value: str) -> str:
@@ -32,6 +41,10 @@ class DispatchProfile:
 
     def __init__(self, primary: str, secondary: str | None = None):
         self._items = []
+        #
+        # Allow primary part to be of type `str` and format it with `_fmt_primary` method.
+        # Allow secondary part to be of type `str | None` and format it with `_fmt_secondary` method.
+        #
         for value, types, formatter in zip(
             (primary, secondary),
             ((str,), (str, type(None))),
@@ -54,7 +67,7 @@ class Dispatch:
 
     def _exec_back(self, result: RawResult, profile: DispatchProfile) -> None:
         if result.get("failed"):
-            raise AnsibleActionFail("Action failure", result)
+            raise AnsibleActionFail(result)
 
         if result.get("changed") is True:
             self._state["changed"] = True
@@ -89,7 +102,7 @@ class Dispatch:
                 dict(src=src, dest=dst, state="link", follow=False, force=True),
                 self._task_vars,
             ),
-            DispatchProfile(src, dst),
+            DispatchProfile(dst, src),
         )
 
     def inject(self, key: str, value: str) -> None:
@@ -107,13 +120,22 @@ class ActionModule(ActionBase):
 
         kwargs = {}
         fields = {field.name: field for field in dataclasses.fields(Arguments)}
+        #
+        # Process both schema and passed keys in one loop.
+        #
         for name in set(fields.keys()).union(container.keys()):
             if name in container and name not in fields:
                 raise AnsibleActionFail(f"Unknown argument {name}")
             elif name not in container:
+                #
+                # Set field value as `None` for further dataclass creation.
+                #
                 kwargs[name] = None
                 continue
 
+            #
+            # Do value validation through dataclass type hints reflection.
+            #
             expected, value = fields[name].type, container[name]
             if typing.get_origin(expected) is typing.Literal:
                 expected = typing.get_args(expected)
@@ -124,6 +146,12 @@ class ActionModule(ActionBase):
 
             kwargs[name] = value
 
+        #
+        # At this stage, `kwargs` contains all values needed to create an `Arguments` instance.
+        #
+        # If important attributes like `wipe` are omitted (e.g., set to None), the underlying module utility
+        #  (`Operations` class) will handle validation.
+        #
         return Arguments(**kwargs)
 
     def _parse_inputs(
@@ -147,6 +175,10 @@ class ActionModule(ActionBase):
 
     @staticmethod
     def _batched_wipes(dispatch: Dispatch, conclusions: typing.Sequence[Conclusion]) -> None:
+        #
+        # Sort directories to ensure parents come before children.
+        # This enables a single common-path check instead of using a nested loop.
+        #
         effective, last = [], None
         for path in sorted((con.value for con in conclusions)):
             if not last or os.path.commonpath((path, last)) != last:
@@ -157,8 +189,14 @@ class ActionModule(ActionBase):
 
     @staticmethod
     def _batched_links(dispatch: Dispatch, conclusions: typing.Sequence[Conclusion]) -> None:
+        #
+        # Note the link direction: dest => src.
+        #
+        # This creates a shortcut or view (e.g., ~/.myapp) rather than a transparent redirect, avoiding compatibility
+        #  issues with link following and directory creation.
+        #
         for con in conclusions:
-            dispatch.link(con.value, con.extra)
+            dispatch.link(con.extra, con.value)
 
     def run(self, tmp: None = None, task_vars: TaskVars = None) -> RawResult:
         args, variables = self._parse_inputs(self._task.args, self._templar.template(self._task.vars))
@@ -178,6 +216,9 @@ class ActionModule(ActionBase):
                     case Conclusion(operation=Conclusion.OP_WIPE):
                         wipes.append(con)
 
+        #
+        # Wipes first, then links. No problem when compatibility link points to non-existent directory.
+        #
         self._batched_wipes(dispatch, wipes)
         self._batched_links(dispatch, links)
 

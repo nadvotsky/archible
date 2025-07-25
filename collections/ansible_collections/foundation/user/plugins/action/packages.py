@@ -1,3 +1,9 @@
+#
+# foundation.user.env - add and remove user packages via mise version manager.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import dataclasses

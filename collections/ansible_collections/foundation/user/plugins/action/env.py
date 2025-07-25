@@ -1,3 +1,9 @@
+#
+# foundation.user.env - manage user environment variables via pam_env with dedicated sections support.
+#
+# Follow the project README for more information.
+#
+
 import typing
 
 import dataclasses
@@ -41,9 +47,23 @@ class Arguments:
     subs: typing.Mapping[str, str]
 
 
+#
+# Section (commentaries) parser modes.
+#
 class PAMMode(enum.Enum):
+    #
+    # No current section is being processed.
+    #
     NONE = enum.auto()
+
+    #
+    # Section beginning has been read.
+    #
     SECT_BEGIN = enum.auto()
+
+    #
+    # Section body has been processed.
+    #
     SECT_BODY = enum.auto()
 
 
@@ -54,12 +74,24 @@ class PAMEntry:
     default: str | None = None
     override: str | None = None
 
+    #
+    # Explicit comment above the declaration.
+    #
     comments: tuple[str] = tuple()
+    #
+    # Inline comment that attached to the declaration.
+    #
     inline: str | None = None
 
 
 class PAM:
+    #
+    # Any entries that were before would go to unknown section.
+    #
     SECT_UNKNOWN = "@unknown"
+    #
+    # A regular expression for pam_env. See https://man7.org/linux/man-pages/man5/pam_env.conf.5.html.
+    #
     EXPR_REGEX = tuple(map(re.compile, (r"(\w+)=([\w{}@$]+)", r'(\w+)="([^"]+)"')))
 
     def __init__(self):
@@ -90,8 +122,8 @@ class PAM:
             return False
 
         self._add_entry(variable, entry)
-
         self._changed = True
+
         return True
 
     def _process_comments(self, comment: str) -> None:
@@ -223,12 +255,17 @@ class ActionModule(ActionBase):
 
     @staticmethod
     def _do_substitution(string: str, name: str, value: str) -> bool:
-        return string.replace(value, "${" + name + "}")
+        #
+        # Perform greedy replacements instead of strict path validation.
+        # This is particularly useful for composite environment variables, such as:
+        #   MYTOOL_ARGS="--homedir=/home/user/mytool"
+        #
         # try:
         #     if os.path.commonpath([string, value]) == value:
-        #         return  + "/" + string[len(value) + 1 :]
+        #         return "/" + string[len(value) + 1 :]
         # except ValueError:
         #     pass
+        return string.replace(value, name)
 
     def _write_changes(self, content: str, task_vars: TaskVars) -> RawResult:
         return ansible_dispatch(
@@ -245,15 +282,19 @@ class ActionModule(ActionBase):
         )
 
     def _inject_variables(self, pam: PAM, args: Arguments, env: typing.Mapping[str, str]) -> None:
+        #
+        # Always inject the most important variables (typically XDG_*) at the very beginning as they are going to be
+        #  substituted later on.
+        #
         for key, value in args.subs.items():
-            entry = PAMEntry("!important", override=self._do_substitution(value, "HOME", args.home))
+            entry = PAMEntry("!important", override=self._do_substitution(value, "@{HOME}", args.home))
             pam.add_entry(key, entry)
 
         for key, value in env.items():
             effective = value
             for sub_key, sub_value in args.subs.items():
-                effective = self._do_substitution(effective, sub_key, sub_value)
-            effective = self._do_substitution(effective, "HOME", args.home)
+                effective = self._do_substitution(effective, "${" + sub_key + "}", sub_value)
+            effective = self._do_substitution(effective, "@{HOME}", args.home)
 
             changed = pam.add_entry(key, PAMEntry(args.section, override=effective))
             self._display.display(

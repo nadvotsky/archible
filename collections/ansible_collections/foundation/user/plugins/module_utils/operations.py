@@ -7,7 +7,13 @@ from ansible.errors import AnsibleError
 
 
 class Conclusion:
+    #
+    # Possible descriptor values.
+    #
     DS_RESOLVED, DS_SKIPPED = 2 << 1, 2 << 2
+    #
+    # Possible operation values.
+    #
     OP_NONE, OP_WIPE, OP_LINK = 0, 2 << 1, 2 << 2
 
     def __init__(self, descriptor: int, operation: int, value: str, extra: str = None):
@@ -26,6 +32,10 @@ class OperationContext:
 
 
 class Operations:
+    #
+    # Allow only 'never' or 'always' for defaults, but allow specifying 'auto' on the target level, which would
+    # effectively fallback.
+    #
     WIPE = ("never", "always")
     WIPE_CHAIN = (*WIPE, "auto")
 
@@ -55,7 +65,7 @@ class Operations:
         return value
 
     @staticmethod
-    def _validate_path(context: str, value: str) -> str | None:
+    def _validate_path(context: str, value: str) -> str:
         if not os.path.isabs(value):
             raise AnsibleError(f"Property '{context}' ({value}) has to point to absolute path")
 
@@ -93,9 +103,15 @@ class Operations:
         if not isinstance(link, str):
             raise AnsibleError(f"Property '{ctx.side_name}.link' needs to be string")
 
+        #
+        # Links are created as aliases rather than a transparent redirect. Because of that, return an actual path, not
+        #  the link.
+        #
+        valid_link = cls._validate_path(f"{ctx.side_name}.link", link)
+
         return (
-            *cls._evaluate_conclusions(ctx, cls._validate_path(f"{ctx.side_name}.link", link)),
-            Conclusion(ctx.descriptor, Conclusion.OP_LINK, link, ctx.default_path),
+            *cls._evaluate_conclusions(ctx, ctx.default_path),
+            Conclusion(ctx.descriptor, Conclusion.OP_LINK, valid_link, ctx.default_path),
         )
 
     @classmethod
@@ -130,14 +146,13 @@ class Operations:
             )
             conclusions.extend(self._evaluate_side(ctx, choice[side]))
 
-        if not any((True for c in conclusions if c.descriptor == Conclusion.DS_RESOLVED)):
-            resolve_ctx = OperationContext(
-                self._side,
-                Conclusion.DS_RESOLVED,
-                default_path,
-                wipe,
-            )
-
-            return self._evaluate_conclusions(resolve_ctx, default_path)
+        default_resolved = not any((True for c in conclusions if c.descriptor == Conclusion.DS_RESOLVED))
+        default_ctx = OperationContext(
+            self._side,
+            Conclusion.DS_RESOLVED if default_resolved else Conclusion.DS_SKIPPED,
+            default_path,
+            wipe,
+        )
+        conclusions.extend(self._evaluate_conclusions(default_ctx, default_path))
 
         return conclusions

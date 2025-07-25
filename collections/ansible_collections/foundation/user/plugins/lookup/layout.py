@@ -1,3 +1,9 @@
+#
+# foundation.user.layout - evaluate effective user layout value.
+#
+# Follow the project README for more information.
+#
+
 from ansible.plugins.lookup import LookupBase
 
 from ansible_collections.foundation.user.plugins.module_utils.operations import (
