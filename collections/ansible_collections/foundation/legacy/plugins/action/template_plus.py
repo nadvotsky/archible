@@ -40,6 +40,9 @@ from jinja2.ext import Extension
 class TemplatePlus(Templar):
     KEEP = "+"
 
+    #
+    # Private Unicode symbols for non-colliding replacement. 
+    #
     INDENT = "\ue000"
     NEWLINE = "\ue001"
 
@@ -118,9 +121,9 @@ class IndentExtension(Extension):
             else:
                 lines.append(line)
 
-        # TODO: another placeholder or keep the newline
-        # that needs to be replaced to none afterwards.
-        # Lua inline array would say thank you :)
+        #
+        # TODO: Another placeholder that gets replaced with nothing. May be used with inline lua arrays.
+        #
         return "".join(lines)
 
     def parse(self, parser: Parser) -> Node:
