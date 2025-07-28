@@ -40,7 +40,7 @@ gd_loopback: true
 #
 # Percentage of computation complexity to quality.
 #
-gd_resampling: 0.5
+gd_resampling: 0.6
 
 #
 # Application quantum (buffer size) for audio processing.
@@ -57,6 +57,8 @@ gd_realtime_priority: 80
 
 #
 # If hard limit is required instead, there is `volume-limit` in the acp.
+#
+# Can be measured using `wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.5`.
 #
 gd_volume_output: 1.0
 gd_volume_input: 1.0
@@ -169,7 +171,7 @@ gd_cards: "{{ undef() }}"
   #     #
   #     # Dictionary of elements.
   #     #
-  #     # Can be examined with `amixer -c0 scontents | grep -P 'pswitch|pvolume' -B1 -A2`
+  #     # Can be examined with `amixer -c0 scontents | grep -P 'switch|volume' -B1 -A2`
   #     #
   #     elements:
   #       <element>:
@@ -179,8 +181,8 @@ gd_cards: "{{ undef() }}"
   #         #
   #         type: [<switch|volume>, ...]
   #         #
-  #         # Element direction. Optional, should only be used for those element that are bugged. (listed in the
-  #         # `Playback channels:` and `Capture channels:` sections of the `amixer` output).
+  #         # Element direction (selector, not purpose). Optional, should only be used for those element that are bugged.
+  #         # (listed in the `Playback channels:` and `Capture channels:` sections of the `amixer` output).
   #         #
   #         direction: <playback|capture>
   #   outputs:

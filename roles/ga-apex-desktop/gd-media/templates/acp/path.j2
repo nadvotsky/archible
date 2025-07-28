@@ -5,7 +5,7 @@
 {%- set _card = item.card -%}
 
 {%- set _unit_key = {"input-path": "inputs", "output-path": "outputs"}[_path.type] -%}
-{%- set _direction = {"input-path": "playback", "output-path": "capture"}[_path.type] -%}
+{%- set _direction = {"input-path": "capture", "output-path": "playback"}[_path.type] -%}
 {%- set _units = _card[_unit_key] -%}
 
 {%- set _blacklist = {} -%}

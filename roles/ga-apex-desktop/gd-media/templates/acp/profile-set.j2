@@ -27,8 +27,8 @@
         description-key = {{ _mapping.label | default(_mapping_name) }}
         priority = {{ _mapping.priority }}
         channel-map = {{ _mappings_channel_map() | aa_relindent }}
-        paths-input = {{ _mapping.outputs | join(" ") }}
-        paths-output = {{ _mapping.inputs | join(" ") }}
+        paths-input = {{ _mapping.inputs | join(" ") }}
+        paths-output = {{ _mapping.outputs | join(" ") }}
         {##}
         {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}

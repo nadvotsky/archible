@@ -9,7 +9,7 @@
     {% for _card_name, _card in _cards.items() %}
         {
             matches = [
-                { 
+                {
                     device.nick = !null
                     {% for _prop, _value in _card.selectors.device.items() %}
                     {{ _prop }} = "!{{ _value }}"
