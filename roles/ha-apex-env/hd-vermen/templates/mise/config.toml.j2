@@ -5,7 +5,10 @@ log_level = "warn"
 env_file = ".env"
 plugin_autoupdate_last_check_duration = "0"
 
+gpg_verify = false
 trusted_config_paths = ["{{ fa_dir_home }}"]
+
+idiomatic_version_file_enable_tools = ["node", "python", "rust", "go", "java"]
 
 [settings.status]
 missing_tools = "always"
