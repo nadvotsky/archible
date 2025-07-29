@@ -421,7 +421,7 @@ def --env "clip to" [] {
         "string" => ($in | into binary),
         _ => ($in | to nuon | into binary),
     }
-    if ("WAYLAND_SOCKET" in $env and "WAYLAND_DISPLAY" in $env) {
+    if ("WAYLAND_DISPLAY" in $env) {
         $data | ^wl-copy
     } else {
         $data | ^xsel -b
@@ -430,7 +430,7 @@ def --env "clip to" [] {
 
 #Retrieve content from the clipboard.
 def --env "clip from" [] {
-    if ("WAYLAND_SOCKET" in $env and "WAYLAND_DISPLAY" in $env) {
+    if ("WAYLAND_DISPLAY" in $env) {
         ^wl-paste
     } else {
         ^xsel -b
