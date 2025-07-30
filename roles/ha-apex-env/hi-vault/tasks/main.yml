@@ -10,6 +10,15 @@
         root: "{{ ha_vault_user_layout }}"
       register: _hi_ulayout
 
+    - name: Create vault directory
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ _hi_ulayout.root }}"
+            perms: "700:{{ ca_name }}:{{ ca_name }}"
+            create: true
+
 #
 # Personal vault/keystore configuration.
 #
@@ -167,11 +176,8 @@
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:
-          - dir: ./
-            create: true
-
           - dir: ./.gopass
-            wipe: true
+            wipe: always
 
           - file: ./.gpg-id
             content: "{{ _hi_gpg_key.gpg[hi_gpg_key].fingerprint }}"
