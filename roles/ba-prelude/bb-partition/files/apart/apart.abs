@@ -604,10 +604,10 @@ f part_process_argument(argument, disk_size, explicit, mount) {
   new_mount = [argument?.mount, part?.mount].find(f(m) { type(m) != "NULL" })
   if type(new_mount) != "NULL" {
     part.mount_hint = new_mount
-  if mount == "" {
-    part.mount = null
-  } else {
-    part.mount = mount + new_mount
+    if mount == "" {
+      part.mount = null
+    } else {
+      part.mount = mount + new_mount
     }
   }
 
@@ -710,9 +710,9 @@ f mount_process(parts, dry_run) {
 
     if type(part.mount) == "NULL" {
       log_warn(
-    "mount_process",
-    "Base mount mount is undefined, cannot mount '%s'".fmt(part.mount_hint)
-    )
+        "mount_process",
+        "Base mount mount is undefined, cannot mount '%s'".fmt(part.mount_hint)
+      )
       continue
     }
 
