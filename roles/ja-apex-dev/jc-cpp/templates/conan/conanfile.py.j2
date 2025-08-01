@@ -31,8 +31,8 @@ class ConanRecipe(ConanFile):
         self.cpp.build.libdirs = ["."]
 
     def requirements(self):
-        self.requires("fmt/[>=11.1]")
-        self.test_requires("gtest/[>=1.15]")
+        self.requires("fmt/[>=11.2]")
+        self.test_requires("gtest/[=1.16]")
 
     def generate(self):
         CMakeDeps(self).generate()

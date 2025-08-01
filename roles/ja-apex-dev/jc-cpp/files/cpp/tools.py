@@ -121,12 +121,12 @@ def main():
             "config", choices=bazel_configs, help="Bazel configuration to run."
         )
 
-    clang_format = subparsers.add_parser(
+    _ = subparsers.add_parser(
         "fmt", aliases=["format"], help="Run clang-format formatter"
     )
 
     args = parser.parse_args()
-    sources = (
+    sources = tuple(
         str(source)
         for source in itertools.chain.from_iterable(
             (project.glob(f"{source}/**/*.*") for source in SOURCES)

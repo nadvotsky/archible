@@ -7,7 +7,7 @@
 #include "util.h"
 
 namespace {
-  constexpr std::string kJoinStringsSep{", "};
+  const std::string kJoinStringsSep{", "};
 }
 
 auto Util::JoinStrings(const std::vector<std::string_view>& strings) -> std::string {
