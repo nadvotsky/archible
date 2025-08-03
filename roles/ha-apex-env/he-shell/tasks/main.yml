@@ -129,8 +129,7 @@
       vars:
         data:
           default: "{{ fa_dir_share }}/zoxide"
-          dot:
-            link: "{{ fa_dir_home }}/.zoxide"
+          dot: "{{ fa_dir_home }}/.zoxide"
       register: _he_zoxide_ulayout
 
     - name: Apply zoxide dot layout
