@@ -47,8 +47,8 @@
                 code_lic=_prod.license,
                 plugins=_plugins,
                 dist_dir='/opt/jetbrains/ide/{}'.format(_codename),
-                dist_bin='/opt/jetbrains/ide/{}/bin/{}'.format(_codename, _codename),
-                dist_ico='/opt/jetbrains/ide/{}/bin/{}.svg'.format(_codename, _codename),
+                dist_bin='/opt/jetbrains/ide/{}/bin/{}'.format(_codename, _codename if _codename != 'webide' else 'webstorm'),
+                dist_ico='/opt/jetbrains/ide/{}/bin/{}.svg'.format(_codename, _codename if _codename != 'webide' else 'webstorm'),
                 dist_url=_release.downloads[_arch].link,
                 dist_ver='{}.{}'.format(_release.version, _release.build),
                 ide_cfg='{}/{}'.format(fa_dir_config, _codename),
@@ -81,13 +81,13 @@
 
           dist_dir: /opt/jetbrains/ide
 
-          ide_cfg: "{{ ['${user.home}', fa_dir_config.removeprefix(fa_dir_home), '${ide.codename}'] | path_join }}"
-          ide_sys: "{{ ['${user.home}', fa_dir_cache.removeprefix(fa_dir_home), '${ide.codename}'] | path_join }}"
+          ide_cfg: "{{ ['${user.home}', fa_dir_config.removeprefix(fa_dir_home).lstrip('/'), '${ide.codename}'] | path_join }}"
+          ide_sys: "{{ ['${user.home}', fa_dir_cache.removeprefix(fa_dir_home).lstrip('/'), '${ide.codename}'] | path_join }}"
           ide_plg: >-
             {{
-              (['${user.home}', fa_dir_state.removeprefix(fa_dir_home), '${ide.codename}'] | path_join)
+              (['${user.home}', fa_dir_state.removeprefix(fa_dir_home).lstrip('/'), '${ide.codename}'] | path_join)
               if fa_layout == 'xdg' else
-              '${user.home}/${ide.codename}'
+              '${user.home}/.${ide.codename}'
             }}
           ide_tmp: ${java.io.tmpdir}/${ide.codename}
 
