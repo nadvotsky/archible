@@ -248,6 +248,9 @@
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:
+          - dir: ./
+            create: true
+
           - file: ./kubeadm.yml
             copy: kubeadm/kubeadm.yml
           - file: ./dashboard.yml
