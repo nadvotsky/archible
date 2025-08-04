@@ -178,19 +178,24 @@ id_chromium_flags:
   #
   # Look.
   #
-  - disable-smooth-scrolling
-  - disable-login-animations
-  - enable-bookmark-undo
-
   # - force-dark-mode
   # - device-scale-factor
   # - force-device-scale-factor
   # - disable-gpu-vsync
   # - disable-frame-rate-limit
+  - disable-smooth-scrolling
+  - disable-login-animations
+  - enable-bookmark-undo
   #
   # GPU.
   #
   # - sync-point-graph-validation
+  # - enable-skia-graphite
+  # - egl
+  # - gl
+  # - gles
+  # - use-angle=gl
+  # - use-gl
   - disable-gpu-watchdog
   - ignore-gpu-blocklist
   - enable-zero-copy
@@ -198,26 +203,20 @@ id_chromium_flags:
   - enable-gpu-rasterization
   - enable-gpu-memory-buffer-video-frames
   - enable-gpu-memory-buffer-compositor-resources
-  - enable-skia-graphite
-  # - egl
-  # - gl
-  # - gles
-  # - use-angle=gl
-  # - use-gl
   - use-vulkan
   #
   # Startup.
   #
+  # - disable-crashpad-for-testing
+  # - disable-crashpad-forwarding
+  # - new-window
+  # - user-data-dir
   - disable-first-run-ui
   - no-first-run
   - restore-last-session
   - no-default-browser-check
   - disable-breakpad
   - disable-crash-reporter
-  - disable-crashpad-for-testing
-  - disable-crashpad-forwarding
-  # - new-window
-  # - user-data-dir
   #
   # Performance.
   #
@@ -264,6 +263,7 @@ id_chromium_flags:
 id_chromium_features_enable:
   # - MiddleClickAutoscroll
   # - DefaultANGLEVulkan
+  - Vulkan
   - AcceleratedVideoDecodeLinuxGL
   - AcceleratedVideoEncoder
   - VaapiVideoDecoder

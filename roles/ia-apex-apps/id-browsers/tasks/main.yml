@@ -32,18 +32,15 @@
       loop: "{{ _id_gck_ulayouts.results | map(attribute='home') }}"
 
     - name: Create a new Gecko profile if none exist
-      ansible.builtin.command:
-        argv:
-          - "{{ item }}"
-          - -no-remote
-          - -headless
-          - -CreateProfile
-          - Default
+      ansible.builtin.shell:
+        cmd: >-
+          {{ item }} -CreateProfile Default -headless && timeout -f 5 "{{ item }}" -headless -P Default
       register: _id_gck_profiles_invocation
       changed_when: _id_gck_profiles_invocation.rc == 0
+      failed_when: false
       loop: >-
         {%- set _acc = [] -%}
-        {%- for _pkg, _stat in id_gck | map(attribute='package') | zip(_id_gck_profiles_stat.results) -%}
+        {%- for _pkg, _stat in _id_gck | map(attribute='package') | zip(_id_gck_profiles_stat.results) -%}
           {%- if _stat.stat.exists is false -%}
             {%- do _acc.append(_pkg) -%}
           {%- endif -%}
@@ -65,14 +62,14 @@
           {%- set _content_lines = [] -%}
           {%- for _key, _value in id_gecko_prefs.items() -%}
             {%- set _json = (_value | tojson | tojson) if _value is mapping else (_value | tojson) -%}
-            {%- do _content_lines.append("user_pref({}, {});".format(_key | tojson, _json)) -%}
+            {%- do _content_lines.append('user_pref({}, {});'.format(_key | tojson, _json)) -%}
           {%- endfor -%}
-          {%- set _content = _content_lines | join("" | aa_newline) -%}
+          {%- set _content = _content_lines | join('' | aa_newline) -%}
           {##}
           {%- set _acc = [] -%}
           {%- for _ulayout, _inv in _id_gck_ulayouts.results | zip(_id_gck_profiles.results) -%}
             {%- for _line in (_inv.content | b64decode).splitlines() -%}
-              {%- set _matches = _line | regex_search("Path=(.*)", "\\1") -%}
+              {%- set _matches = _line | regex_search('Path=(.*)', '\\1') -%}
               {%- if _matches is not none -%}
                 {%- do _acc.append(dict(
                   file=[_ulayout.home, _matches | first, 'user.js'] | path_join,
