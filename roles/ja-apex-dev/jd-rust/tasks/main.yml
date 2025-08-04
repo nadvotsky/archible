@@ -95,7 +95,7 @@
               rust = "nightly"
 
               [env]
-              RUSTFLAGS = "-Z threads={{ (ba_cores / 2) | round | int }} -Z linker-features=+lld -C target-cpu=native"
+              RUSTFLAGS = "-Z threads={{ (ba_cores / 2) | round | int }} -Z unstable-options -C linker-features=+lld -C target-cpu=native"
               #
               # Rust stable alternative:
               #
