@@ -1,0 +1,43 @@
+# cpp-bazel-template
+
+## Bazel Cheatsheet
+
+### Getting Started
+
+- Initialize: ```bazel[isk] sync [--config=<PROFILE>]```
+
+### Working with Code
+
+- Format: ```python tools.py format```
+- Lint: ```python tools.py lint```
+- Test: ```bazel[isk] test //test:main```
+
+### Developement Flow
+
+- Build: ```bazel[isk] build //src:main [--config=<PROFILE>]```
+- Clean: ```bazel[isk] clean```
+- Debug Linkage: ```readelf -d``` and ```ldd```
+
+### Links
+
+- C++ Package Managers: <https://moderncppdevops.com/pkg-mngr-roundup/>
+
+- Bazel C++: <https://bazel.build/start/cpp>
+- Bazel Testing: <https://bazel.build/rules/testing>
+- bazelrc: <https://bazel.build/run/bazelrc>
+- Bazel Commands and Options: <https://bazel.build/docs/user-manual>
+- Bazel Command-Line Reference: <https://bazel.build/reference/command-line-reference>
+- bazel-compile-commands: <https://github.com/kiron1/bazel-compile-commands>
+- Bazel Toolchains (not used): <https://bazel.build/extending/toolchains>
+
+- clang Reference: <https://clang.llvm.org/docs/ClangCommandLineReference.html>
+- clang-tidy: <https://discourse.cmake.org/t/how-to-prevent-clang-tidy-to-check-sources-added-with-fetchcontents/>
+- clang-format: <https://clang.llvm.org/docs/ClangFormatStyleOptions.html>
+- clang-tidy: <https://clang.llvm.org/extra/clang-tidy/checks/list.html>
+- run-clang-tidy: <https://github.com/llvm/llvm-project/blob/main/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py>
+- vfsoverlay: https://github.com/microsoft/clang-1/blob/master/test/VFS/Inputs/vfsoverlay.yaml
+
+- gcc: https://gcc.gnu.org/onlinedocs/gcc-3.2.2/gcc/Invoking-GCC.html
+- GoogleTest: <http://google.github.io/googletest>
+
+{{ ja_readme }}

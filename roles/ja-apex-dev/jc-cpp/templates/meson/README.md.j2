@@ -1,0 +1,48 @@
+# cpp-meson-template
+
+## Meson Cheatsheet
+
+### Getting Started
+
+- Initialize:
+    1) ```conan install . --build=missing --profile=config/profiles/<PROFILE>```
+    2) ```meson setup --native-file build/generators/conan_meson_native.ini build```
+
+- Fix Linking and Related Issues: ```rm -r $CONAN_HOME```
+
+### Working with Code
+
+- Format: ```meson compile clang-format -C build``` or ```python tools.py format```
+- Lint: ```meson compile clang-tidy -C build``` or ```python tools.py lint```
+- Test: ```meson test -C build```
+- Debug Linkage: ```readelf -d``` and ```ldd```
+
+### Developement Flow
+
+- Build: ```meson compile -C build```
+- Clean: ```meson compile --clean -C build```
+- All-in-One: ```conan build . --build=missing --profile=config/profiles/<PROFILE>```
+
+### Links
+
+- C++ Package Managers: <https://moderncppdevops.com/pkg-mngr-roundup/>
+
+- Meson Cross and Native File: <https://mesonbuild.com/Machine-files.html>
+- Meson Built-in Options: <https://mesonbuild.com/Builtin-options.html>
+- Meson Reference: <https://mesonbuild.com/Reference-manual_functions.html>
+- Meson HOWTO: <https://mesonbuild.com/howtox.html>
+- Meson WrapDB: <https://mesonbuild.com/Wrapdb-projects.html>
+- Meson Releases: <https://mesonbuild.com/Creating-releases.html>
+- Conan and Meson: <https://docs.conan.io/2/integrations/meson.html>
+
+- clang Reference: <https://clang.llvm.org/docs/ClangCommandLineReference.html>
+- clang-tidy: <https://discourse.cmake.org/t/how-to-prevent-clang-tidy-to-check-sources-added-with-fetchcontents/>
+- clang-format: <https://clang.llvm.org/docs/ClangFormatStyleOptions.html>
+- clang-tidy: <https://clang.llvm.org/extra/clang-tidy/checks/list.html>
+- run-clang-tidy: <https://github.com/llvm/llvm-project/blob/main/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py>
+- vfsoverlay: https://github.com/microsoft/clang-1/blob/master/test/VFS/Inputs/vfsoverlay.yaml
+
+- gcc: https://gcc.gnu.org/onlinedocs/gcc-3.2.2/gcc/Invoking-GCC.html
+- GoogleTest: <http://google.github.io/googletest>
+
+{{ ja_readme }}

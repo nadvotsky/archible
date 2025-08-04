@@ -1,5 +1,6 @@
 {%- set _acc = [
     dict(file="./vcpkg.json", template="vcpkg/vcpkg.json.j2"),
+    dict(file="./README.md", template="vcpkg/README.md.j2"),
 
     dict(dir="./config/cmake-toolchains", create=true),
     dict(dir="./config/vcpkg-toolchains", create=true),

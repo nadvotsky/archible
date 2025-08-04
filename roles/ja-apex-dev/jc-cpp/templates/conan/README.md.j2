@@ -1,21 +1,24 @@
-# cpp-cmake-template
+# cpp-conan-template
 
-## CMake Cheatsheet
+## Conan Cheatsheet
 
 ### Getting Started
 
 - Initialize:
-    - ```cmake [--fresh] --preset <PRESET>```
-    - ```cmake [--fresh] -B build -DCMAKE_TOOLCHAIN_FILE=config/toolchains/<PRESET>```
+    1) ```conan install . --build=missing --profile=config/profiles/<PROFILE>```
+    2) ```cmake [--fresh] --preset <PRESET>``` or ```cmake [--fresh] -B build -DCMAKE_TOOLCHAIN_FILE=config/toolchains/<PRESET>```
+
+- Fix Linking and Related Issues: ```rm -r $CONAN_HOME```
 
 ### Working with Code
 
 - Format: ```python tools.py format```
 - Lint: ```python tools.py lint```
 - Test:
-    - ```ctest --preset <PRESET>```
+    - ```ctest --preset @PRESET```
     - ```(cd build; ctest [-j 2] [-R 'TestName*'])```
-    - ```ninja -C build build.ninja test``` and ```./build/cmake-template-test```
+    - ```ninja -C build build.ninja test```
+    - ```./build/cmake-template-test```
 - Debug Linkage: ```readelf -d``` and ```ldd```
 
 ### Developement Flow
@@ -33,6 +36,11 @@
 ### Links
 
 - C++ Package Managers: <https://moderncppdevops.com/pkg-mngr-roundup/>
+
+- Conan and CMake: <https://docs.conan.io/2/integrations/cmake.html>
+- Conan Profile: <https://docs.conan.io/2/reference/config_files/profiles.html>
+- Conan Global Properties: <vhttps://docs.conan.io/2/reference/config_files/global_conf.html>
+- conanfile.py: <https://docs.conan.io/2/reference/conanfile.html>
 
 - CMake Documentation: <https://cmake.org/cmake/help/latest/index.html>
 - CMake Variables: <https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html>
