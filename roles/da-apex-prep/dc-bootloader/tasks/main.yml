@@ -7,15 +7,6 @@
       vars:
         install:
           - booster
-          #
-          # Filesystems support, for fsck.
-          #
-          - btrfs-progs
-          - e2fsprogs
-          - exfatprogs
-          - xfsprogs
-          - ntfs-3g
-          - dosfstools
 
     - name: Render booster configuration
       become: true

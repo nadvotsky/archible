@@ -107,6 +107,16 @@
           #
           - procs
           #
+          # Partitions, filesystems.
+          #
+          - gptfdisk
+          - btrfs-progs
+          - e2fsprogs
+          - exfatprogs
+          - xfsprogs
+          - ntfs-3g
+          - dosfstools
+          #
           # Archlinux.
           #
           # - pacquery
