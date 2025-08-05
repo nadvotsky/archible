@@ -7,10 +7,7 @@
     #  and entry dotnet binary. This binary sdk auto-discovery is set to the binary directory and not the popular
     #  linux default (/usr/share/dotnet).
     #
-    # This means that there is no need for any dotnet-tools system package as it used to be with AUR, and the only
-    #  thing that is required to get started is to add this binary to the PATH variable.
-    #
-    # Moreover, even if the system dotnet-runtime or dotnet-sdk is installed, such installation does not interfere
+    # This way, even if the system dotnet-runtime or dotnet-sdk is installed, such installation does not interfere
     #  with them.
     #
     - name: Resolve dotnet user layout
@@ -21,9 +18,6 @@
         dotnet_root:
           default: "{{ fa_dir_home }}/.dotnet"
           xdg: "{{ fa_dir_share }}/dotnet"
-        dotnet_tools:
-          default: "{{ fa_dir_home }}/.dotnet/tools"
-          xdg: "{{ fa_dir_state }}/dotnet/tools"
 
         nuget:
           default: "{{ fa_dir_home }}/.nuget"
