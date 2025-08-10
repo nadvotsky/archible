@@ -73,7 +73,7 @@
         targets: "{{ zb_home }}"
 
 - name: Configure gecko applications cleanup
-  tags: za-cleanup-gecko
+  tags: extra-cleanup-gecko
   when: aa_wipe == 'always'
   vars:
     _za_gecko_paths: >-

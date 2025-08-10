@@ -2,7 +2,7 @@
 - name: Configure hub restoration
   tags: apex-env-hub-restore
   block:
-    - name: Wipe hub state
+    - name: Prepare hub state
       foundation.files.install:
       vars:
         targets:

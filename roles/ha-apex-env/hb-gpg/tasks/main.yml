@@ -122,7 +122,7 @@
       register: _gb_restore_persist
 
     - name: Retrieve unattended keys information
-      when: not (_gb_restore_persist is skipped)
+      when: _gb_restore_persist is not skipped
       foundation.persist.gpg:
         home: "{{ fa_dir_home }}"
         layout: "{{ fa_layout }}"
@@ -131,7 +131,7 @@
       register: _gb_restore_unattended
 
     - name: Import ownertrust to GnuPG
-      when: not (_gb_restore_persist is skipped)
+      when: _gb_restore_persist is not skipped
       ansible.builtin.command:
         argv:
           - gpg
@@ -149,7 +149,7 @@
 
 - name: Configure GnuPG keyring generation
   tags: apex-env-gpg-generate
-  when: not (_gb_persist_restore is defined and _gb_persist_restore is skipped)
+  when: _gb_restore_persist is not defined or _gb_restore_persist is skipped
   vars:
     _hb_re_fpr: .*KEY_CREATED.*([0-9-A-Z]{40})
     _hb_re_kgr: fpr:+{}:+\sgrp:+(\w+)
