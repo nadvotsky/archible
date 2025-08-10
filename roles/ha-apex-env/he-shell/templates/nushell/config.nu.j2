@@ -502,7 +502,7 @@ def --wrapped --env mise [...rest: string] {
             hide-env ...($parsed | where op == hide | each {|it| $it.variable })
 
             if ($rest.0 == "deactivate") {
-                hide-env ...($env | columns | filter {|$k| $k | str contains "MISE" })
+                hide-env ...($env | columns | where {|$k| $k | str contains "MISE" })
             }
         },
         _ => {
