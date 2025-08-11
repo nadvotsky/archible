@@ -10,32 +10,6 @@ from jinja2.nodes import Node, Output, Const, CallBlock
 from jinja2.parser import Parser
 from jinja2.ext import Extension
 
-"""
-{% setindent spaces 8 %}
-
-{% macro foo() %}
-	{% indent %}
-	function() {+
-		{% indent %}
-			return [1, 2, 3];+
-		{% endindent %}
-	}
-	{% endindent %}
-
-{% endmacro %}
-
-{+
-	{% indent %}
-		"root: "true",+
-		"values": [+
-			{% indent %}{{ foo() }}{% endindent %},+
-		],+
-	{% endindent %}
-}+
-
-{% newline 3 %}
-"""
-
 
 class TemplatePlus(Templar):
     KEEP = "+"
@@ -103,8 +77,8 @@ class NewlineExtension(Extension):
 
         count_token = parser.stream.next_if("integer")
         count = 1 if count_token is None else count_token.value
-        if not (0 < count <= 10):
-            raise TemplateSyntaxError("Newline counter must be bigger than 0 and less than 10.")
+        if not (0 < count <= 12):
+            raise TemplateSyntaxError("Newline counter must be bigger than 0 and less than 12.")
 
         return Output([Const(TemplatePlus.NEWLINE * count)], lineno=lineno)
 
