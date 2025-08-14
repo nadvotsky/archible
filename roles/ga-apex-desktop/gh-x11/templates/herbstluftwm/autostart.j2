@@ -48,7 +48,7 @@
             dims = "{{ _mon.width }}x{{ _mon.height }}+{{ _acc.width }}+{{ _acc.height }}",
             first_tag = "{{ _mon_name | ga_workspace_prefix(loop.first) }}1",
         },
-        {% set _ = _acc.__setitem__(_dim, _acc[_dim] + _mon[_dim]) %}
+        {% set _ = _acc.update({_dim: _acc[_dim] + _mon[_dim]}) %}
     {% endfor %}
 {%- endmacro %}
 
@@ -60,8 +60,8 @@
         {% for _ in range(_mon.workspaces) %}
             {% set _name = "{}{}".format(_prefix, loop.index) %}
             {##}
-            {% set _ = _tags_map.__setitem__(_tags_map.index, {"name": _name, "monitor": _mon_name}) %}
-            {% set _ = _tags_map.__setitem__("index", _tags_map.index + 1) %}
+            {% set _ = _tags_map.update({_tags_map.index: dict(name=_name, monitor=_mon_name)}) %}
+            {% set _ = _tags_map.update(dict(index=_tags_map.index + 1)) %}
             {##}
             {% set _min = 1 %}
             {% set _max = _mon.workspaces %}
@@ -113,7 +113,7 @@
         [{{ _bind.line | aa_dquote() }}] = {
             "and",
                 "AND", "focus_monitor", "{{ _tags_map[loop.index0].monitor }}",
-                "AND", "use", "{{ _tags_map[loop.index0].name }}",
+                "AND", "use", "{{ _tags_map[loop.index0].name }}", 
         },
     {% endfor %}
 
@@ -191,7 +191,7 @@
         "dunstctl history-pop $(" ..
             "dunstctl history |" ..
             "jq --raw-output '.data[][] | [.id.data, .appname.data, .summary.data] | @tsv' |" ..
-            "rofi -dmenu -i | " ..
+            "rofi -dmenu -i | " .. 
             "awk '{ print ($1 ? $1 : -1); }'" ..
         ")",
 {%- endmacro -%}
@@ -267,7 +267,7 @@
         {% set _action = _bind.action.subs %}
         {% set _line = _bind.line | aa_dquote() %}
         {% if _action is string %}
-            [{{ _line }}] = {{
+            [{{ _line }}] = {{ 
                 "{}{}{}".format("{", _action | split(" ") | map("aa_dquote") | join(", "), "}")
             }},
         {% else %}
@@ -350,7 +350,7 @@ local config = {
         -- border_width acts different when outer_width is used:
         -- For top (tabs) total size = outer_width + border_width
         -- For left, right, bottom total size = border_width
-        --
+        -- 
         -- Therefore, emulating unified look with paddings
         --
         {"theme.border_width", {{ _spacing_medium }}},
@@ -455,13 +455,12 @@ function process_xresources(xresources)
 end
 
 function process_env(env)
-    for key, value in pairs(env) do
-        commit("setenv", key, value)
-    end
-
     exec(
         "dbus-update-activation-environment", "--systemd",
-        "XDG_CURRENT_DESKTOP=herbstluftwm", "XDG_SESSION_TYPE=x11"
+        "XDG_CURRENT_DESKTOP=herbstluftwm", "XDG_SESSION_TYPE=x11", "DISPLAY"
+    )
+    exec(
+        "systemctl", "--user", "unset-environment", "WAYLAND_DISPLAY"
     )
 end
 

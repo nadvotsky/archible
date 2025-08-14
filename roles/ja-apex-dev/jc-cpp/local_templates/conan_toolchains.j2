@@ -1,52 +1,51 @@
 {%- set _acc = lookup("jc_toolchains") -%}
 {%- for _name, _tchain in _acc.items() -%}
-    {%- do _tchain.update({
+    {%- set _ = _tchain.update({
         "cache": {
-            "CMAKE_BUILD_TYPE": _tchain.release is true | ternary("Release", "Debug"),
+            "CMAKE_BUILD_TYPE": _tchain.get("release") is true | ternary("Release", "Debug"),
         },
         "conan": {},
     }) -%}
-    {%- if _tchain.default is true -%}
-        {%- do _tchain.__setitem__("file", "${sourceDir}/build/generators/conan_toolchain.cmake") -%}
-        {%- do _tchain.cache.__setitem__("CMAKE_POLICY_DEFAULT_CMP0091", "NEW") -%}
-        {%- continue -%}
+    {%- if _tchain.get("default") is true -%}
+        {%- set _ = _tchain.update(dict(file="${sourceDir}/build/generators/conan_toolchain.cmake")) -%}
+        {%- set _ = _tchain.cache.update({"CMAKE_POLICY_DEFAULT_CMP0091": "NEW"}) -%}
+    {%- else -%}
+        {%- set _compiler = _tchain.compiler | default({}) -%}
+        {%- set _linker = _tchain.linker | default({}) -%}
+        {%- set _c = _tchain.c | default({}) -%}
+        {%- set _cxx = _tchain.cxx | default({}) -%}
+        {##}
+        {%- set _linker_flags = (
+            [_linker.use | default(none)] + (_linker.flags | default([]))
+        ) | reject("none") -%}
+        {%- for _prop, _section in {
+            "settings": {
+                "build_type": _tchain.get("release") is true | ternary("Release", "Debug"),
+                "compiler": _compiler.family | default(none),
+                "compiler.version": _compiler.version | default(none),
+                "compiler.cppstd": _cxx.std | default(none),
+                "compiler.cstd": _c.std | default(none),
+                "compiler.libcxx": _cxx.stdlib | default(none),
+            },
+            "conf": {
+                "tools.build:compiler_executables": (
+                    {"c": _c.name | default(none), "cpp": _cxx.name | default(none)}
+                        | dict2items | rejectattr("value", "none") | items2dict
+                ) or none,
+                "tools.build:cflags": _c.flags | default(none),
+                "tools.build:cxxflags": _cxx.flags | default(none),
+                "tools.build:exelinkflags": none if _linker_flags | length == 0 else _linker_flags,
+                "tools.build:sharedlinkflags": none if _linker_flags | length == 0 else _linker_flags,
+            },
+            "options": {
+                "*:shared": true if _tchain.get("linkage", "") == "dynamic" else none,
+            }
+        }.items() -%}
+            {%- set _ = _tchain.conan.update({
+                _prop: _section | dict2items | rejectattr("value", "none") | items2dict,
+            }) -%}
+        {%- endfor -%}
     {%- endif -%}
-
-    {%- set _linker_flags = (
-        [(_tchain.linker.use | default(none))] + (_tchain.linker.flags | default([]))
-    ) | reject("none") -%}
-    {%- for _prop, _section in {
-        "settings": {
-            "build_type": _tchain.release is true | ternary("Release", "Debug"),
-            "compiler": _tchain.compiler.family,
-            "compiler.version": _tchain.compiler.version,
-            "compiler.cppstd": _tchain.cxx.std,
-            "compiler.cstd": _tchain.c.std,
-            "compiler.libcxx": _tchain.cxx.stdlib,
-        },
-        "conf": {
-            "tools.build:compiler_executables": (
-                {"c": _tchain.c.name, "cpp": _tchain.cxx.name}
-                    | dict2items | selectattr("value", "defined")
-                    | items2dict
-            ) or none,
-            "tools.build:cflags": _tchain.c.flags,
-            "tools.build:cxxflags": _tchain.cxx.flags,
-            "tools.build:exelinkflags": none if _linker_flags | length == 0 else _linker_flags,
-            "tools.build:sharedlinkflags": none if _linker_flags | length == 0 else _linker_flags,
-        },
-        "options": {
-            "*:shared": true if _tchain.linkage is string and _tchain.linkage == "dynamic" else none,
-        }
-    }.items() -%}
-        {%- do _tchain.conan.__setitem__(
-            _prop, _section
-                | dict2items
-                | selectattr("value", "defined")
-                | rejectattr("value", "none")
-                | items2dict,
-        ) -%}
-    {%- endfor -%}
 {%- endfor -%}
 
 {{ _acc }}

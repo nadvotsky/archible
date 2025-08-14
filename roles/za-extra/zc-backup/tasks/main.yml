@@ -17,9 +17,9 @@
           {%- for _name, _meta in _zc_unattended.gpg.items() -%}
             {%- for _master, _subdict in hb_generate.items() -%}
               {%- if _master == _name -%}
-                {%- do _acc.__setitem__(
-                  _name, dict(fingerprint=_meta.fingerprint, keygrip=_meta.keygrip, password=_subdict.master.password),
-                ) -%}
+                {%- set _ = _acc.update({
+                  _name: dict(fingerprint=_meta.fingerprint, keygrip=_meta.keygrip, password=_subdict.master.password),
+                }) -%}
               {%- endif -%}
             {%- endfor -%}
           {%- endfor -%}
@@ -41,7 +41,7 @@
             include: >-
               {%- set _acc = [] -%}
               {%- for _key in _zc_unattended.gpg.values() -%}
-                {%- do _acc.append('private-keys-v1.d/{}.key'.format(_key.keygrip)) -%}
+                {%- set _ = _acc.append('private-keys-v1.d/{}.key'.format(_key.keygrip)) -%}
               {%- endfor -%}
               {{ _acc }}
 

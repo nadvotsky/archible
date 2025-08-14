@@ -1,48 +1,50 @@
 {%- set _rc_lines = [] -%}
 {%- for _name, _tchain in lookup("jc_toolchains").items() -%}
-    {%- if _tchain.default is true -%}
-        {%- continue -%}
+    {%- if _tchain.get("default") is not true -%}
+        {%- set _linker = _tchain.linker | default({}) -%}
+        {%- set _c = _tchain.c | default({}) -%}
+        {%- set _cxx = _tchain.cxx | default({}) -%}
+
+        {%- set _lines = [
+            "--force_pic",
+            "--spawn_strategy=local",
+            "--symlink_prefix=build/",
+
+            "--action_env=CC={}".format(_tchain.cxx.name)
+                if (_cxx.name | default(none)) is string else none,
+
+            ["--linkopt {}".format(_linker.use)]
+                if (_linker.use | default(none)) is string else none,
+
+            ["--cxxopt {}".format(_cxx.use), "--linkopt {}".format(_cxx.use)]
+                if (_cxx.use | default(none)) is string else none,
+
+            ["--compilation_mode=opt", "--strip=always", "--copt -O3"]
+                if _tchain.get("release") is true else
+                ["--compilation_mode=dbg", "--strip=never"],
+
+            ("--dynamic_mode=off" if _tchain.linkage == "static" else "--dynamic_mode=fully")
+                if _tchain.get("linkage") is string else none,
+        ] -%}
+
+        {%- for _arg, _flags in {
+            "--copt": _c.flags | default(none),
+            "--cxxopt": _cxx.flags | default(none),
+            "--linkopt": _linker.flags | default(none),
+        }.items() -%}
+            {%- if _flags is not none -%}
+                {%- for _flag in _flags -%}
+                    {%- set _ = _lines.append("{} {}".format(_arg, _flag)) -%}
+                {%- endfor -%}
+            {%- endif -%}
+        {%- endfor -%}
+
+        {%- for _line in _lines | reject("none") | flatten() -%}
+            {%- set _ = _rc_lines.append("build:{} {}".format(_name, _line)) -%}
+        {%- endfor -%}
+
+        {%- set _ = _rc_lines.append("") -%}
     {%- endif -%}
-
-    {%- set _lines = [
-        "--force_pic",
-        "--spawn_strategy=local",
-        "--symlink_prefix=build/",
-
-        "--action_env=CC={}".format(_tchain.cxx.name)
-            if _tchain.cxx.name is string else none,
-
-        ["--linkopt {}".format(_tchain.linker.use)]
-            if _tchain.linker.use is string else none,
-
-        ["--cxxopt {}".format(_tchain.cxx.use), "--linkopt {}".format(_tchain.cxx.use)]
-            if _tchain.cxx.use is string else none,
-
-        ["--compilation_mode=opt", "--strip=always", "--copt -O3"]
-            if _tchain.release is true else
-            ["--compilation_mode=dbg", "--strip=never"],
-
-        ("--dynamic_mode=off" if _tchain.linkage == "static" else "--dynamic_mode=fully")
-            if _tchain.linkage is string else none,
-    ] -%}
-
-    {%- for _arg, _flags in {
-        "--copt": _tchain.c.flags,
-        "--cxxopt": _tchain.cxx.flags,
-        "--linkopt": _tchain.linker.flags,
-    }.items() -%}
-        {%- if _flags is defined -%}
-            {%- for _flag in _flags -%}
-                {%- do _lines.append("{} {}".format(_arg, _flag)) -%}
-            {%- endfor -%}
-        {%- endif -%}
-    {%- endfor -%}
-
-    {%- for _line in _lines | reject("none") | flatten() -%}
-        {%- do _rc_lines.append("build:{} {}".format(_name, _line)) -%}
-    {%- endfor -%}
-
-    {%- do _rc_lines.append("") -%}
 {%- endfor -%}
 
 {%- set _acc = [

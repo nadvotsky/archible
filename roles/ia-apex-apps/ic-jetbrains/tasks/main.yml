@@ -18,7 +18,7 @@
       loop: >-
         {%- set _acc = ic_plugins -%}
         {%- for _codename in ic_install -%}
-          {%- do _acc.extend(ic_products[_codename].get('plugins', [])) -%}
+          {%- set _ = _acc.extend(ic_products[_codename].get('plugins', [])) -%}
         {%- endfor -%}
         {{ _acc }}
       register: _ic_plugins
@@ -34,21 +34,21 @@
             {%- set _plugins = [] -%}
             {%- for _id in (ic_plugins + _prod.get('plugins', [])) -%}
               {%- set _meta = _ic_plugins.results | selectattr('item', 'eq', _id) | first -%}
-              {%- do _plugins.append(dict(
+              {%- set _ = _plugins.append(dict(
                 id=_meta.json.xmlId,
                 model=_meta.json.pricingModel,
                 code=_meta.json.purchaseInfo.productCode | default(none),
               )) -%}
             {%- endfor -%}
-            {%- do _acc.__setitem__(
-              _codename, dict(
+            {%- set _ = _acc.update({
+              _codename: dict(
                 info_name=_prod.name,
                 info_comm=_prod.comment,
                 code_lic=_prod.license,
                 plugins=_plugins,
                 dist_dir='/opt/jetbrains/ide/{}'.format(_codename),
                 dist_bin='/opt/jetbrains/ide/{}/bin/{}'.format(_codename, _codename if _codename != 'webide' else 'webstorm'),
-                dist_ico='/opt/jetbrains/ide/{}/bin/{}.svg'.format(_codename, _codename if _codename != 'webide' else 'webstorm'),
+                dist_ico='/opt/jetbrains/ide/{}/bin/{}.svg'.format(_codename, _codename),
                 dist_url=_release.downloads[_arch].link,
                 dist_ver='{}.{}'.format(_release.version, _release.build),
                 ide_cfg='{}/{}'.format(fa_dir_config, _codename),
@@ -60,7 +60,7 @@
                 ),
                 ide_key='{}/{}/{}.key'.format(fa_dir_config, _codename, _codename),
               )
-            ) -%}
+            }) -%}
           {%- endfor -%}
           {{ _acc }}
 
@@ -193,7 +193,7 @@
         targets: >-
           {%- set _acc = [dict(dir=_ic_paths.dist_dir)] -%}
           {%- for _ide in _ic_ctx.values() -%}
-            {%- do _acc.append(dict(dir=_ide.dist_dir)) -%}
+            {%- set _ = _acc.append(dict(dir=_ide.dist_dir)) -%}
           {%- endfor -%}
           {{ _acc }}
 
@@ -260,9 +260,9 @@
         targets: >-
           {%- set _acc = [] -%}
           {%- for _ide in _ic_ctx.values() -%}
-            {%- do _acc.append(dict(dir=_ide.ide_cfg)) -%}
-            {%- do _acc.append(dict(dir=_ide.ide_sys)) -%}
-            {%- do _acc.append(dict(dir=_ide.ide_plg)) -%}
+            {%- set _ = _acc.append(dict(dir=_ide.ide_cfg)) -%}
+            {%- set _ = _acc.append(dict(dir=_ide.ide_sys)) -%}
+            {%- set _ = _acc.append(dict(dir=_ide.ide_plg)) -%}
           {%- endfor -%}
           {{ _acc }}
 
@@ -287,14 +287,14 @@
               'metadata': '01{}0101PPAM000005'.format(now(fmt='%Y')),
             } -%}
             {%- if ic_code_with_me -%}
-              {%- do _lic.products.append(dict(code='PCWMP', paidUpTo=_up_to)) -%}
+              {%- set _ = _lic.products.append(dict(code='PCWMP', paidUpTo=_up_to)) -%}
             {%- endif -%}
             {%- for _plugin in _ide.plugins -%}
               {%- if _plugin.model != 'FREE' -%}
-                {%- do _lic.products.append(dict(code=_plugin.code, paidUpTo=_up_to)) -%}
+                {%- set _ = _lic.products.append(dict(code=_plugin.code, paidUpTo=_up_to)) -%}
               {%- endif -%}
             {%- endfor -%}
-            {%- do _acc.append(_lic) -%}
+            {%- set _ = _acc.append(_lic) -%}
           {%- endfor -%}
           {{ _acc }}
 
@@ -330,7 +330,7 @@
             {%- set _cert = [] -%}
             {%- for _line in (_ic_agent_cert.content | b64decode).split('' | aa_newline) -%}
               {%- if not _line.startswith('-') -%}
-                {%- do _cert.append(_line) -%}
+                {%- set _ = _cert.append(_line) -%}
               {%- endif -%}
             {%- endfor -%}
             {%- set _prefix = (0xFFFF).to_bytes(2) + '<certificate-key>'.encode('utf-16le') + (0xA).to_bytes(2, 'little') -%}
@@ -338,7 +338,7 @@
               _lic.licenseId, _lic | to_json(separators=(',', ':')) | b64encode, _sign.stdout, _cert | join('')
             ] -%}
             {%- set _key_encoded = (_key | join('-')).encode('utf-16le') -%}
-            {%- do _acc.append(dict(
+            {%- set _ = _acc.append(dict(
               file=_ide.ide_key, content=_prefix + _key_encoded,
             )) -%}
           {%- endfor -%}

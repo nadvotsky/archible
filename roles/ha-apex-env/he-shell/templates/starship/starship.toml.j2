@@ -17,14 +17,18 @@
     ({{ _expr.removesuffix("\\") }})
 {%- endmacro -%}
 
-{% set _escape_table = "".maketrans({
+{%- set _escape_table = {
     "(": "\\\\(",
     ")": "\\\\)",
     "[": "\\\\[",
-    "]": "\\\\]",
-}) %}
+    "]": "\\\\]"
+} -%}
 {%- macro _escape(_expr) -%}
-    {{ _expr.translate(_escape_table) }}
+    {%- set _ns = namespace(str=_expr) -%}
+    {%- for _chr in _expr | list | select('in', _escape_table) -%}
+        {%- set _ns.str = _ns.str.replace(_chr, _escape_table[_chr]) -%}
+    {%- endfor -%}
+    {{ _ns.str }}
 {%- endmacro -%}
 
 {%- macro _multiline(_lines) -%}

@@ -1,17 +1,16 @@
 {% set _cmdline = {} %}
 {% for _param in __cmdline.split(" ") %}
     {% set _parts = _param.split("=", 1) %}
-    {% set _ = _cmdline.__setitem__(
-        _parts[0],
-        none if _parts | length == 1 else (_parts[1] | split(",")),
-    ) %}
+    {% set _ = _cmdline.update({
+        _parts[0]: none if _parts | length == 1 else (_parts[1] | split(",")),
+    }) %}
 {% endfor %}
 {##}
 {% for _key, _value in _common_cmdline.items() %}
     {% if _value is none %}
-        {% set _ = _cmdline.__setitem__(_key, _value) %}
+        {% set _ = _cmdline.update(dict(_key, _value)) %}
     {% elif _value is string %}
-        {% set _ = _cmdline.__setitem__(_key, [_value]) %}
+        {% set _ = _cmdline.update(dict(_key, [_value])) %}
     {% else %}
     {% set _ = _cmdline.update({_key: (_cmdline[_key] | default([]) + _value) | unique}) %}
     {% endif %}

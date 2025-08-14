@@ -140,7 +140,7 @@
           {%- set _acc = [] -%}
           {%- for _name, _key in _gb_restore_unattended.gpg.items() -%}
             {%- if _name in hb_generate -%}
-              {%- do _acc.append('{}:6:'.format(_key.fingerprint)) -%}
+              {%- set _ = _acc.append('{}:6:'.format(_key.fingerprint)) -%}
             {%- endif -%}
           {%- endfor -%}
           {{ _acc | join('' | aa_newline) }}
@@ -157,14 +157,16 @@
     _hb_masters: >-
       {%- set _acc = {} -%}
       {%- for _name, _subdict in hb_generate.items() -%}
-        {%- do _acc.__setitem__(_name, _subdict.master | combine(dict(fpr=none, kgr=none))) -%}
+        {%- set _ = _acc.update({_name: _subdict.master | combine(dict(fpr=none, kgr=none))}) -%}
       {%- endfor -%}
       {{ _acc }}
     _hb_subkeys: >-
       {%- set _acc = {} -%}
       {%- for _master, _subdict in hb_generate.items() -%}
         {%- for _name, _subkey in _subdict.subkeys.items() -%}
-          {%- do _acc.__setitem__(_name, _subkey | combine(dict(fpr=none, kgp=none, master=_master))) -%}
+          {%- set _ = _acc.update({
+            _name: _subkey | combine(dict(fpr=none, kgp=none, master=_master))
+          }) -%}
         {%- endfor -%}
       {%- endfor -%}
       {{ _acc }}
@@ -198,7 +200,7 @@
       ansible.builtin.set_fact:
         _hb_masters: >-
           {%- for _name, _inv in _hb_masters.keys() | zip(_hb_gen_master_invocation.results) -%}
-            {%- do _hb_masters[_name].update(dict(fpr=_inv.stdout | regex_search(_hb_re_fpr, '\\1') | first)) -%}
+            {%- set _ = _hb_masters[_name].update(dict(fpr=_inv.stdout | regex_search(_hb_re_fpr, '\\1') | first)) -%}
           {%- endfor -%}
           {{ _hb_masters }}
 
@@ -235,10 +237,9 @@
       ansible.builtin.set_fact:
         _hb_masters: >-
           {%- for _name, _master in _hb_masters.items() -%}
-            {%- do _hb_masters[_name].__setitem__(
-              'kgp',
-              _hb_gen_keyring_invocation.stdout | regex_search(_hb_re_kgr.format(_master.fpr), '\\1') | first
-            ) -%}
+            {%- set _ = _hb_masters[_name].update({
+              'kgp': _hb_gen_keyring_invocation.stdout | regex_search(_hb_re_kgr.format(_master.fpr), '\\1') | first
+            }) -%}
           {%- endfor -%}
           {{ _hb_masters }}
 
@@ -248,7 +249,7 @@
           {%- for _name, _inv in _hb_subkeys | zip(_hb_gen_subkeys_invocation.results) -%}
             {%- set _fpr = _inv.stdout | regex_search(_hb_re_fpr, '\\1') | first -%}
             {%- set _kgp = _hb_gen_keyring_invocation.stdout | regex_search(_hb_re_kgr.format(_fpr), '\\1') | first -%}
-            {%- do _hb_subkeys[_name].update(dict(fpr=_fpr, kgp=_kgp)) -%}
+            {%- set _ = _hb_subkeys[_name].update(dict(fpr=_fpr, kgp=_kgp)) -%}
           {%- endfor -%}
           {{ _hb_subkeys }}
 
@@ -272,10 +273,10 @@
         stdin: >-
           {%- set _acc = {} -%}
           {%- for _name, _master in _hb_masters.items() -%}
-            {%- do _acc.__setitem__(_name, dict(fingerprint=_master.fpr, keygrip=_master.kgp)) -%}
+            {%- set _ = _acc.update({_name: dict(fingerprint=_master.fpr, keygrip=_master.kgp)}) -%}
           {%- endfor -%}
           {%- for _name, _subkey in _hb_subkeys.items() -%}
-            {%- do _acc.__setitem__(_name, dict(fingerprint=_subkey.fpr, keygrip=_subkey.kgp)) -%}
+            {%- set _ = _acc.update({_name: dict(fingerprint=_subkey.fpr, keygrip=_subkey.kgp)}) -%}
           {%- endfor -%}
           {{ _acc | to_nice_json | b64encode }}
       register: _hb_gen_unattended_invocation
@@ -290,7 +291,7 @@
         block: >-
           {%- set _lines = ['export GPG_TTY=$(tty)'] -%}
           {%- if hb_ssh_agent is true -%}
-            {%- do _lines.append('export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)') -%}
+            {%- set _ = _lines.append('export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)') -%}
           {%- endif -%}
           {{ _lines | join('' | aa_newline) }}
         marker: "# {mark} GnuPG init"

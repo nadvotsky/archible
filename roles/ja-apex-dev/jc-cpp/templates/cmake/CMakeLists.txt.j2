@@ -26,7 +26,7 @@ if(lto_supported)
 endif()
 
 
-{% if _jc_template.fetch is true %}
+{% if _jc_template.get("fetch") is true %}
 include(FetchContent)
 FetchContent_Declare(
     fmt
@@ -58,7 +58,7 @@ add_executable(
     ${SOURCES}
 )
 
-{% if _jc_template.fetch is true %}
+{% if _jc_template.get("fetch") is true %}
 FetchContent_MakeAvailable(fmt)
 {% else %}
 find_package(fmt CONFIG REQUIRED)
@@ -73,7 +73,7 @@ add_executable(
     ${TESTS}
 )
 
-{% if _jc_template.fetch is true %}
+{% if _jc_template.get("fetch") is true %}
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 {% else %}
@@ -85,7 +85,7 @@ include(GoogleTest)
 gtest_discover_tests({{ _jc_template.name }}-test)
 
 
-{% set _targets = [_jc_template.name, "fmt" if _jc_template.fetch is true else none] %}
+{% set _targets = [_jc_template.name, "fmt" if _jc_template.get("fetch") is true else none] %}
 install(
     TARGETS {{ _targets | reject("none") | join(" ") }}
     RUNTIME_DEPENDENCIES

@@ -42,7 +42,7 @@
         {%- set _acc = [] -%}
         {%- for _pkg, _stat in _id_gck | map(attribute='package') | zip(_id_gck_profiles_stat.results) -%}
           {%- if _stat.stat.exists is false -%}
-            {%- do _acc.append(_pkg) -%}
+            {%- set _ = _acc.append(_pkg) -%}
           {%- endif -%}
         {%- endfor -%}
         {{ _acc }}
@@ -62,7 +62,7 @@
           {%- set _content_lines = [] -%}
           {%- for _key, _value in id_gecko_prefs.items() -%}
             {%- set _json = (_value | tojson | tojson) if _value is mapping else (_value | tojson) -%}
-            {%- do _content_lines.append('user_pref({}, {});'.format(_key | tojson, _json)) -%}
+            {%- set _ = _content_lines.append('user_pref({}, {});'.format(_key | tojson, _json)) -%}
           {%- endfor -%}
           {%- set _content = _content_lines | join('' | aa_newline) -%}
           {##}
@@ -71,7 +71,7 @@
             {%- for _line in (_inv.content | b64decode).splitlines() -%}
               {%- set _matches = _line | regex_search('Path=(.*)', '\\1') -%}
               {%- if _matches is not none -%}
-                {%- do _acc.append(dict(
+                {%- set _ = _acc.append(dict(
                   file=[_ulayout.home, _matches | first, 'user.js'] | path_join,
                   content=_content
                 )) -%}
@@ -118,10 +118,10 @@
         targets: >-
           {%- set _lines = [] -%}
           {%- for _flag in id_chromium_flags -%}
-            {%- do _lines.append('--{}'.format(_flag)) -%}
+            {%- set _ = _lines.append('--{}'.format(_flag)) -%}
           {%- endfor -%}
-          {%- do _lines.append('--enable-features={}'.format(id_chromium_features_enable | join(','))) -%}
-          {%- do _lines.append('--disable-features={}'.format(id_chromium_features_disable | join(','))) -%}
+          {%- set _ = _lines.append('--enable-features={}'.format(id_chromium_features_enable | join(','))) -%}
+          {%- set _ = _lines.append('--disable-features={}'.format(id_chromium_features_disable | join(','))) -%}
           {##}
           {%- set _acc = [] -%}
           {%- for _browser, _ulayout in _id_chr | zip(_id_chr_ulayouts.results) -%}
@@ -130,7 +130,7 @@
               ['--user-data-dir={}'.format(_ulayout.home)] +
               ['--disk-cache-dir={}'.format(_ulayout.cache)]
             ) -%}
-            {%- do _acc.append(dict(file=_browser.flags, content=_flags | join('' | aa_newline))) -%}
+            {%- set _ = _acc.append(dict(file=_browser.flags, content=_flags | join('' | aa_newline))) -%}
           {%- endfor -%}
           {{ _acc }}
 
@@ -143,7 +143,7 @@
         targets: >-
           {%- set _acc = [] -%}
           {%- for _ulayout in _id_chr_ulayouts.results -%}
-            {%- do _acc.extend([
+            {%- set _ = _acc.extend([
               dict(dir=_ulayout.home),
               dict(dir=[_ulayout.home, 'Default'] | path_join),
               dict(file=[_ulayout.home, 'Default', 'Preferences'] | path_join),

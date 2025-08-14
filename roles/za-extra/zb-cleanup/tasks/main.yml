@@ -79,8 +79,8 @@
     _za_gecko_paths: >-
       {%- set _acc = [] -%}
       {%- for _gecko in ia_browsers | selectattr('type', 'eq', 'gecko') -%}
-        {%- do _acc.append(lookup('foundation.user.layout', fa_layout, _gecko.home)) -%}
-        {%- do _acc.append(lookup('foundation.user.layout', fa_layout, _gecko.cache)) -%}
+        {%- set _ = _acc.append(lookup('foundation.user.layout', fa_layout, _gecko.home)) -%}
+        {%- set _ = _acc.append(lookup('foundation.user.layout', fa_layout, _gecko.cache)) -%}
       {%- endfor -%}
       {{ _acc }}
   block:
@@ -131,10 +131,10 @@
     _za_chromium: >-
       {%- set _acc = [] -%}
       {%- for _chr in ia_browsers | selectattr('type', 'eq', 'chromium') -%}
-        {%- do _acc.append(dict(name=_chr.package, path=lookup('foundation.user.layout', fa_layout, _chr.home))) -%}
-        {%- do _acc.append(dict(name=_chr.package, path=lookup('foundation.user.layout', fa_layout, _chr.cache))) -%}
+        {%- set _ = _acc.append(dict(name=_chr.package, path=lookup('foundation.user.layout', fa_layout, _chr.home))) -%}
+        {%- set _ = _acc.append(dict(name=_chr.package, path=lookup('foundation.user.layout', fa_layout, _chr.cache))) -%}
       {%- endfor -%}
-      {%- do _acc.append(dict(name='code', path=lookup('foundation.user.layout', fa_layout, ia_vscode_user_layout))) -%}
+      {%- set _ = _acc.append(dict(name='code', path=lookup('foundation.user.layout', fa_layout, ia_vscode_user_layout))) -%}
       {{ _acc }}
   block:
     - name: Stop running Chromium instance

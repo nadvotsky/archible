@@ -5,21 +5,19 @@
     },
 ] -%}
 {%- for _name, _tchain in _jc_template.toolchains.items() -%}
-    {%- if _tchain.default is true -%}
-        {%- continue -%}
+    {%- if _tchain.get("default") is not true -%}
+        {%- set _lines = [] -%}
+        {%- for _var, _val in _tchain.cmake.items() -%}
+            {%- set _ = _lines.append('set({} "{}")'.format(
+                _var, _val if _val is string else (_val | join(" ")),
+            )) -%}
+        {%- endfor -%}
+
+        {%- set _ = _acc.append({
+            "file": "./config/toolchains/{}.cmake".format(_name),
+            "content": _lines | join("" | aa_newline) | aa_newline,
+        }) -%}
     {%- endif -%}
-
-    {%- set _lines = [] -%}
-    {%- for _var, _val in _tchain.cmake.items() -%}
-        {%- do _lines.append('set({} "{}")'.format(
-            _var, _val if _val is string else (_val | join(" ")),
-        )) -%}
-    {%- endfor -%}
-
-    {%- do _acc.append({
-        "file": "./config/toolchains/{}.cmake".format(_name),
-        "content": _lines | join("" | aa_newline) | aa_newline,
-    }) -%}
 {%- endfor -%}
 
 {{ _acc }}

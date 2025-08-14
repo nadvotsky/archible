@@ -4,11 +4,11 @@
   {% for _name, _tchain in _jc_template.toolchains.items() %}
     {
       "name": "{{ _name }}",
-    {% if _tchain.toolchain is string %}
+    {% if _tchain.get("toolchain", none) is string %}
       "toolchainFile": "{{ _tchain.toolchain }}",
     {% endif %}
     {##}
-    {% if _tchain.default is true %}
+    {% if _tchain.get("default") is true %}
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "warnings": {
@@ -22,7 +22,7 @@
       "inherits": ["default"]{{ "," if _tchain.cache is defined else "" }}
     {% endif %}
     {##}
-    {% if _tchain.cache is sequence %}
+    {% if (_tchain.cache | default(none)) is sequence %}
       "cacheVariables": {
       {% for _var, _val in _tchain.cache.items() %}
         "{{ _var }}": "{{ _val }}"{{ "," if not loop.last else "" }}
@@ -47,7 +47,7 @@
     {
       "name": "{{ _kv.key }}",
       "configurePreset": "{{ _kv.key }}",
-    {% if _kv.value.default is true %}
+    {% if _kv.value.get("default") is true %}
       "output": {
         "outputOnFailure": true,
         "shortProgress": true
@@ -64,7 +64,7 @@
     {
       "name": "{{ _name }}",
       "configurePreset": "{{ _name }}",
-    {% if _tchain.default is true %}
+    {% if _tchain.get("default") is true %}
       "packageName": "{{ _jc_template.name }}",
       "packageVersion": "1.0.0",
       "packageDirectory": "dist",
@@ -90,7 +90,7 @@
           "name": "{{ _name }}"
         },
         {
-          "type": "{{ "package" if _tchain.release is true else "test" }}",
+          "type": "{{ "package" if _tchain.get("release") is true else "test" }}",
           "name": "{{ _name }}"
         }
       ]

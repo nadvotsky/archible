@@ -279,12 +279,12 @@
     {% for _bind in _he_nushell_default.content | regex_findall(
         "modifier: (?P<mod>\\w*)\\s*keycode: (?P<key>\\w*)"
     ) %}
-        {% set _ = _binds.__setitem__(
-            _binds_id(_bind[0], _bind[1]),
+        {% set _ = _binds.update({
+            _binds_id(_bind[0], _bind[1]):
             {
                 "mode": _binds_mode_all, "mods": _bind[0], "key": _bind[1], "env": None,
             },
-        ) %}
+        }) %}
     {% endfor %}
     #}
     {#
@@ -294,29 +294,29 @@
         | ga_parse_binds(actions_map=_binds_actions_map, modifiers_map={"ctrl": "control"}, sep=("_", "-"))
         | selectattr("mode_name", "in", ["bare", "common", "vim", "emacs"])
     %}
-        {% set _ = _binds.__setitem__(
-            _binds_id(_bind.modifiers, _bind.key),
+        {% set _ = _binds.update({
+            _binds_id(_bind.modifiers, _bind.key):
             {
                 "mode": "[vi_normal]" if _bind.mode_name == "vim" else _binds_mode_all,
                 "mods": _binds_modifiers(_bind.modifiers),
                 "key": _binds_key(_bind.key),
                 "evn": _bind.action.subs,
             }
-        ) %}
+        }) %}
     {% endfor %}
     {#
         Overlay all Reedline builtins.
     #}
     {% for _bind in _binds_builtins %}
-        {% set _ = _binds.__setitem__(
-            _binds_id(_bind[0], _bind[1]),
+        {% set _ = _binds.update({
+            _binds_id(_bind[0], _bind[1]):
             {
                 "mode": _binds_mode_all,
                 "mods": _binds_modifiers(_bind[0]),
                 "key": _binds_key(_bind[1]),
-                "env": None,
+                "evn": None,
             },
-        ) %}
+        }) %}
     {% endfor %}
     {#
         Overlay special binds.
@@ -353,9 +353,9 @@
     {% for _bind in _binds.values() %}
         {% set _oneliner = "modifier: {}, keycode: \"{}\", mode: {}".format(_bind.mods, _bind.key, _bind.mode) %}
         {##}
-        {% if _bind.env is none %}
+        {% if _bind.get("evn") is none %}
             { {{ _oneliner }}, event: null },
-        {% elif _bind.evn is string %}
+        {% elif _bind.get("evn") is string %}
             { {{ _oneliner }}, event: { {{ _bind.evn }} } },
         {% else %}
             {

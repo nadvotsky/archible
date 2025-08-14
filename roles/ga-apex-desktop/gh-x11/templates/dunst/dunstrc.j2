@@ -1,7 +1,12 @@
 {%- set _font_family = "monospace" -%}
 {%- set _font_size = ga_fonts_mono_sz_big | ga_scale(ga_scaling) -%}
 
-{%- set _monitor = ga_monitors.values() | selectattr("notifications", "true") | first -%}
+{%- set _monitor = (
+    ga_monitors.values()
+        | selectattr("notifications", "defined")
+        | selectattr("notifications", "true")
+        | first
+) -%}
 
 {%- set _width = (_monitor.width * ga_popup_width) | ga_scale(ga_scaling) -%}
 {%- set _height = (_monitor.height * ga_popup_height) | ga_scale(ga_scaling)-%}
@@ -30,7 +35,7 @@
 
 {%- macro _monitor_index() -%}
     {%- for _mon in ga_monitors.values() -%}
-        {%- if _mon.notifications is true -%}
+        {%- if _mon.get('notifications') is true -%}
             {{ loop.index0 }}
         {%- endif -%} 
     {%- endfor -%}

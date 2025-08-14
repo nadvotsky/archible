@@ -140,7 +140,7 @@
         _ib_vscode_flags: >-
           {%- set _flags = ['--user-data-dir {}'.format(_ib_vscode_ulayout.data)] -%}
           {%- if fa_layout == 'xdg' -%}
-            {%- do _flags.append('--extensions-dir {}'.format(_ib_vscode_ulayout.extensions)) -%}
+            {%- set _ = _flags.append('--extensions-dir {}'.format(_ib_vscode_ulayout.extensions)) -%}
           {%- endif -%}
           {{ _flags }}
 

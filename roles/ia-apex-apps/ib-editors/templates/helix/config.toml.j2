@@ -204,7 +204,7 @@
                 {% set _ = _selector.append(_keys | first) %}
             {% else %}
                 {% if not _id in _binds %}
-                    {% set _ = _binds.__setitem__(_id, {}) %}
+                    {% set _ = _binds.update({_id: {}}) %}
                 {% endif %}
                 {# {% set _action = _line | regex_search("=>\\s+([\\w_]+),", "\\1") | first %} #}
                 {% for _key in _keys %}
@@ -225,7 +225,7 @@
     {% set _normal_to_select_clone = {} %}
     {% for _k, _v in _binds.items() %}
         {% if "normal" in _k %}
-            {% set _ = _normal_to_select_clone.__setitem__(_k | replace("normal", "select"), _v.copy()) %}
+            {% set _ = _normal_to_select_clone.update({_k | replace("normal", "select"): _v.copy()}) %}
         {% endif %}
     {% endfor %}
     {% set _ = _binds.update(_normal_to_select_clone) %}
@@ -237,7 +237,7 @@
 
 {%- macro _binds_overlay(_prefix, _action_map, _selector) -%}
     {% if _prefix not in _binds %}
-        {% set _ = _binds.__setitem__(_prefix, {}) %}
+        {% set _ = _binds.update({_prefix: dict()}) %}
     {% endif %}
     {##}
     {% for _bind in ga_keys
