@@ -2,7 +2,7 @@
 ig_git_name: "{{ undef() }}"
 ig_git_mail: "{{ undef() }}"
 
-ig_git_gpgsign: "{{ undef() }}"
+ig_git_gpg_key: "{{ undef() }}"
 
 ig_git_userconf:
   user.name: "{{ ig_git_name }}"

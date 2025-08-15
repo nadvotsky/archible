@@ -27,6 +27,7 @@
           # https://github.com/SKalt/git-cc
           # https://github.com/cococonscious/koji
           #
+          - git-koji-bin
 
     - name: Wipe sublime-merge
       foundation.files.install:
@@ -57,13 +58,13 @@
           - file: "{{ fa_dir_home }}/.gitconfig"
 
     - name: Retrieve Git signing key information
-      when: ig_git_gpgsign is defined
+      when: ig_git_gpg_key is defined
       foundation.persist.gpg:
         home: "{{ fa_dir_home }}"
         layout: "{{ fa_layout }}"
       vars:
         keys:
-          - "{{ ig_git_gpgsign }}"
+          - "{{ ig_git_gpg_key }}"
       register: _ig_git_signkey
 
     - name: Set Git configuration options
@@ -77,7 +78,7 @@
       loop: >-
         {%- set _config = ig_git_userconf | ansible.builtin.combine(ig_git_perfconf, ig_git_featconf) -%}
         {%- if _ig_git_signkey is defined -%}
-          {%- do _config.__setitem__('user.signingkey', _ig_git_signkey.gpg[ig_git_gpgsign].fingerprint) -%}
+          {%- set _ = _config.update({'user.signingkey': '{}!'.format(_ig_git_signkey.gpg[ig_git_gpg_key].fingerprint)}) -%}
         {%- endif -%}
 
         {{ _config | dict2items }}
