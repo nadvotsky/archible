@@ -20,8 +20,22 @@ gc_nvidia_cmdline:
   #
   # Alternatively, explicit resolution hint for nvidia_drm may be set:
   #
-  # {%- set _width = ga_monitors | map(attribute='width') | min() -%}
-  # {%- set _height = ga_monitors | map(attribute='height') | min() -%}
-  # {%- for _mon in ga_monitors -%}
-  #   video={{ _mon.wayland }}:{{ _width }}x{{ _height }}
+  # (A trick to set multiple values for `foundation.system.kernel`):
+  #
+  # video: "HDMI-A-1:1920x1080 video=HDMI-A-2:1920x1080"
+  #
+  # {%- set _acc = {
+  #   "nvidia.NVreg_InitializeSystemMemoryAllocations": "0",
+  #   "nvidia.NVreg_UsePageAttributeTable": "1",
+  #   "nvidia.NVReg_PreserveVideoMemoryAllocations": "1",
+  #   "nvidia_drm.modeset": "1",
+  #   "nvidia_drm.fbdev": "1",
+  # } -%}
+  #
+  # {%- set _width = ga_monitors | map(attribute='width') | max() -%}
+  # {%- set _height = ga_monitors | map(attribute='height') | max() -%}
+  # {%- set _video = [] -%}
+  # {%- for _mon in ga_monitors.values() -%}
+  #   {%- set _ = video.append("{}:{}x{}@{}".format(_mon.wayland, _width, _height)) -%}
   # {%- endfor -%}
+  # {{ _acc | combine({"video": _video | join(" ")}) }}

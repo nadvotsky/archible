@@ -91,13 +91,20 @@ class ActionModule(ActionBase):
             if any(filter(lambda v: v == "", (key, val))):
                 raise AnsibleActionFail("Empty component ({}={}).".format(key, val))
             #
-            # Comma-separated values are naturally threated as list in many kernel modules.
+            # Comma-separated values are naturally treated as list in many kernel modules.
             #
             if val and len((vector := val.split(","))) > 1:
                 cmdline[key] = list(filter(None, vector))
                 if len(cmdline[key]) == 0:
                     self._display.warning("Empty list in '{}'.".format(val))
 
+                continue
+
+            #
+            # Exclusive list of parameters that may be specified multiple times.
+            #
+            if key in ('video'):
+                cmdline[key] = cmdline.get("key", "") + " " + val
                 continue
 
             #

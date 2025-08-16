@@ -20,8 +20,6 @@
           - nvidia-hibernate.service
           - nvidia-persistenced.service
           - nvidia-powerd.service
-          - nvidia-resume.service
-          - nvidia-suspend.service
         state:
           disable: true
 
