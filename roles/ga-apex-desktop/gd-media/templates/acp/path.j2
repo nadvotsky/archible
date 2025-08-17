@@ -63,8 +63,8 @@
         {#
             Additional props such as `volume-limit`, if specified.
         #}
-        {% for _key, _value in (_props is mapping | ternary(_props, {})).items() %}
-        {{ _key }} = {{ _value }}
+        {% for _extra in _element_meta.keys() | reject('in', ['type', 'direction'])  %}
+        {{ _extra }} = {{ _element_meta[_extra] }}
         {% endfor %}
         {##}
         {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
