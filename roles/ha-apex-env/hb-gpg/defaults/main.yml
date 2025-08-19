@@ -10,21 +10,21 @@ hb_keyserver: hkps://keys.openpgp.org
 # Supported digest algorithms, order represents priority.
 #
 hb_digests:
+  - SHA256
   - SHA512
   - SHA384
-  - SHA256
   - SHA224
 
 #
 # Supported ciphers, order represents priority.
 #
 hb_ciphers:
-  - AES
-  - AES-192
   - AES-256
-  - CAMELLIA128
-  - CAMELLIA192
+  - AES-192
+  - AES
   - CAMELLIA256
+  - CAMELLIA192
+  - CAMELLIA128
   - CAST5
   - IDEA
 

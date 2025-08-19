@@ -3,22 +3,22 @@
 # Supported ciphers, order represents priority.
 #
 hc_ciphers:
-  - aes128-gcm@openssh.com
-  - aes128-cbc
-  - aes128-ctr
   - aes256-gcm@openssh.com
-  - aes256-cbc
   - aes256-ctr
+  - aes256-cbc
+  - aes128-gcm@openssh.com
+  - aes128-ctr
+  - aes128-cbc
   - chacha20-poly1305@openssh.com
 
 #
 # Supported public key algorithms, order represents priority.
 #
 hc_public_keys:
-  - ecdsa-sha2-nistp256
-  - ssh-ed25519
   - ssh-ed25519-cert-v01@openssh.com
+  - ssh-ed25519
   - ecdsa-sha2-nistp256-cert-v01@openssh.com
+  - ecdsa-sha2-nistp256
   - rsa-sha2-512
   - rsa-sha2-512-cert-v01@openssh.com
 
@@ -26,22 +26,24 @@ hc_public_keys:
 # Supported key exchange algorithms, order represents priority.
 #
 hc_key_exchangers:
-  - ecdh-sha2-nistp256
-  - curve25519-sha256
   - curve25519-sha256@libssh.org
+  - curve25519-sha256
+  - ecdh-sha2-nistp256
   - sntrup761x25519-sha512@openssh.com
+  - sntrup761x25519-sha512
   - diffie-hellman-group-exchange-sha256
+  - diffie-hellman-group14-sha256
 
 #
 # Supported message authentication algorithms, order represents priority.
 #
 hc_message_auths:
+  - hmac-sha2-256-etm@openssh.com
+  - hmac-sha2-256
+  - hmac-sha2-512-etm@openssh.com
+  - hmac-sha2-512
   - umac-64-etm@openssh.com
   - umac-128-etm@openssh.com
-  - hmac-sha2-512-etm@openssh.com
-  - hmac-sha2-256-etm@openssh.com
-  - hmac-sha2-512
-  - hmac-sha2-256
 
 #
 # Whether to integrate gpg-agent.
