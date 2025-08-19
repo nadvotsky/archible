@@ -200,6 +200,15 @@
           - mtr
           # - speedtest-go
 
+- name: Configure mail utilities
+  tags: apex-apps-misc-mail
+  block:
+    - name: Install mail packages
+      foundation.system.packages:
+      vars:
+        install:
+          - tutanota-desktop-bin
+
 - name: Configure fun utilities
   tags: apex-apps-misc-fun
   block:
