@@ -29,7 +29,10 @@ class FilterModule:
         return dict(aa_relindent=self.relative_indent)
 
     @staticmethod
-    def relative_indent(string, tab=False, space=0, times=0):
+    def relative_indent(string: str, tab: bool = False, space: int = 0, times: int = 0) -> str:
+        if string is None:
+            return ""
+
         lines = string.strip().splitlines()
         prepend = ("\t" if tab else (" " * space)) * times
 
