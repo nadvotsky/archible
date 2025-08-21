@@ -181,8 +181,8 @@
           - --status-fd=1
           - --generate-key
         stdin: |-
-          Key-Type: {{ item.algo }}
-          Key-{{ 'Curve' if item.algo.startswith(('ec', 'ed')) else 'Length' }}: {{ item.hint }}
+          Key-Type: {{ 'eddsa' if item.algo.startswith('ed') else item.algo }}
+          Key-{{ 'Curve' if item.algo.startswith(('ec', 'ed')) else 'Length' }}: {{ [item.hint, item.algo] | reject('none') | first }}
           Key-Usage: cert
           Name-Real: {{ item.name }}
           Name-Comment: {{ item.comment }}
@@ -211,8 +211,8 @@
           --faked-system-time {{ '{}0101T000000Z!'.format(now(utc=true, fmt='%Y')) }}
           --quick-add-key {{ _hb_masters[item.master].fpr }}
           {{
-            [item.hint, item.algo] | reject('none') | join('/')
-            if item.algo.startswith(('ec', 'ed')) else
+            ([item.hint, item.algo] | reject('none') | join('/'))
+            if item.algo.startswith(('ec', 'ed', 'cv')) else
             '{}{}'.format(item.algo, item.hint)
           }}
           {{ item.type }}
