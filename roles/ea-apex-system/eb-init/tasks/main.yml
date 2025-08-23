@@ -26,6 +26,7 @@
         headless: "{{ ba_headless }}"
       vars:
         units:
+          - systemd-rfkill.socket
           - systemd-rfkill.service
           - systemd-binfmt.service
           - systemd-repart.service
