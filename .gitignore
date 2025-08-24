@@ -107,6 +107,7 @@ __pypackages__
 #
 .cache
 .ruff_cache
+.ropeproject
 
 #
 # Ansible.
