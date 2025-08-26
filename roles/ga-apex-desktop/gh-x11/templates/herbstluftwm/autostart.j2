@@ -149,7 +149,7 @@
 
 {%- macro _screenshot_file() -%}
     "spawn", "bash", "-c",
-        "shotgun -f png -g $(hacksaw) '{{ fa_dir_xdg.pictures }}/shot-$(date +%s).png'",
+        "shotgun -f png -g $(hacksaw) \"{{ fa_dir_xdg.pictures }}/shot-$(date +%s).png\"",
 {%- endmacro -%}
 
 {%- macro _cut() -%}
