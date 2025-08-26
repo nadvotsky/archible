@@ -1,4 +1,7 @@
 ---
+#
+# Refer to the `./roles/ea-apex-system/ed-devices/defaults/main.yml`.
+#
 ed_blacklist:
   #
   # Fake keyboard reported by mouse.

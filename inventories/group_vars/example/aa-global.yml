@@ -1,3 +1,6 @@
 ---
-aa_wipe: always
+#
+# Refer to the `./roles/aa-global/aa-shared/defaults/main.yml`.
+#
+aa_wipe: never
 aa_persist: "{{ playbook_dir }}/persist"

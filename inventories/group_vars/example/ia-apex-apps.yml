@@ -1,4 +1,7 @@
 ---
+#
+# Refer to the `./roles/ia-apex-apps/ig-code/defaults/main.yml`.
+#
 ig_git_name: "{{ ca_info_full }}"
 ig_git_mail: "{{ ca_info_mail }}"
 ig_git_gpg_key: primary_sign

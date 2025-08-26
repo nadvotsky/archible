@@ -1,4 +1,7 @@
 ---
+#
+# Refer to the `./roles/ha-apex-env/hb-gpg/defaults/main.yml`.
+#
 hb_generate:
   private:
     master:
@@ -61,4 +64,7 @@ hb_generate:
         algo: ed25519
         hint: ~
 
+#
+# Refer to the `./roles/ha-apex-env/hi-vault/defaults/main.yml`.
+#
 hi_gpg_key: private_encr_vault

@@ -1,4 +1,7 @@
 ---
+#
+# Refer to the `./roles/ga-apex-desktop/ga-shared/defaults/main.yml`.
+#
 ga_monitors:
   primary:
     workspaces: 8
@@ -11,6 +14,9 @@ ga_monitors:
     notifications: true
     scratch: Scratch
 
+#
+# Refer to the `./roles/ga-apex-desktop/gd-media/defaults/main.yml`.
+#
 gd_cards:
   main:
     exclusive: true

@@ -1,4 +1,7 @@
 ---
+#
+# Refer to the `./roles/ea-apex-user/fa-shared/defaults/main.yml`.
+#
 fa_layout: dot
 
 fa_dir_home: "/home/{{ ca_name }}"

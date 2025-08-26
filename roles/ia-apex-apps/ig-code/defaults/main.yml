@@ -1,9 +1,18 @@
 ---
+#
+# Git credentials.
+#
 ig_git_name: "{{ undef() }}"
 ig_git_mail: "{{ undef() }}"
 
+#
+# Git code signing GnuPG key. Skipped if undefined.
+#
 ig_git_gpg_key: "{{ undef() }}"
 
+#
+# User settings.
+#
 ig_git_userconf:
   user.name: "{{ ig_git_name }}"
   user.email: "{{ ig_git_mail }}"
@@ -15,6 +24,9 @@ ig_git_userconf:
   apply.whitespace: fix
   core.whitespace: tabwidth=4
 
+#
+# Performance settings.
+#
 ig_git_perfconf:
   checkout.workers: "-1"
   #
@@ -28,6 +40,9 @@ ig_git_perfconf:
   http.maxRequests: "10"
   pack.threads: "0"
 
+#
+# Features settings.
+#
 ig_git_featconf:
   grep.lineNumber: "true"
   grep.column: "true"

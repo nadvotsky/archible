@@ -1,11 +1,11 @@
 ---
 #
-# Vault is a user directory used for storing sensitive data such as password.
+# Vault is a user directory used for storing sensitive data such as passwords.
 #
 ha_vault_user_layout:
   default: "{{ fa_dir_home }}/.password-store"
   #
-  # Some of the utility packages seem to not respect PASSWORD_STORE_DIR, linking instead.
+  # Some of utility packages seem to not respect `PASSWORD_STORE_DIR`, linking instead.
   #
   xdg:
     link: "{{ fa_dir_share }}/password-store"

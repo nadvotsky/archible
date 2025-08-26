@@ -1,18 +1,26 @@
 ---
-ba_headless:  true
+#
+# Refer to the `./roles/ba-prelude/ba-shared/defaults/main.yml`.
+#
+ba_headless: true
 ba_mount_point: /mnt
 ba_hostname: example
 ba_cores: 8
 ba_arch: x86_64_v2
 ba_locale: en_US.UTF-8
 
+#
+# Refer to the `./roles/ba-prelude/bb-partition/defaults/main.yml`.
+#
 bb_disk_id: ata-SSD
 bb_schema:
-  - name=EX-EFI,type=efi,size=1G
-  - name=EX-ROOT,type=root,fs=xfs,size=85%
-  - name=EX-SWAP,type=swap,size=8G
-  - name=EX-VOLT,type=linux,fs=ext4
+  - name=EXEFI,type=efi,size=1G
+  - name=EXROOT,type=root,fs=ext4,size=85%
+  - name=EXVOLT,type=linux,fs=ext4
 
+#
+# Refer to the `./roles/ba-prelude/bc-bootstrap/defaults/main.yml`.
+#
 bc_root_password: example
 bc_mountopts_root: async,noatime,auto,dev,exec,noiversion,suid,rw,nouser,dax=always,nodiscard,noquota
 bc_mountopts_efi: "sync,noatime,auto,dev,exec,noiversion,suid,rw,nouser,fmask=0023,dmask=0022,check=s,discard,\

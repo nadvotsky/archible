@@ -41,33 +41,47 @@ hb_compressions:
 #
 # New keys will be generated only if they were not restored from the persist.
 #
-# Note that in order to integrate existing GnuPG keyring into this role and foundation.user.gpg role, the following
+# Note that in order to integrate existing GnuPG keyring into this role and `foundation.user.gpg` plugin, the following
 #  persist items must exist:
 #  - gpg/keyring: full GnuPG keyring backup with secret keys
-#  - gpg/private-keys: archive of private-keys-v1.d/*.key, in order to omit reencryption of keys that occurs after
+#  - gpg/private-keys: archive of `private-keys-v1.d/*.key`, in order to omit reencryption of keys that occurs after
 #    keyring import
-#  - gpg/unattended-keys: JSON metadata file of keys from `hb_generate` in the form of array of objects:
+#  - gpg/unattended-keys: JSON metadata file of keys from `hb_generate` in the form of object of objects:
 #    <master_key_or_subkey>: {"fingerprint": <fpr>, "keygrip": <krp>}
 #
 hb_generate: "{{ undef() }}"
   # <master-name>:
   #   master:
   #     name: Alice
-  #     comment: my key
-  #     email: something@.local
+  #     comment: "my key comment"
+  #     email: myname@.local
   #     expire: 5y
   #     password: qwerty
-  #     algo: ecdsa/dsa/rsa
-  #     hint: nistp256/2048/4096
+  #     #
+  #     # ElGamal:
+  #     #  - sign: algo=dsa, hint=2048
+  #     #  - encr: algo=elg, hint=2048
+  #     # RSA:
+  #     #  - sign: algo=rsa, hint=4096
+  #     #  - encr: algo=rsa, hint=4096
+  #     # EC:
+  #     #  - sign: algo=ecdsa, hint=nistp256
+  #     #  - encr: algo=ecdh, hint=nistp256
+  #     # EC(Curve25519):
+  #     #  - sign: algo=ed25519, hint=~
+  #     #  - encr: algo=cv25519, hint=~
+  #     #
+  #     algo: <algo>
+  #     hint: <hint>
   #   subkeys:
   #     <subkey-name>:
   #       type: encr/auth/sigh
   #       #
-  #       # SSH key priority for gpg-agent, negative number are highest priority.
+  #       # SSH key priority for gpg-agent, negative number represent the highest priority.
   #       #
   #       priority: 100
-  #       algo: <>
-  #       hint: <>
+  #       algo: <algo>
+  #       hint: <hint>
   #
 
 #

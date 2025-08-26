@@ -1,4 +1,7 @@
 ---
+#
+# Refer to the `./roles/da-apex-prep/dc-bootloader/defaults/main.yml`.
+#
 dc_cmdline:
   #
   # Features.

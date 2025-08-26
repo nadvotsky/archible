@@ -1,6 +1,9 @@
 ---
-ca_name: example
-ca_password: test
+#
+# Refer to the `./roles/ca-catalyst/ca-shared/defaults/main.yml`.
+#
+ca_name: user
+ca_password: qwerty
 ca_info_short: User
 ca_info_full: Example User
 ca_info_alt: Exemple d'Utilisateur

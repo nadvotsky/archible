@@ -1,14 +1,35 @@
 ---
+#
+# Spotify launcher user layout.
+#
+# The actual spotify profile is keps in XDG_CACHE_HOME.
+#
 ia_spotify_launcher_user_layout:
   default: "{{ fa_dir_share }}/spotify-launcher"
   dot:
     link: "{{ fa_dir_home }}/.spotify-launcher"
 
+#
+# Tutanota user layout.
+#
+ia_tutanota_user_layout:
+  default: "{{ fa_dir_config }}/tutanota-desktop"
+  dot:
+    link: "{{ fa_dir_home }}/.tutanota"
+
+#
+# Visual Studio Code user layout.
+#
 ia_vscode_user_layout:
   default: "{{ fa_dir_config }}/Code"
   dot: "{{ fa_dir_home }}/.vscode/data"
   xdg: "{{ fa_dir_state }}/vscode"
 
+#
+# List of browsers to install.
+#
+# When type is 'chromium', a flag file may also be provided that will be rendered with id_chromium_flags.
+#
 ia_browsers:
   - type: gecko
     package: firefox
