@@ -78,7 +78,7 @@
         paths: /boot
         patterns: "*.img,vmlinuz*"
         hidden: true
-      register: _dc_kernels
+      register: _dc_leftovers
 
     - name: Remove previous kernels and initrd images
       when: aa_wipe == 'always'
@@ -86,7 +86,7 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: absent
-      loop: "{{ _dc_kernels.files | selectattr('path') }}"
+      loop: "{{ _dc_leftovers.files | map(attribute='path') }}"
 
 - name: Configure bootloader
   tags: apex-prep-bootloader-main
