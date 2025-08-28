@@ -116,7 +116,7 @@
 - name: Configure archive managers
   tags: apex-apps-files-archive
   block:
-    - name: Install archive packages
+    - name: Install file archive packages
       foundation.system.packages:
       vars:
         install:
@@ -124,12 +124,13 @@
           - fuse-archive
           - libarchive
           - 7zip
+          - squashfs-tools
           # - p7zip-full-bin
 
 - name: Configure usage managers
   tags: apex-apps-files-usage
   block:
-    - name: Install usage packages
+    - name: Install file usage packages
       foundation.system.packages:
       vars:
         install:
@@ -143,7 +144,7 @@
 - name: Configure file editing
   tags: apex-apps-files-edit
   block:
-    - name: Install editing packages
+    - name: Install file editing packages
       foundation.system.packages:
       vars:
         install:
@@ -161,7 +162,7 @@
 - name: Configure file viewing
   tags: apex-apps-files-view
   block:
-    - name: Install view packages
+    - name: Install file view packages
       foundation.system.packages:
       vars:
         install:
@@ -178,6 +179,16 @@
         BAT_THEME: Nord
         PAGER: bat
         MANPAGER: bat --style=grid
+
+- name: Configure file sharing
+  tags: apex-apps-files-share
+  block:
+    - name: Install file share packages
+      foundation.system.packages:
+      vars:
+        install:
+          - miniserve
+          - darkhttpd
 
 - name: Configure file searching
   tags: apex-apps-files-search
@@ -227,7 +238,7 @@
 - name: Configure file renaming
   tags: apex-apps-files-rename
   block:
-    - name: Install file watch packages
+    - name: Install file renaming packages
       foundation.system.packages:
       vars:
         install:
