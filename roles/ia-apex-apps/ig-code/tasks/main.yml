@@ -95,6 +95,7 @@
           - diffutils
           - difftastic
           - diff-so-fancy
+          - meld
           - git-delta
           - vbindiff
 
