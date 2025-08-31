@@ -122,6 +122,7 @@
           - VACUUM
       register: _za_gecko_vacuum_invocation
       changed_when: _za_gecko_vacuum_invocation.rc == 0
+      failed_when: false
       loop: "{{ _za_gecko_databases.files | map(attribute='path') }}"
 
 - name: Cleanup chromium-based apps
