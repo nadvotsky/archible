@@ -125,7 +125,7 @@
       failed_when: false
       loop: "{{ _za_gecko_databases.files | map(attribute='path') }}"
 
-- name: Cleanup chromium-based apps
+- name: Cleanup chromium (electron)-based apps
   tags: extra-cleanup-chromium
   when: aa_wipe == 'always'
   vars:
@@ -136,6 +136,7 @@
         {%- set _ = _acc.append(dict(name=_chr.package, path=lookup('foundation.user.layout', fa_layout, _chr.cache))) -%}
       {%- endfor -%}
       {%- set _ = _acc.append(dict(name='code', path=lookup('foundation.user.layout', fa_layout, ia_vscode_user_layout))) -%}
+      {%- set _ = _acc.append(dict(name='tuta', path=lookup('foundation.user.layout', fa_layout, ia_tutanota_user_layout))) -%}
       {{ _acc }}
   block:
     - name: Stop running Chromium instance

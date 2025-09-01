@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Tuta Mail
+Comment=Turn ON Privacy. Take back your data with Tuta's encrypted email, calendar and contacts.
+Icon=/opt/tutanota/resources/icons/icon/512.png
+Exec=/opt/tutanota/tutanota-desktop --no-sandbox %U
+Categories=Network;
+Terminal=false
+StartupWMClass=tutanota
+MimeType=x-scheme-handler/mailto;

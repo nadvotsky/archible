@@ -203,11 +203,74 @@
 - name: Configure mail utilities
   tags: apex-apps-misc-mail
   block:
-    - name: Install mail packages
-      foundation.system.packages:
+    # - name: Install mail packages
+    #   foundation.system.packages:
+    #   vars:
+    #     install:
+    #       #
+    #       # - epyrus-bin
+    #       # - dbus-glibc
+    #       #
+
+    - name: Fetch latest tutanota releases
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/tutao/tutanota/releases
+        return_content: true
+      register: _ih_tuta_releases
+
+    - name: Ensure installation directory for tutanota exist
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
       vars:
-        install:
-          - tutanota-desktop-bin
+        targets:
+          - dir: /opt/tutanota
+            perms: 755:root:root
+            create: true
+
+    - name: Download latest tutanota release
+      become: true
+      foundation.files.net_archive:
+        url: >-
+          {%- set _ns = namespace(url=none) -%}
+          {%- for _rel in _ih_tuta_releases.json -%}
+            {%- for _asset in _rel['assets'] -%}
+              {%- if _ns.url is none and _asset['name'].endswith("unpacked-linux.tar.gz") -%}
+                {%- set _ns.url = _asset['browser_download_url'] -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+          {{ _ns.url }}
+        strip: 2
+        dest: /opt/tutanota
+        perms: root:root
+        creates:
+          - ./tutanota-desktop
+
+    - name: Render tutanota desktop entry
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - file: /usr/local/share/applications/tutanota.desktop
+            perms: 644:root:root
+            copy: tutanota/tutanota.desktop
+
+    - name: Update XDG desktop database
+      become: true
+      ansible.builtin.command:
+        argv:
+          - update-desktop-database
+      register: _ih_database_invocation
+      changed_when: _ih_database_invocation.rc == 0
+
+    - name: Resolve tutanota user layout
+      foundation.user.layout:
+        wipe: "{{ aa_wipe }}"
+        layout: "{{ fa_layout }}"
+      vars:
+        profile: "{{ ia_tutanota_user_layout }}"
 
 - name: Configure fun utilities
   tags: apex-apps-misc-fun
