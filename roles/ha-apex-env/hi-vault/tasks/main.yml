@@ -176,8 +176,11 @@
         perms: "755:644:{{ ca_name }}:{{ ca_name }}"
       vars:
         targets:
+          - dir: ./
+            create: true
+
           - dir: ./.gopass
             wipe: always
 
           - file: ./.gpg-id
-            content: "{{ _hi_gpg_key.gpg[hi_gpg_key].fingerprint }}"
+            content: "{{ _hi_gpg_key.gpg[hi_gpg_key].fingerprint }}!{{ '' | aa_newline }}"
