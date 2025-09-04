@@ -65,7 +65,7 @@
     _fg=None,
     _bg=None
 ) -%}
-    {{ 
+    {{
         _style_internal({
             "inverted": _inverted,
             "bold": _bold,
@@ -131,7 +131,7 @@
 {%- set _username_hostname_style = {"_bold": True, "_fg": _preset.unimportant.line} -%}
 {%- set _username_hostname_format = "{}{}".format(
     _block(
-        _escape(["[", "$username", _icon("eb3a"), "$hostname", "]"] | join(_spacing)),
+        _escape(["[", "$username", _icon("eb3a"), "", "$hostname", "]"] | join(_spacing)),
         **_username_hostname_style,
     ),
     _spacing,
@@ -271,13 +271,15 @@ disabled = false
 
 format = """
 {{
-    _block(
-        "{}{}$state".format(_icon("f47f"), _spacing),
-        _italic=True,
-        _bold=True,
-        _bg=_git_bg,
-        _fg=_preset.important.line,
-    )
+    _multiline([
+        _block(
+            "{}{}$state".format(_icon("f47f"), _spacing),
+            _italic=True,
+            _bold=True,
+            _bg=_git_bg,
+            _fg=_preset.important.line,
+        )
+    ])
 }}
 """
 
@@ -362,7 +364,7 @@ symbol = "{{
         _bold=True,
         _bg=_status_duration_bg,
         _fg=_preset.negative.line,
-    ) 
+    )
 }}"
 success_symbol = "{{
     _block(
@@ -395,7 +397,7 @@ format = "{{
 disabled = false
 use_12hr = true
 
-format = "{{ 
+format = "{{
     _block(
         [_icon("f199f"), "$time"] | join(_spacing),
         _bold=True,
