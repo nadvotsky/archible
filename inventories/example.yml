@@ -23,3 +23,7 @@ example:
         --resolv-conf=bind-host --timezone=off --link-journal=no
 
     example_extra: *example-apex
+
+    example_local:
+      ansible_connection: local
+      ansible_become_password: test
