@@ -3,14 +3,7 @@
   tags: prelude-partition-check
   vars:
     _bb_disk_path: "/dev/disk/by-id/{{ bb_disk_id }}"
-  become: true
   block:
-    - name: Install dependencies for disk probing
-      become: true
-      ansible.builtin.package:
-        name: util-linux
-        state: present
-
     - name: Ensure nothing is mounted at the mount point
       become: true
       ansible.builtin.command:
@@ -57,21 +50,6 @@
 - name: Perform disk partitioning
   tags: prelude-partition-main
   block:
-    - name: Install dependencies for disk partitioning
-      become: true
-      ansible.builtin.package:
-        name:
-          - coreutils
-          - util-linux
-          - gdisk
-          - btrfs-progs
-          - e2fsprogs
-          - exfatprogs
-          - xfsprogs
-          - ntfs-3g
-          - dosfstools
-        state: present
-
     - name: Prepare apart environment
       foundation.files.install:
         base: /tmp/apart
@@ -112,3 +90,13 @@
       ansible.builtin.file:
         path: /tmp/apart
         state: absent
+
+  rescue:
+    - name: Fail with hint about required packages
+      ansible.builtin.fail:
+        msg: >-
+          {%- set _pkgs = [
+            'util-linux', 'coreutils', 'gptfdisk',
+            'btrfs-progs', 'e2fsprogs', 'exfatprogs', 'xfsprogs', 'f2fs-tools', 'ntfs-3g', 'dosfstools',
+          ] -%}
+          Please make sure you have installed: {{ _pkgs | join(', ') }}

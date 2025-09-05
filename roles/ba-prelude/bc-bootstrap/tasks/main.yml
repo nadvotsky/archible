@@ -2,13 +2,12 @@
 - name: Configure bootstrap dependencies
   tags: prelude-bootstrap-deps
   block:
-    - name: Install bootstrap prelude dependencies
-      become: true
-      ansible.builtin.package:
-        name:
-          - arch-install-scripts
-          - whois
-        state: present
+    - name: Ensure that pacstrap (arch-install-scripts) and mkpasswd (whois) are available
+      ansible.builtin.shell:
+        cmd: command -v pacstrap && command -v mkpasswd
+      register: _ba_deps_invocation
+      changed_when: false
+      failed_when: _ba_deps_invocation.rc != 0
 
 - name: Configure base system
   tags: prelude-bootstrap-main

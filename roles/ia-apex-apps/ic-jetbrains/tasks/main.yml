@@ -277,7 +277,7 @@
           {%- set _acc = [] -%}
           {%- for _ide in _ic_ctx.values() -%}
             {%- set _lic = {
-              'licenseId': lookup('community.general.random_string', special=false, lower=false, length=10),
+              'licenseId': lookup('ansible.builtin.pipe', 'openssl rand -hex 5') | upper,
               'licenseeName': ca_info_short,
               'licenseeType': 'PERSONAL',
               'assigneeName': '',

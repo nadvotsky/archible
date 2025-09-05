@@ -10,16 +10,16 @@ import subprocess
 import fcntl
 import select
 import functools
-import shutil
 
 from ansible.errors import AnsibleError
 from ansible.module_utils.common.text.converters import to_bytes, to_native
 
 from ansible.utils.display import Display
 from ansible.utils.shlex import shlex_split
-from ansible.module_utils.six.moves import shlex_quote
 
-from ansible.plugins.connection import ConnectionBase, BUFSIZE
+from ansible_collections.community.general.plugins.connection.chroot import (
+    Connection as ChrootConnection,
+)
 
 
 DOCUMENTATION = """
@@ -70,12 +70,8 @@ main:
 """
 
 
-class Connection(ConnectionBase):
+class Connection(ChrootConnection):
     """Systemd-nspawn (machinectl-less, i.e. stateless) connections"""
-
-    transport = "foundation.connection.nspawn"
-    has_pipelining = True
-    has_tty = False
 
     #
     # Unlike the chroot plugin, we do have an option to select a user (via --user)
@@ -88,13 +84,23 @@ class Connection(ConnectionBase):
     # The actual initializion of desired variables and stuff is implemented in the `_connect` method.
     #
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        #
+        # Note the `super()` call:
+        #  it calls not the direct base class `ChrootConnection`, but the `ConnectionBase` instead.
+        #
+        # The purpose of this is to omit useless operations (and also errors) that are not related to the nspawn
+        #  functionality.
+        #
+        super(ChrootConnection, self).__init__(*args, **kwargs)
 
     def _connect(self):
         if os.geteuid() != 0:
             raise AnsibleError("nspawn connection requires running ansible as root")
 
-        self._nspawn_root = self.get_option("nspawn_root")
+        #
+        # `self.chroot` is required to be set for the chroot plugin.
+        #
+        self.chroot = self._nspawn_root = self.get_option("nspawn_root")
         self._nspawn_log = functools.partial(Display().vvv, host=self._nspawn_root)
 
         self._nspawn_args = [
@@ -106,14 +112,14 @@ class Connection(ConnectionBase):
             self._nspawn_args.append("--user={}".format(self._play_context.remote_user))
 
         self._nspawn_args.append("--")
-        self._nspawn_log(f"NSPAWN: ARGS {self._nspawn_args}")
+        self._nspawn_log(f"NSPAWN ARGS {self._nspawn_args}")
 
         #
         # Calling `ConnectionBase` because `ChrootConnection` constructs unnecessary arguments and prints some messages.
         #
-        super()._connect()
+        super(ChrootConnection, self)._connect()
         if not self._connected:
-            self._nspawn_log("NSPAWN: NEW CONTAINER")
+            self._nspawn_log("NSPAWN NEW CONNECTION")
             self._connected = True
 
     #
@@ -141,9 +147,12 @@ class Connection(ConnectionBase):
     # This would solve a problem when other commands (such as `put_file` which uses `dd`) are interpreted as sudo command.
     #
     def exec_command(self, cmd, in_data=None, sudoable=False):
-        super().exec_command(cmd, in_data=in_data, sudoable=sudoable)
+        #
+        # Bypassing `ChrootConnection.exec_command` prior to `ConnectionBase.exec_command`.
+        #
+        super(ChrootConnection, self).exec_command(cmd, in_data=in_data, sudoable=sudoable)
 
-        self._nspawn_log(f"NSPAWN: EXEC SUDOABLE {sudoable} COMMAND :: {cmd}")
+        self._nspawn_log(f"NSPAWN EXEC SUDOABLE {sudoable} COMMAND :: {cmd}")
         p = self._buffered_exec_command(cmd, sudoable=sudoable)
 
         stdout, stderr = p.communicate(in_data)
@@ -174,32 +183,3 @@ class Connection(ConnectionBase):
                 fcntl.fcntl(p.stderr, fcntl.F_SETFL, flags | ~os.O_NONBLOCK)
 
         return p
-
-    def put_file(self, in_path, out_path):
-        super().put_file(in_path, out_path)
-        self._nspawn_log(f"NSPAWN: PUT {in_path} => {out_path}")
-
-        escaped_out = shlex_quote(out_path)
-        with open(to_bytes(in_path, errors="surrogate_or_strict"), "rb") as in_file:
-            count = " count=0" if not os.fstat(in_file.fileno()).st_size else ""
-            p = self._buffered_exec_command(f'dd of={escaped_out} bs={BUFSIZE}{count}', stdin=in_file)
-
-            _, stderr = p.communicate()
-            if p.returncode != 0:
-                raise AnsibleError(f"failed to transfer file {in_path} to {out_path}: {stderr}")
-
-    def fetch_file(self, in_path, out_path):
-        super().fetch_file(in_path, out_path)
-        self._nspawn_log(f"NSPAWN: FETCH {in_path} => {out_path}")
-
-        p = self._buffered_exec_command(f"dd if={shlex_quote(in_path)} bs={BUFSIZE}")
-        with open(to_bytes(out_path, errors="surrogate_or_strict"), "wb+") as out_file:
-            shutil.copyfileobj(p.stdout, out_file)
-
-            _, stderr = p.communicate()
-            if p.returncode != 0:
-                raise AnsibleError(f"failed to transfer file {in_path} to {out_path}: {stderr}")
-
-    def close(self):
-        super().close()
-        self._connected = False
