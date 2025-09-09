@@ -455,6 +455,10 @@ function process_xresources(xresources)
 end
 
 function process_env(env)
+    for key, value in pairs(env) do
+        commit("setenv", key, value)
+    end
+
     exec(
         "dbus-update-activation-environment", "--systemd",
         "XDG_CURRENT_DESKTOP=herbstluftwm", "XDG_SESSION_TYPE=x11", "DISPLAY"
