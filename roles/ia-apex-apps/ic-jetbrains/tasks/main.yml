@@ -44,7 +44,7 @@
               _codename: dict(
                 info_name=_prod.name,
                 info_comm=_prod.comment,
-                code_lic=_prod.license,
+                code_lic=[_prod.license] if _prod.license is string else _prod.license,
                 plugins=_plugins,
                 dist_dir='/opt/jetbrains/ide/{}'.format(_codename),
                 dist_bin='/opt/jetbrains/ide/{}/bin/{}'.format(_codename, _codename if _codename != 'webide' else 'webstorm'),
@@ -276,24 +276,29 @@
           {%- set _up_to = '{}-01-01'.format(now(fmt='%Y') | int + ic_agentize) -%}
           {%- set _acc = [] -%}
           {%- for _ide in _ic_ctx.values() -%}
-            {%- set _lic = {
+            {%- set _products = [] -%}
+            {%- for _prod in _ide.code_lic -%}
+              {%- set _ = _products.append(dict(code=_prod, paidUpTo=_up_to)) -%}
+            {%- endfor -%}
+            {%- if ic_code_with_me -%}
+              {%- set _ = _products.append(dict(code='PCWMP', paidUpTo=_up_to)) -%}
+            {%- endif -%}
+            {%- for _plugin in _ide.plugins -%}
+              {%- if _plugin.model != 'FREE' -%}
+                {%- set _ = _products.append(dict(code=_plugin.code, paidUpTo=_up_to)) -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {##}
+            {%- set _ = _acc.append({
               'licenseId': lookup('ansible.builtin.pipe', 'openssl rand -hex 5') | upper,
               'licenseeName': ca_info_short,
               'licenseeType': 'PERSONAL',
               'assigneeName': '',
               'assigneeEmail': '',
               'checkConcurrentUse': false,
-              'products': [dict(code=_ide.code_lic, paidUpTo=_up_to)],
+              'products': _products,
               'metadata': '01{}0101PPAM000005'.format(now(fmt='%Y')),
-            } -%}
-            {%- if ic_code_with_me -%}
-              {%- set _ = _lic.products.append(dict(code='PCWMP', paidUpTo=_up_to)) -%}
-            {%- endif -%}
-            {%- for _plugin in _ide.plugins -%}
-              {%- if _plugin.model != 'FREE' -%}
-                {%- set _ = _lic.products.append(dict(code=_plugin.code, paidUpTo=_up_to)) -%}
-              {%- endif -%}
-            {%- endfor -%}
+            }) -%}
             {%- set _ = _acc.append(_lic) -%}
           {%- endfor -%}
           {{ _acc }}

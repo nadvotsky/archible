@@ -208,9 +208,14 @@ ic_products:
     #  10) DPN => dotTrace
     #  11) DC  => dotCover
     #  12) DUL => dotUltimate (basically AIO)
+    #  13) RD  => Rider
     #
     release: RD
-    license: DUL
+    license:
+      - RD
+      - DM
+      - DPN
+      - DC
   webide:
     name: WebStorm
     comment: The JavaScript and TypeScript IDE by JetBrains
