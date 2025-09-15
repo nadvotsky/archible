@@ -1,5 +1,7 @@
 # archible
 
+![Archible Logo](./docs/archible-small.webp)
+
 ## Description
 
 **archible** provides a complete, declarative desktop provisioning setup for **Arch Linux**, powered by **Ansible**.
@@ -1845,3 +1847,8 @@ Huge shout-out to:
 - All the authors of documentation, manual pages, mailing lists, and Stack Exchange answers that made this possible.
 
 Praise open 👾 source! Thanks for using this project and your attention to this matter! I use Arch BTW!
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE). You are free to use, modify, and distribute this software,
+but please provide attribution.
