@@ -176,9 +176,9 @@
           - file: "{{ fa_dir_config }}/pdm/config.toml"
             content: |
               use_uv = true
-              venv.location = {{ _jh_pdm_ulayout.venv }}
-              python.install_root = {{ _jh_pdm_ulayout.python }}
-              log_dir = {{ _jh_pdm_ulayout.log }}
+              venv.location = "{{ _jh_pdm_ulayout.venv }}"
+              python.install_root = "{{ _jh_pdm_ulayout.python }}"
+              log_dir = "{{ _jh_pdm_ulayout.log }}"
 
 - name: Configure poetry
   tags: apex-dev-python-poetry
