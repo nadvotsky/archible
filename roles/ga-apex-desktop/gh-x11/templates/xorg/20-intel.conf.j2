@@ -1,0 +1,70 @@
+{%- set _indent = {"space": 4} -%}
+
+{%- set _placement = namespace(value=none) -%}
+{%- if ga_monitors_stack == "horizontal" -%}
+    {%- set _placement.value = "LeftOf" -%}
+{%- elif ga_monitors_stack == "vertical" -%}
+    {% set _placement.value = "Below" -%}
+{%- endif -%}
+
+{%- macro _monitor_pretty_name(_mon_name) -%}
+    {{ _mon_name.capitalize() }} Monitor
+{%- endmacro -%}
+
+{%- macro _monitor_options_render(_index) -%}
+    {% set _ops = {
+        "DPMS": "true",
+        "Primary": "true" if _index == 0 else "false",
+    } %}
+    {##}
+    {% if _placement.value is string and _index > 0 %}
+        {% set _ = _ops.update({_placement.value: _monitor_pretty_name(ga_monitors.keys()[_index])}) %}
+    {% endif %}
+    {##}
+    {% for _option, _value in _ops.items() %}
+        Option "{{ _option }}" "{{ _value }}"
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _monitor_render(_mon_name, _index, _placement) %}
+    Section "Monitor"
+        Identifier "{{ _monitor_pretty_name(_mon_name) }}"
+
+        {{ _monitor_options_render(_index) | aa_relindent(times=2, **_indent) }}
+    EndSection
+{%- endmacro -%}
+
+{%- macro _monitors_render() -%}
+    {% set _sep = "\n\n" %}
+    {% for _mon_name, _mon in ga_monitors.items() %}
+        {{ _monitor_render(_mon_name, loop.index0) | aa_relindent(times=3, **_indent) }}{{ _sep }}
+    {% endfor %}
+{%- endmacro -%}
+
+{%- macro _monitor_pins_render() -%}
+    {% for _mon_name, _mon in ga_monitors.items() %}
+        Option "monitor-{{ _mon.x11 }}" "{{ _monitor_pretty_name(_mon_name) }}"
+    {% endfor %}
+{%- endmacro -%}
+
+{{ _monitors_render() | aa_relindent() }}
+
+
+Section "Device"
+    Identifier "intel"
+
+    Driver "intel"
+
+    # Option "CustomEDID" "DP1:/path/to/dp1.edid,DP2:/path/to/dp2.edid"
+
+    #
+    # Delegate VSync to compositor instead of GPU.
+    #
+    Option "TearFree" "false"
+    Option "VSync" "false"
+    Option "PageFlip" "false"
+    Option "SwapbuffersWait" "false"
+    Option "TripleBuffer" "false"
+
+    {{ _monitor_pins_render() | aa_relindent(times=1, **_indent)  }}
+EndSection

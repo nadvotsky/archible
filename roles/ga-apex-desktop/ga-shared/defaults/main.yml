@@ -1,5 +1,52 @@
 ---
 #
+# List of graphics stacks, where each defines its type and list of packages.
+#
+#
+ga_stack: "{{ undef() }}"
+  # #
+  # # Official NVIDIA drivers.
+  # #
+  # - type: nvidia
+  #   drivers:
+  #     # nvidia-open: never open kernel modules for NV160+
+  #     # nvidia: Proprietary kernel modules for NV110 - NV190
+  #     # nvidia-470xx-dkms: Old version for NVE0 - NV110
+  #     # nvidia-390xx-dkms: Old version for NVC0 - NVE0
+  #     # nvidia-340xx-dkms: Old version for NV50 - NVC0
+  #     - nvidia
+  #   #
+  #   # No need to specify as `libva-nvidia-driver` is included automatically.
+  #   #
+  #   hwaccel: []
+
+  # #
+  # # Intel Linux driver.
+  # #
+  # - type: intel
+  #   #
+  #   # Can be ommited as both `i915` and `xe` are built-in.
+  #   #
+  #   drivers: []
+  #   #
+  #   # Hardware-specific hardware acceleration configuration. Vulkan is included automatically.
+  #   #
+  #   hwaccel:
+  #     #
+  #     # VA-API:
+  #     #
+  #     # intel-media-driver: Gen 8+
+  #     # libva-intel-driver: up to 8 Gen
+  #     # intel-hybrid-codec-driver-git: VP9 up to 6 Gen
+  #     # linux-firmware-intel: binary firmware for 6 Gen and later
+  #     #
+  #     # Intel Video Processing Library (Intel VPL)
+  #     #
+  #     # libvpl: base package
+  #     # vpl-gpu-rt: 11 Gen+
+  #     # intel-media-sdk: 5 Gen to 11 Gen
+
+#
 # Uptime shell command.
 #
 ga_uptime: uptime -p | sed -E 's/up //; s/ days?,?/d/; s/ hours?,?/h/; s/ minutes?,?/m/'
@@ -25,7 +72,8 @@ ga_keyboard_options: grp:terminate:ctrl_alt_bksp
 #
 # Monitor devices.
 #
-ga_monitors: "{{ undef() }}"
+ga_monitors:
+  "{{ undef() }}"
   # <name>:
   #   workspaces: 4
   #   width: 1920

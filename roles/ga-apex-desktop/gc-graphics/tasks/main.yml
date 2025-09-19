@@ -1,15 +1,16 @@
 ---
 - name: Configure proprietary NVIDIA graphics
+  when: ga_stack | selectattr('type', 'eq', 'nvidia') | length == 1
   tags: apex-desktop-graphics-nvidia
+  vars:
+    _ga_descriptor: "{{ ga_stack | selectattr('type', 'eq', 'nvidia') | first }}"
   block:
     - name: Install NVIDIA packages
       foundation.system.packages:
       vars:
-        install:
-          - nvidia
-          - nvidia-utils
-          - nvidia-settings
-          - libva-nvidia-driver
+        install: >-
+          {%- set _pkgs = ['nvidia-utils', 'nvidia-settings', 'libva-nvidia-driver']  -%}
+          {{ _ga_descriptor.drivers + _pkgs }}
 
     - name: Disable useless NVIDIA services
       become: true
@@ -46,4 +47,30 @@
       environment:
         LIBVA_DRIVER_NAME: "nvidia"
         NVD_BACKEND: "direct"
+        GBM_BACKEND: "nvidia-drm"
         __GL_ALLOW_UNOFFICIAL_PROTOCOL: "1"
+
+- name: Configure Intel graphics
+  when: ga_stack | selectattr('type', 'eq', 'intel') | length == 1
+  tags: apex-desktop-graphics-intel
+  vars:
+    _ga_descriptor: "{{ ga_stack | selectattr('type', 'eq', 'intel') | first }}"
+  block:
+    - name: Install Intel packages
+      foundation.system.packages:
+      vars:
+        install: "{{ _ga_descriptor.hwaccel + ['mesa', 'vulkan-intel'] }}"
+
+    - name: Set Intel system environment variables
+      become: true
+      foundation.system.env:
+      environment: >-
+        {%- set _acc = {
+          'ANV_DEBUG': 'video-decode,video-encode',
+        } -%}
+        {%- if 'libva-intel-driver' in _ga_descriptor.hwaccel -%}
+          {%- set _ = _acc.update({'LIBVA_DRIVER_NAME': 'i965'}) -%}
+        {%- elif 'intel-media-driver' in _ga_descriptor.hwaccel -%}
+          {%- set _ = _acc.update({'LIBVA_DRIVER_NAME': 'iHD'}) -%}
+        {%- endif -%}
+        {{ _acc }}

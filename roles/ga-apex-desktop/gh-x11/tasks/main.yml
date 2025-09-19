@@ -36,13 +36,34 @@
           - file: ./10-mouse.conf
             template: xorg/10-mouse.conf.j2
 
-          - file: ./20-nvidia.conf
-            template: xorg/20-nvidia.conf.j2
-
           # - file: ./30-server.conf
           #   template: xorg/30-server.conf.j2
 
           - dir: "{{ fa_dir_share }}/xorg"
+
+    - name: Render graphics-specific Xorg configuration
+      become: true
+      foundation.files.install:
+        wipe: never
+        base: /etc/X11/xorg.conf.d
+        perms: 755:644:root:root
+      vars:
+        #
+        # Respect priority and only render the most important configuration.
+        # In case no template is required, omit no-op error by specifying directory creation.
+        #
+        targets: >-
+          {%- set _acc = [dict(dir='./', create=true)] -%}
+          {##}
+          {%- set _assoc = {
+            'intel': '20-intel.conf',
+            'nvidia': '20-nvidia.conf',
+          } -%}
+          {%- set _conf = _assoc.get(ga_stack[0].type) if (ga_stack | default([]) | length > 0) else none -%}
+          {%- if _conf is not none -%}
+            {%- set _ = _acc.append(dict(file='./{}'.format(_conf), template='./xorg/{}.j2'.format(_conf))) -%}
+          {%- endif -%}
+          {{ _acc }}
 
 - name: Configure XDG Desktop Portal
   tags: apex-desktop-x11-portal

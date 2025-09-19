@@ -2,6 +2,14 @@
 #
 # Refer to the `./roles/ga-apex-desktop/ga-shared/defaults/main.yml`.
 #
+ga_stack:
+  - type: nvidia
+    drivers:
+      - nvidia
+
+#
+# Refer to the `./roles/ga-apex-desktop/ga-shared/defaults/main.yml`.
+#
 ga_monitors:
   primary:
     workspaces: 8

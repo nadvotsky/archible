@@ -439,9 +439,10 @@ While this approach adds some initial complexity, it offers several advantages o
 
 #### `gc-graphics`
 
-- **Description**: Configures the *NVIDIA* graphics stack.
+- **Description**: Configures the graphics stack.
 - **Tags**:
   - `apex-desktop-graphics-nvidia`
+  - `apex-desktop-graphics-intel`
 - **References**:
   - `ba_headless`
 
@@ -574,6 +575,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `ga_space_medium`
   - `ga_space_small`
   - `ga_space_thin`
+  - `ga_stack`
   - `ga_uptime`
   - `ga_workspace_prefix`
 
