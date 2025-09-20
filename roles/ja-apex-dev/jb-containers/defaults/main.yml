@@ -1,0 +1,5 @@
+---
+#
+# Whether to configure nvidia-container-toolkit.
+#
+jb_nvidia_runtime: false

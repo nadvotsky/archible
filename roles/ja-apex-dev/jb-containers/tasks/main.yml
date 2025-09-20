@@ -18,7 +18,6 @@
           - crictl
           - runc
           - crun
-          - nvidia-container-toolkit
           - iptables-nft
 
     - name: Wipe containerd state
@@ -54,7 +53,15 @@
           - file: /etc/containerd/config.toml
             copy: containerd/config.toml
 
-    - name: Confgure nvidia container device interface
+    - name: Install NVIDIA toolkit packages
+      when: jb_nvidia_runtime is true
+      foundation.system.packages:
+      vars:
+        install:
+          - nvidia-container-toolkit
+
+    - name: Confgure NVIDIA container device interface
+      when: jb_nvidia_runtime is true
       become: true
       ansible.builtin.command:
         argv:
