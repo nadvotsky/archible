@@ -23,9 +23,9 @@
       register: _bb_disk_stat
 
     - name: Fail if disk not available or not a block device
-      when: not (_bb_disk_stat.stat.isblk is true)
+      when: (_bb_disk_stat.stat.isblk | default(false)) is false
       ansible.builtin.fail:
-        msg: Requested disk id {{ _bb_disk_stat }} cannot be found
+        msg: Requested disk id {{ _bb_disk_path }} cannot be found
 
     - name: Get a list of partitions for the disk
       become: true
