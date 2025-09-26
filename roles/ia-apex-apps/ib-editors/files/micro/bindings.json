@@ -108,12 +108,11 @@
     "Ctrl-b":         "ShellMode",
     "Ctrl-o":         "OpenFile",
     "Ctrl-s":         "Save",
-    //"Ctrl-S":         "SaveAs",
+    // "Ctrl-S":         "SaveAs",
     "Ctrl-q":         "Quit",
-    "Ctrl-c":         "Quit",
     "Ctrl-e":         "CommandMode",
 
-    "Alt-c":         "Copy",
+    "Ctrl-c":         "Copy",
     "Ctrl-x":         "Cut",
     "Ctrl-v":         "Paste",
 
