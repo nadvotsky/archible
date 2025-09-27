@@ -452,6 +452,7 @@ While this approach adds some initial complexity, it offers several advantages o
 - **Tags**:
   - `apex-desktop-media-driver`
   - `apex-desktop-media-framework`
+  - `apex-desktop-media-setup`
   - `apex-desktop-media-cards`
 - **References**:
   - `aa_newline`

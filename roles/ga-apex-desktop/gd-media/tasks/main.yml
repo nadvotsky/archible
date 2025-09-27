@@ -26,13 +26,39 @@
 
 - name: Configure media framework
   tags: apex-desktop-media-framework
+  block:
+    - name: Install PipeWire packages
+      foundation.system.packages:
+      vars:
+        install: >-
+          {{
+            [
+              "pipewire", "pipewire-pulse", "wireplumber", "pavucontrol", "rtkit",
+              "noise-suppression-for-voice" if gd_rnnoise is true else none,
+              "pipewire-jack" if gd_jack is true else none,
+              "bluez" if gd_bluetooth is true else none,
+              "pipewire-v4l2" if gd_video_v4l2 is true else none,
+              "pipewire-libcamera" if gd_video_libcamera is true else none,
+            ] | reject("none")
+          }}
+
+    - name: Add user to the rtkit group
+      become: true
+      ansible.builtin.user:
+        name: "{{ ca_name }}"
+        groups: rtkit
+        append: true
+
+- name: Configure media framework setup
+  tags: apex-desktop-media-setup
+  when: gd_cards is defined
   vars:
     _gd_context: |-
       clock.power-of-two-quantum = true
       cpu.zero.denormals = true
 
       default.clock.rate = {{
-        (gd_cards | dict2items | map(attribute='value.frequency') | min) if gd_cards is defined else 48000
+        (gd_cards | dict2items | map(attribute='value.frequency') | min)
       }}
       default.clock.allowed-rates = []
 
@@ -76,28 +102,6 @@
       channelmix.mix-lfe = true
       channelmix.upmix = false
   block:
-    - name: Install PipeWire packages
-      foundation.system.packages:
-      vars:
-        install: >-
-          {{
-            [
-              "pipewire", "pipewire-pulse", "wireplumber", "pavucontrol", "rtkit",
-              "noise-suppression-for-voice" if gd_rnnoise is true else none,
-              "pipewire-jack" if gd_jack is true else none,
-              "bluez" if gd_bluetooth is true else none,
-              "pipewire-v4l2" if gd_video_v4l2 is true else none,
-              "pipewire-libcamera" if gd_video_libcamera is true else none,
-            ] | reject("none")
-          }}
-
-    - name: Add user to the rtkit group
-      become: true
-      ansible.builtin.user:
-        name: "{{ ca_name }}"
-        groups: rtkit
-        append: true
-
     - name: Assert that the frequency is supported by rnnoise
       when: gd_rnnoise is true
       ansible.builtin.assert:
@@ -147,6 +151,7 @@
 
 - name: Configure ALSA card profiles
   tags: apex-desktop-media-cards
+  when: gd_cards is defined
   block:
     - name: Prepare ALSA card profiles directories
       foundation.files.install:
