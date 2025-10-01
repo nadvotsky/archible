@@ -1,4 +1,102 @@
 ---
+- name: Configure apps integration services
+  tags: apex-apps-misc-integration
+  block:
+    - name: Install integration packages
+      foundation.system.packages:
+      vars:
+        install:
+          #
+          # mDNS/DNS-SD Zeroconf implementation:
+          #  https://avahi.org/
+          #
+          - avahi
+          #
+          # Virtual filesystem and block device interfaces:
+          #  https://wiki.gnome.org/Projects/gvfs
+          #  https://www.freedesktop.org/wiki/Software/udisks/
+          #
+          - udisks2
+          - gvfs
+          #
+          # Freedesktop Secrets API implementation:
+          #  https://freedesktop.org/wiki/Specifications/secret-storage-spec/secrets-api-0.1.html
+          #
+          - gnome-keyring
+          - libsecret
+          - seahorse
+
+    - name: Disable useless system services
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - avahi-daemon.socket
+          - avahi-daemon.service
+          - udisks2.service
+        state:
+          disable: true
+
+    - name: Mask useless user services
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          # - gvfs-udisks2-volume-monitor.service
+          # - gvfs-metadata.service
+          - gvfs-daemon.service
+        state:
+          mask: true
+
+    - name: Stop the running GNOME Keyring instance
+      foundation.system.stop:
+        headless: "{{ ba_headless }}"
+      vars:
+        processes:
+          - gnome-keyring-daemon
+        services:
+          - gnome-keyring-daemon.service
+          - gnome-keyring-daemon.socket
+
+    - name: Wipe the GNOME Keyring
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: "{{ fa_dir_share }}/keyrings"
+
+    #
+    # If the custom password is provided, the command below:
+    #  1) Tries to initialize a new keyring with the custom password.
+    #  2) Otherwise silently fails to unlock the existing keyring.
+    #  3) Starts running a service in the foreground.
+    #  4) In either case, gets killed due to the timeout.
+    #
+    # If no password is provided, no action needs to be taken:
+    #  1) PAM module will automatically try to initialize it upon the first login.
+    #  2) Then will try to unlock the existing keyring with the user credentials.
+    #  3) Otherwise, will fallback to prompt for a password during the actual API invocation.
+    #
+    - name: Initialize a new GNOME Keyring
+      when: ih_keyring_password is defined
+      ansible.builtin.shell:
+        cmd: timeout --preserve-status --foreground 5 gnome-keyring-daemon --components=secrets --foreground --unlock
+        stdin: "{{ ih_keyring_password }}"
+        stdin_add_newline: false
+      register: _ih_gcr_keyring_invocation
+      changed_when: _ih_gcr_keyring_invocation.rc == 0
+
+    - name: Enable the GNOME Keyring service
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - gnome-keyring-daemon.service
+          - gnome-keyring-daemon.socket
+        state:
+          enable: true
+
 - name: Configure media utilities
   tags: apex-apps-misc-media
   block:
@@ -57,29 +155,6 @@
           mime: application/pdf
       register: _ih_xdg_mime_invocation
       changed_when: _ih_xdg_mime_invocation.rc == 0
-
-    - name: Disable useless system services
-      become: true
-      foundation.system.services:
-        headless: "{{ ba_headless }}"
-      vars:
-        units:
-          - avahi-daemon.socket
-          - avahi-daemon.service
-          - udisks2.service
-        state:
-          disable: true
-
-    - name: Disable useless user services
-      foundation.system.services:
-        headless: "{{ ba_headless }}"
-      vars:
-        units:
-          # - gvfs-udisks2-volume-monitor.service
-          # - gvfs-metadata.service
-          - gvfs-daemon.service
-        state:
-          mask: true
 
 - name: Configure system benchmark and info utilities
   tags: apex-apps-misc-system

@@ -1,0 +1,7 @@
+---
+#
+# A password for the user keyring which complies with the Freedesktop Secrets API.
+#  May not be set. In that case it will typically be managed by the Pluggable Authentication Modules (PAM)
+#  that uses the user credentials and automatically unlocks a keyring upon login.
+#
+ih_keyring_password: "{{ undef() }}"

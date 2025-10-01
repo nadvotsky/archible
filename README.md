@@ -903,6 +903,7 @@ While this approach adds some initial complexity, it offers several advantages o
 
 - **Description**: Provisions miscellaneous applications for system, data pipelines, media, and other uses.
 - **Tags**:
+  - `apex-apps-misc-integration`
   - `apex-apps-misc-media`
   - `apex-apps-misc-system`
   - `apex-apps-misc-data`
@@ -914,6 +915,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `ba_headless`
   - `ca_name`
   - `fa_dir_config`
+  - `fa_dir_share`
   - `fa_layout`
   - `ia_spotify_launcher_user_layout`
   - `ia_tutanota_user_layout`
