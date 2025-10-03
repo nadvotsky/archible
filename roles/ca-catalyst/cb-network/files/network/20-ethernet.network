@@ -1,6 +1,7 @@
 [Match]
 Name=eth*
 Name=en*
+Name=wlan*
 
 [Network]
 DHCP=ipv4
