@@ -1,6 +1,6 @@
 # archible
 
-![Archible Logo](./docs/archible-small.webp)
+![Archible Logo](./roles/aa-global/aa-shared/files/archible-small.webp)
 
 ## Description
 
