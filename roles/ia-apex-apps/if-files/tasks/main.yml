@@ -151,7 +151,7 @@
           #
           # Raw bytes manipulation.
           #
-          - bless
+          - ghex
           - heh
           - binwalk
           #
