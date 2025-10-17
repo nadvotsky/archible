@@ -6,7 +6,7 @@ dc_cmdline:
   #
   # Features.
   #
-  debugfs: "off"
+  # debugfs: "off"
   ipv6.disable: "1"
   audit: "0"
   console_msg_format: "syslog"
@@ -37,8 +37,8 @@ dc_cmdline:
   #
   # Hardware.
   #
-  iommu: "off"
-  amd_iommu: "off"
+  # iommu: "off"
+  # amd_iommu: "off"
   lp: "0"
   parport: "0"
   enable_mtrr_cleanup: true
