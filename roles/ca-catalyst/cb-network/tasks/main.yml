@@ -51,3 +51,37 @@
           - systemd-resolved.service
         state:
           enable: true
+
+- name: Configure wireless daemon
+  when: ba_wireless is true
+  tags: catalyst-network-wireless
+  block:
+    - name: Render iwd configuration
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: /etc/iwd
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - dir: ./
+            create: true
+          - file: ./main.conf
+            copy: iwd/main.conf
+
+    - name: Wipe iwd state
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - dir: /var/lib/iwd
+
+    - name: Enable iwd service
+      become: true
+      foundation.system.services:
+        headless: "{{ ba_headless }}"
+      vars:
+        units:
+          - iwd.service
+        state:
+          enable: true

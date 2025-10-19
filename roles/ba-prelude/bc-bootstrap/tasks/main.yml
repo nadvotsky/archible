@@ -15,7 +15,9 @@
     - name: Bootstrap base system with pacstrap
       become: true
       ansible.builtin.command:
-        argv:
+        argv: "{{ _bc_pacstrap_cmdline | reject('none') }}"
+      vars:
+        _bc_pacstrap_cmdline:
           - pacstrap
           - -M
           - -K
@@ -35,6 +37,10 @@
           - sudo
           - whois
           - reflector
+          #
+          # Networking.
+          #
+          - "{{ 'iwd' if ba_wireless is true else none }}"
       register: _bc_pacstrap_invocation
       changed_when: _bc_pacstrap_invocation.rc == 0
 

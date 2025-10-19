@@ -44,3 +44,8 @@ ba_arch: "x86_64_v2"
 # System locale.
 #
 ba_locale: en_US.UTF-8
+
+#
+# Whether machine is using a wireless connection.
+#
+ba_wireless: false

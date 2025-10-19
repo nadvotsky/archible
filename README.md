@@ -275,9 +275,11 @@ While this approach adds some initial complexity, it offers several advantages o
 - **Tags**:
   - `catalyst-network-main`
   - `catalyst-network-dns`
+  - `catalyst-network-wireless`
 - **References**:
   - `aa_wipe`
   - `ba_headless`
+  - `ba_wireless`
   - `ca_dns_ip`
   - `ca_dns_sni`
 
