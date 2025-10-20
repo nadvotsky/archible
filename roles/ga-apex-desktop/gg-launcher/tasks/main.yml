@@ -6,11 +6,7 @@
       foundation.system.packages:
       vars:
         install:
-          - rofi-wayland
-          #
-          # rofi-wayland follows rofi git version, while may rofi-emoji follows rofi stable. Therefor, ABI version
-          #  may occur. If rofi prints such error, build in manually with rofi-emoji-git.
-          #
+          - rofi
           - rofi-emoji
 
     - name: Render rofi configuration
