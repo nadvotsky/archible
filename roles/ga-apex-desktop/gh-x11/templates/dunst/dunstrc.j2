@@ -37,7 +37,7 @@
     {%- for _mon in ga_monitors.values() -%}
         {%- if _mon.get('notifications') is true -%}
             {{ loop.index0 }}
-        {%- endif -%} 
+        {%- endif -%}
     {%- endfor -%}
 {%- endmacro -%}
 
@@ -49,6 +49,8 @@ follow = none
 transparency = 0
 layer = overlay
 force_xwayland = false
+
+default_pause_level = 0
 
 enable_posix_regex = false
 enable_recursive_icon_lookup = true
