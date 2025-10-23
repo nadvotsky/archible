@@ -5,6 +5,10 @@ session_path = "{{ _he_atuin_layout.state }}/session"
 update_check = false
 auto_sync = false
 
+dialect = "us"
+store_failed = true
+workspaces = false
+secrets_filter = false
 history_filter = [
     "^exit",
     "^clear",
@@ -15,6 +19,31 @@ history_filter = [
     "^sh"
 ]
 
-keymap_mode = "vim-insert"
-scroll_exits = false
+search_mode = "fuzzy"
+filter_mode = "global"
+
+inline_height = 0
 style = "compact"
+invert = false
+show_preview = true
+show_help = true
+show_tabs = true
+
+scroll_exits = false
+keymap_mode = "vim-insert"
+prefers_reduced_motion = false
+
+[preview]
+strategy = "auto"
+
+[stats]
+common_prefix = [
+  "sudo",
+  "run0",
+]
+
+[dotfiles]
+enabled = false
+
+[daemon]
+enabled = false
