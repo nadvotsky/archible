@@ -3,7 +3,7 @@ experimental = true
 log_level = "warn"
 
 env_file = ".env"
-plugin_autoupdate_last_check_duration = "0"
+not_found_auto_install = false
 
 gpg_verify = false
 trusted_config_paths = ["{{ fa_dir_home }}"]
@@ -18,6 +18,3 @@ show_env = true
 [settings.python]
 precompiled_os = "unknown-linux-gnu"
 precompiled_arch = "{{ ba_arch }}"
-
-[settings.pipx]
-uvx = true
