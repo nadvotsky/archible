@@ -103,6 +103,7 @@
       foundation.system.packages:
       vars:
         install:
+          - usage
           - mise
 
     - name: Resolve mise user layout

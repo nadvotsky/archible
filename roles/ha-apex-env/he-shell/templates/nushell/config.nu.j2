@@ -400,19 +400,28 @@ $env.CARAPACE_MATCH = 1
 $env.CARAPACE_LOG = 0
 
 #Get an environment variable.
+@complete external
 def --env get-env [name] {
-    $env | get $name 
+    $env | get $name
 }
 
 #Set an environment variable.
+@complete external
 def --env set-env [name, value] {
     load-env { $name: $value }
 }
 
 #Hide an environment variable.
+@complete external
 def --env unset-env [name] {
     hide-env $name
 }
+
+
+{% endif %}
+#
+# Clipboard management.
+#
 
 #Copy content to the clipboard.
 def --env "clip to" [] {
@@ -437,19 +446,23 @@ def --env "clip from" [] {
     }
 }
 
-
-{% endif %}
 {% if he_shell_navigator is true %}
 #
 # Zoxide completer.
 #
 
+def zoxide-completer [spans: list<string>] {
+    ^zoxide query --exclude $env.PWD --list ...($spans | skip) | lines
+}
+
 #Zoxide, a smarter cd command.
+@complete zoxide-completer
 def --env z [...rest:string] {
     cd (^zoxide query --exclude $env.PWD -- ...$rest | str trim -r -c "\n")
 }
 
 #Zoxide, a smarter cd command (interactive selection).
+@complete zoxide-completer
 def --env zi [...rest:string] {
     cd (^zoxide query --exclude $env.PWD --interactive -- ...$rest | str trim -r -c "\n")
 }
@@ -473,6 +486,7 @@ hide-env -i ATUIN_HISTORY_ID
 $env.MISE_SHELL = "nu"
 
 #A tool for managing runtime versions.
+@complete external
 def --wrapped --env mise [...rest: string] {
     if (($rest | is-empty) or ("-h" in $rest) or ("--help" in $rest)) {
         return (^mise ...$rest)
@@ -551,33 +565,26 @@ $env.config = {
         external: {
             enable: true,
             max_results: 100,
+            {% if he_shell_completion is true %}
             completer: {|spans|
-                let ctx = $spans | first
-                let rest = $spans | skip
-
-                match $ctx {
-                    {% if he_shell_navigator is true %}
-                    "z" | "zi" => (zoxide query --exclude $env.PWD --list ...$rest | lines),
-
-                    {% endif %}
-                    {% if he_shell_completion is true %}
-                    _ => (carapace $ctx nushell ...$spans  | from json)
-                    #
-                    # If aliases to non-builtin commands (such as ls) is expected to be used:
-                    #
-                    # _ => {
-                    #     let subs = (
-                    #         scope aliases
-                    #             | where name == $ctx
-                    #             | get -i $.0.expansion
-                    #             | default $ctx
-                    #             | split row " "
-                    #     )
-                    #     (carapace ($subs | first) nushell ...($subs | skip) ...$rest  | from json)
-                    # },
-                    {% endif %}
-                }
+                ^carapace ($spans | first) nushell ...($spans | skip) | from json
+                #
+                # If aliases to non-builtin commands (such as ls) is expected to be used:
+                #
+                # let ctx = $spans | first
+                # let rest = $spans | skip
+                # _ => {
+                #     let subs = (
+                #         scope aliases
+                #             | where name == $ctx
+                #             | get -i $.0.expansion
+                #             | default $ctx
+                #             | split row " "
+                #     )
+                #     (carapace ($subs | first) nushell ...($subs | skip) ...$rest  | from json)
+                # },
             },
+            {% endif %}
         }
     },
 
