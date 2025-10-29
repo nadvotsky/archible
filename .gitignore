@@ -131,3 +131,8 @@ inventories/*.yml
 !inventories/example.yml
 inventories/group_vars/*
 !inventories/group_vars/example
+
+#
+# Ansible vault password
+#
+.vault

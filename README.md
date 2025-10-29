@@ -179,10 +179,10 @@ The installation environment needs to be prepared first:
 
 ### 5. Run the Playbook
 
-Use `--ask-vault-pass` if using Ansible Vault. It is also possible to skip certain parts of the run with `--skip-tags`.
+Use the command below to run the playbook. It is also possible to skip certain parts of the run with `--skip-tags`.
 
 ```shell
-ansible-playbook playbook.yml --ask-vault-pass [--skip-tags apex-apps-browsers]
+ansible-playbook playbook.yml [--skip-tags apex-apps-browsers]
 ```
 
 That is it! For next steps, consired the following:
