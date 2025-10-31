@@ -50,7 +50,7 @@ In order to get started with group variables, explore the following sections:
 - [Roles](#roles): Details all available roles and their references.
 - [Common Questions](#common-questions): Includes quick tips and common hacks.
 
-> **Note**: Many variables come with resonable defaults, but pay close attention to the most fundamental ones, such as
+> **Note**: Many variables come with reasonable defaults, but pay close attention to the most fundamental ones, such as
 > `aa_wipe` (global wiping policy) and user-related `ca_*`, `fa_*` variables. They are undefined by default, but not in
 > the case of example inventory.
 
@@ -165,7 +165,7 @@ main:
 The installation environment needs to be prepared first:
 
 1) **(Optional, ArchISO) Increase Root Filesystem Size**:
-    - Needed only if planning to use complete Ansible installation and/or additonal packages.
+    - Needed only if planning to use complete Ansible installation and/or additional packages.
     - At boot, press *E* to edit the boot entry and add `cow_space_size=3G` to the kernel parameters, and boot the system.
     - Alternatively, after booting, run `mount -o remount,size=3G /run/archiso/cowspace`.
     - See the [Arch Wiki](https://wiki.archlinux.org/title/Archiso#Adjusting_the_size_of_the_root_file_system) for more info.
@@ -1193,7 +1193,7 @@ Variables:
 This action plugin provides a convenient, declarative interface for batched file management.
 
 It was created to enforce strict filesystem rules on a managed node without the verbose boilerplate created by
-built-in modules (it may took up to 100+ lines for simple repeative operations).
+built-in modules (it may took up to 100+ lines for simple repetitive operations).
 
 The plugin first performs optional wiping operations (with optimizations to avoid redundant wipes), then creates all
 necessary directories, and finally performs the main file operations (copy, template, link, etc.).
@@ -1753,7 +1753,7 @@ Currently, is supports the following features:
 - **Newline Symbols**:
   - Each newline symbol is stripped unless the line ends with the `+` symbol.
   - Extra newlines can be added with the `newline` statement.
-- **Indentaion Control**: Each indentation requires an appropriate `indent` statement.
+- **Indentation Control**: Each indentation requires an appropriate `indent` statement.
 
 **Parameters**:
 
@@ -1838,7 +1838,7 @@ It is a good idea to check the role implementation and its relationship with dif
 While building a fully resilient, cross-distribution playbook is beyond the scope of this project, many of the
 techniques and configurations can be adapted for other systems. Some of the tasks require almost no change in
 order to be run on musl or even ARM-based systems. This is not only about all-in-one solution, but also
-configuration quirks: nothing stops from using the same techique of unattended GnuPG generation in shell scripts,
+configuration quirks: nothing stops from using the same technique of unattended GnuPG generation in shell scripts,
 PyInfra, or standalone utility.
 
 ## Credits
@@ -1846,7 +1846,7 @@ PyInfra, or standalone utility.
 Huge shout-out to:
 
 - The `Ansible` team and its community
-- The `Jinja2` templating engine
+- The `Jinja2` template engine
 - `ansible-lint` for keeping the code consistent
 - The `Ansible` Extension for VSCode
 - `uv` and `ruff` for an amazing Python tooling experience
