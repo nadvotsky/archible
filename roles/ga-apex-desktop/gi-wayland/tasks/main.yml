@@ -98,6 +98,29 @@
           - file: ./config
             template: mako/config.j2
 
+- name: Configure XDG Desktop Portal
+  tags: apex-desktop-wayland-portal
+  block:
+    - name: Install hyprland XDG Desktop Portal packages
+      foundation.system.packages:
+      vars:
+        install:
+          - xdg-desktop-portal-hyprland
+
+    - name: Render XDG Desktop Portal configuration for hyprland
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+      vars:
+        targets:
+          - file: "{{ fa_dir_config }}/xdg-desktop-portal/hyprland-portals.conf"
+            perms: "644:{{ ca_name }}:{{ ca_name }}"
+            content: |
+              [preferred]
+              default=gtk
+              org.freedesktop.impl.portal.Screenshot=hyprland
+              org.freedesktop.impl.portal.ScreenCast=hyprland
+              org.freedesktop.impl.portal.GlobalShortcuts=hyprland
+
 - name: Configure compositor
   tags: apex-desktop-wayland-compositor
   block:
@@ -106,7 +129,6 @@
       vars:
         install:
           - hyprland
-          - xdg-desktop-portal-hyprland
           - wl-clipboard
           - grim
           - slurp
@@ -126,14 +148,6 @@
             create: true
           - file: ./hypr/hyprland.conf
             template: hyprland/hyprland.conf.j2
-
-          - file: ./xdg-desktop-portal/hyprland-portals.conf
-            content: |
-              [preferred]
-              default=gtk
-              org.freedesktop.impl.portal.Screenshot=hyprland
-              org.freedesktop.impl.portal.ScreenCast=hyprland
-              org.freedesktop.impl.portal.GlobalShortcuts=hyprland
 
     - name: Remove hyprland UWSM launcher
       become: true

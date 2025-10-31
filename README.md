@@ -589,6 +589,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `apex-desktop-wayland-seat`
   - `apex-desktop-wayland-bar`
   - `apex-desktop-wayland-notify`
+  - `apex-desktop-wayland-portal`
   - `apex-desktop-wayland-compositor`
 - **References**:
   - `aa_relindent`
