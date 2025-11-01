@@ -1179,7 +1179,7 @@ This connection plugin allows Ansible to connect to the control node via a *syst
 
 The connection is stateless and does not boot the underlying system. Think of it as an advanced chroot.
 
-Variables:
+**Variables**:
 
 - `foundation_nspawn_root`: Path to the root directory to start container from. (Default: `/mnt`)
 - `foundation_nspawn_exe`: Path to the *systemd-nspawn* executable binary. (Default: `/usr/bin/systemd-nspawn`)
@@ -1302,13 +1302,13 @@ effective fallbacks without using `ignore_errors: true`.
 - `base`: The absolute base directory for all operations, unless overridden.
 - `persist`: The persistence directory on the control node.
 
-Variable `shells`:
+**Variable `shells`**:
 
 - `key`: The two-component key of the persistence item.
 - `dir`: Optional working directory for the command. If not specified, it falls back to the `base` parameter.
 - `cmd`: The shell command that receives the raw binary stream of the persistence item via its standard input.
 
-Variable `archives`:
+**Variable `archives`**:
 
 - `key`: The two-component key of the persistence item.
 - `dir`: Optional working directory for the command. If not specified, it falls back to the `base` parameter.
@@ -1358,7 +1358,7 @@ It can capture output from shell commands or create archives from specified path
 - `dir`: Optional working directory for the command. If not specified, it falls back to the `base` parameter.
 - `cmd`: The shell command that outputs a raw binary stream to be saved.
 
-Variable `archives`:
+**Variable `archives`**:
 
 - `key`: Two component key of persist item.
 - `dir`: Optional working directory for the command. If not specified, it falls back to the `base` parameter.
@@ -1399,7 +1399,7 @@ consisting of the key fingerprint and keygrip.
 
 - A list of key names to fetch. To fetch all keys, use `['all']`.
 
-Examples:
+**Examples**:
 
 ```yaml
 - name: Get GPG key info
@@ -1563,11 +1563,11 @@ configuration changes.
 
 - `headless`: A boolean flag. If `true`, this action does nothing, as a non-bootable machine has no running services.
 
-Variable `services`:
+**Variable `services`**:
 
 - A list of services to stop.
 
-Variable `processes`
+**Variable `processes`**:
 
 - A list of process names to terminate.
 
@@ -1651,7 +1651,7 @@ The user layout determines the preferred stage paths for user applications. The 
 - `dot`, `xdg`: Optional layout-specific value. Can be a path string or a dictionary `{ link: /path/to/link }` to create
   a symlink (from `link` to `default`).
 
-Examples:
+**Examples**:
 
 ```yaml
 #
@@ -1738,6 +1738,14 @@ The [ha-apex-env/hd-vermen](#hd-vermen) role must have been run first.
       - java@latest
 ```
 
+### `foundation.legacy.*`
+
+A collection of roles from previous development iterations, prior to the current plugin system.
+
+They are left for archival purposes only and are not used anymore. They are documented in the
+[`arguments_specs`](./collections/ansible_collections/foundation/legacy/meta/argument_specs.yml) file within the
+collection.
+
 ### `foundation.legacy.template_plus`
 
 An experimental Jinja extension that introduces syntax intended to solve complex Jinja indentation problems.
@@ -1786,14 +1794,6 @@ Currently, is supports the following features:
 
 {% newline 3 %}
 ```
-
-### `foundation.legacy.*`
-
-A collection of roles from previous development iterations, prior to the current plugin system.
-
-They are left for archival purposes only and are not used anymore. They are documented in the
-[`arguments_specs`](./collections/ansible_collections/foundation/legacy/meta/argument_specs.yml) file within the
-collection.
 
 ## Common Questions
 
