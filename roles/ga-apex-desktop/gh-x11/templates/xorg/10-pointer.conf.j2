@@ -10,3 +10,13 @@ Section "InputClass"
     Option "AccelProfile" "{{ ga_mouse_accel }}"
     Option "AccelSpeed" "{{ ga_mouse_speed }}"
 EndSection
+
+Section "InputClass"
+    Identifier "touchpad"
+    Driver "libinput"
+
+    MatchIsTouchpad "on"
+
+    Option "AccelProfile" "{{ ga_mouse_accel }}"
+    Option "AccelSpeed" "{{ ga_mouse_speed }}"
+EndSection
