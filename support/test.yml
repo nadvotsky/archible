@@ -1,3 +1,4 @@
+---
 - name: Tests foundation
   hosts: debug_local
   gather_facts: false
@@ -36,30 +37,30 @@
     - name: Test foundation.user.env
       foundation.user.env:
         section: test
-        home: /home/myuser
+        home: /home/user
         subs:
-          XDG_CONFIG_HOME: /home/myuser/.config
+          XDG_CONFIG_HOME: /home/user/.config
       environment:
-        MYAPP_CONFIG: "/home/myuser/.config/myapp"
+        MYAPP_CONFIG: /home/user/.config/myapp
     #
     # foundation.user.package
     #
     - name: Test foundation.user.package
       foundation.user.packages:
         wipe: always
-        home: "{{ aa_user_dir_home }}"
+        home: /home/user
       vars:
         install:
-          - one
+          - foo
         remove:
-          - two
+          - bar
     #
     # foundation.system.env
     #
     - name: Test foundation.system.env
       foundation.system.env:
       environment:
-        SYSTEM_VAR: "YES"
+        SYSTEM_VAR: VALUE
     #
     # foundation.system.kernel
     #
@@ -93,7 +94,7 @@
         processes:
           - myproc
         services:
-          - kekos
+          - myservice
     #
     # foundation.system.packages
     #
@@ -103,65 +104,65 @@
         force: false
       vars:
         install:
-          - one
+          - foo
         remove:
-          - two
+          - bar
     #
     # foundation.persist.from
     #
     - name: Test foundation.persist.from
       foundation.persist.from:
         base: /mydir
-        persist: "{{ aa_persist }}"
+        persist: "{{ playbook_dir }}/persist"
       vars:
         shells:
-          - key: mykey/arche
+          - key: fookey/shell
             dir: ./my-dir
             cmd: echo 123
         archives:
-          - key: some/another
+          - key: barkey/archive
             dir: /tmp
-            perms: "owner:group"
+            perms: owner:group
     #
     # foundation.persist.to
     #
     - name: Test foundation.persist.to
       foundation.persist.to:
         base: /mydir
-        persist: "{{ aa_persist }}"
+        persist: "{{ playbook_dir }}/persist"
       vars:
         shells:
           - key: some/path
-            dir: ./kek
+            dir: ./foo
             cmd: echo 123
         archives:
           - key: some/another
             dir: /tmp
             include:
-              - asd
+              - foo
     #
     # foundation.persist.gpg
     #
     - name: Test foundation.persist.gpg
       foundation.persist.gpg:
-        home: /home/xnd
+        home: /home/user
         layout: dot
       vars:
         keys:
-          - sas
+          - foo
       register: gpg
 
     # foundation.files.install
     #
     - name: Test foundation.files.install
       foundation.files.install:
-        wipe: "{{ aa_wipe }}"
+        wipe: always
         perms: 755:755:{{ ca_name }}:{{ ca_name }}
       vars:
         targets:
           - dir: /something
           - file: /some
-            content: asd
+            content: foobar
             perms: "644"
     #
     # foundation.files.net_archive
@@ -169,8 +170,8 @@
     - name: Test foundation.files.net_archive
       foundation.files.net_archive:
         url: https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-x86_64-unknown-linux-gnu.tar.gz
-        dest: /tmp/kek
-        perms: "owner:group"
+        dest: /tmp/foo
+        perms: owner:group
         strip: 1
         creates:
           - ./bat
