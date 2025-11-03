@@ -84,7 +84,8 @@ main:
 #### Catalyst Stage
 
 The **Catalyst** stage sets up the base system after it has been bootstrapped. At this point, the root filesystem is
-mounted , but lacks networking and users. The systemd-nspawn connection is recommended as the system is not yet bootable.
+mounted , but lacks networking and users. The systemd-nspawn connection is recommended as the system is not yet
+bootable.
 
 ```yaml
 main:
@@ -1270,7 +1271,8 @@ It is backed by *bsdtar*, which can handle tar (with many compression formats), 
 
 - `url`: A link to the remote archive to download.
 - `dest`: The destination directory. Note that the directory is **not** created automatically.
-- `perms`: A permission expression in the form of `owner:group`, which specifies the owner and group of all extracted files.
+- `perms`: A permission expression in the form of `owner:group`, which specifies the owner and group of all extracted
+  files.
 - `strip`: An optional number of leading path components to strip from the archive.
 - `creates`: A list of relative (`./`) or absolute paths. The existence of these paths is tested before downloading to
   prevent re-downloading, and after the download to ensure the required files were created.
@@ -1426,8 +1428,8 @@ consisting of the key fingerprint and keygrip.
 
 This action plugin modifies the global system environment via the `/etc/environment` file.
 
-It is recommended to only set the most essential system-wide variables here, such as those required for early loading by
-drivers and system services. For user-specific variables, use [`foundation.user.env`](#foundationuserenv).
+It is recommended to only set the most essential system-wide variables here, such as those required for early loading
+by drivers and system services. For user-specific variables, use [`foundation.user.env`](#foundationuserenv).
 
 **Environment**:
 
@@ -1447,12 +1449,14 @@ drivers and system services. For user-specific variables, use [`foundation.user.
 This action plugin modifies kernel command-line parameters and handles the proper regeneration of the initramfs.
 
 The system must be set up with the [da-apex-prep/dc-bootloader](#dc-bootloader) role for this to work. The plugin
-intelligently merges merges list items (i.e. `blacklist=one,two`), and replaces flags and options (i.e. `quiet`, `one=two`).
+intelligently merges merges list items (i.e. `blacklist=one,two`), and replaces flags and options
+(i.e. `quiet`, `one=two`).
 
 **Parameters**:
 
 - `headless`: A boolean flag. If `true`, the generated initramfs image will be platform-neutral to avoid boot issues.
-  The initramfs will be properly regenerated with hardware-specific modules upon the next system update on the booted machine.
+  The initramfs will be properly regenerated with hardware-specific modules upon the next system update on the booted
+  machine.
 
 **Environment**:
 
@@ -1491,8 +1495,8 @@ In order to use this plugin, [da-apex-prep/db-packaging](#db-packaging) role mus
 **Parameters**:
 
 - `sync`: Optional flag to sync repositories before performing any operations.
-- `force`: Optional flag to forcefully install packages even if they already exist. This can be useful for re-triggering
-  post-install hooks.
+- `force`: Optional flag to forcefully install packages even if they already exist. This can be useful for
+  re-triggering post-install hooks.
 
 **Variables `remove`**:
 
@@ -1520,8 +1524,8 @@ In order to use this plugin, [da-apex-prep/db-packaging](#db-packaging) role mus
 This action plugin manipulates systemd services in a declarative way.
 
 Unlike the built-in `ansible.builtin.systemd_service` module, it works on non-bootable machines and implies logical
-state changes (e.g., masking a service also stops it). The plugin operates in the user context when run without `become`,
-and in the system context otherwise.
+state changes (e.g., masking a service also stops it). The plugin operates in the user context when run without
+`become`, and in the system context otherwise.
 
 **Parameters**:
 
@@ -1632,8 +1636,8 @@ correct path without performing filesystem operations.
 The user layout determines the preferred stage paths for user applications. The plugin supports two possible options:
 
 - **XDG Layout**:
-  - The modern, [standardized](https://specifications.freedesktop.org/basedir-spec/latest/), clean separation of config,
-    cache, data, and state.
+  - The modern, [standardized](https://specifications.freedesktop.org/basedir-spec/latest/), clean separation of
+    config, cache, data, and state.
   - Still [not supported](https://wiki.archlinux.org/title/XDG_Base_Directory#Support) by many different applications.
 - **DOT Layout**:
   - The historical style that is the only option for many applications.
@@ -1648,8 +1652,8 @@ The user layout determines the preferred stage paths for user applications. The 
 
 - `default`: The path the tool uses by default.
 - `wipe`: Optional override for `wipe` parameter.
-- `dot`, `xdg`: Optional layout-specific value. Can be a path string or a dictionary `{ link: /path/to/link }` to create
-  a symlink (from `link` to `default`).
+- `dot`, `xdg`: Optional layout-specific value. Can be a path string or a dictionary `{ link: /path/to/link }`
+  to create a symlink (from `link` to `default`).
 
 **Examples**:
 
@@ -1714,7 +1718,8 @@ The [ha-apex-env/hd-vermen](#hd-vermen) role must have been run first.
 
 **Parameters**:
 
-- `wipe`: Whether to not only uninstall a package but also wipe its installation directory entirely. Either `never` or `always`.
+- `wipe`: Whether to not only uninstall a package but also wipe its installation directory entirely.
+  Either `never` or `always`.
 - `home`: The user's home directory.
 
 **Variable `install`**:
@@ -1825,8 +1830,9 @@ The main reason for this is to create a static, reproducible environment that be
 circumstances. No code changes should be applied when running a specific role through container, chroot, or root-only
 SSH connection.
 
-Moreover, relying on the environmental variables often results in an inconsistent source of truth. Specifically, `pam_env`,
-`/etc/environment`, and `.bash_profile` may not clearly reflect pending changes and may require multiple machine reboots.
+Moreover, relying on the environmental variables often results in an inconsistent source of truth. Specifically,
+`pam_env`, `/etc/environment`, and `.bash_profile` may not clearly reflect pending changes and may require multiple
+machine reboots.
 
 > What kind of the roles can be run on SSH, localhost, maybe other Linux distributions?
 
