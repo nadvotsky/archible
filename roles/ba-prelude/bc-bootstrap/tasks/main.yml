@@ -24,12 +24,6 @@
           - "{{ ba_mount_point }}"
           - base
           - iptables-nft
-          - util-linux
-          #
-          # Kernel.
-          #
-          - linux
-          - linux-firmware
           #
           # Ansible, mkpasswd, and packaging.
           #

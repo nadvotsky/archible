@@ -322,6 +322,7 @@ While this approach adds some initial complexity, it offers several advantages o
 
 - **Description**: Installs the *booster* initramfs generator, a *kernel-install* hook, and the *systemd-boot* bootloader.
 - **Tags**:
+  - `apex-prep-bootloader-suite`
   - `apex-prep-bootloader-initrd`
   - `apex-prep-bootloader-kernel`
   - `apex-prep-bootloader-main`

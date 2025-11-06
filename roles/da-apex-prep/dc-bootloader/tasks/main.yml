@@ -1,8 +1,25 @@
 ---
+- name: Configure bootloader suite
+  tags: apex-prep-bootloader-suite
+  block:
+    - name: Prepare kernel-install directories
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: /etc/kernel
+        perms: 755:644:root:root
+      vars:
+        targets:
+          - dir: ./
+            create: true
+
+          - dir: ./install.d
+            create: true
+
 - name: Configure initramfs generator
   tags: apex-prep-bootloader-initrd
   block:
-    - name: Install booster
+    - name: Install booster packages
       foundation.system.packages:
       vars:
         install:
@@ -12,13 +29,13 @@
       become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
+        perms: 755:644:root:root
       vars:
         targets:
           - file: /etc/booster.yaml
-            perms: 644:root:root
             copy: booster/booster.yaml
 
-    - name: Remove built-in pacman hooks
+    - name: Remove built-in booster pacman hooks
       become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
@@ -31,62 +48,42 @@
           - file: ./90-booster-install.hook
             link: /dev/null
 
-- name: Configure kernel installer
-  tags: apex-prep-bootloader-kernel
-  block:
-    - name: Render kernel-install configuration
+    - name: Render kernel-install booster configuration and plugin
       become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
         base: /etc/kernel
-        perms: 755:644:root:root
       vars:
         targets:
-          - dir: ./
-            create: true
           - file: ./install.conf
+            perms: 644:root:root
             copy: kernel-install/install.conf
 
-          - dir: ./install.d
-            create: true
           - file: ./install.d/60-booster.install
             perms: 755:root:root
             copy: kernel-install/60-booster.install
 
+- name: Configure kernel
+  tags: apex-prep-bootloader-kernel
+  block:
     - name: Install kernel-install pacman hook
       foundation.system.packages:
       vars:
         install:
           - pacman-hook-kernel-install
 
+    - name: Install kernel package
+      foundation.system.packages:
+      vars:
+        install:
+          - "{{ dc_kernel | default('linux') }}"
+          - linux-firmware
+
     - name: Render kernel cmdline and install initrd
       become: true
       foundation.system.kernel:
         headless: "{{ ba_headless }}"
       environment: "{{ dc_cmdline }}"
-
-    - name: Remove mkinitcpio packages, i.e. default initramfs generator
-      when: aa_wipe == 'always'
-      foundation.system.packages:
-      vars:
-        remove:
-          - mkinitcpio
-
-    - name: List previous kernels and initrd images
-      when: aa_wipe == 'always'
-      ansible.builtin.find:
-        paths: /boot
-        patterns: "*.img,vmlinuz*"
-        hidden: true
-      register: _dc_leftovers
-
-    - name: Remove previous kernels and initrd images
-      when: aa_wipe == 'always'
-      become: true
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: absent
-      loop: "{{ _dc_leftovers.files | map(attribute='path') }}"
 
 - name: Configure bootloader
   tags: apex-prep-bootloader-main

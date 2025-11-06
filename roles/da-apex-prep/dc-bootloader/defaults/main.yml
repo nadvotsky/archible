@@ -1,5 +1,12 @@
 ---
 #
+# Linux kernel package to use. Fallbacks to 'linux' if not defined.
+#
+#  Examples: linux-zen, linux-lts, linux-rt, linux-hardened, and others.
+#
+dc_kernel: "{{ undef() }}"
+
+#
 # List of kernel command-line parameters:
 #  - boolean values are treated as flags, i.e. `key: true` results in `key`
 #  - list values are merged and rendered with comma separator, i.e. `key: [val, val2]` results in `key=val,val2`
