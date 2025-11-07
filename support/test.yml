@@ -55,6 +55,35 @@
         remove:
           - bar
     #
+    # foundation.storage.partition
+    #
+    - name: Test foundation.storage.partition
+      foundation.storage.partition:
+        disk: /dev/nullb0
+        base: /mnt
+      vars:
+        layout:
+          - name: EFI
+            table:
+              type: efi
+              size: 1G
+            fs:
+              type: vfat
+            mount:
+              path: /efi
+              mode: "755:root:root"
+              exec: "mount -o $OPTS,extra_opt $SRC $DST"
+
+          - name: ROOT
+            table:
+              type: "8304"
+              size: 60%
+            fs:
+              type: ext4
+            mount:
+              opts: "$OPTS,extra_mount_opt"
+              path: /
+    #
     # foundation.system.env
     #
     - name: Test foundation.system.env
@@ -107,35 +136,6 @@
           - foo
         remove:
           - bar
-    #
-    # foundation.storage.partition
-    #
-    - name: Test foundation.storage.partition
-      foundation.storage.partition:
-        disk: /dev/nullb0
-        base: /mnt
-      vars:
-        layout:
-          - name: EFI
-            table:
-              type: efi
-              size: 1G
-            fs:
-              type: vfat
-            mount:
-              path: /efi
-              mode: "755:root:root"
-              exec: "mount -o $OPTS,extra_opt $SRC $DST"
-
-          - name: ROOT
-            table:
-              type: "8304"
-              size: 60%
-            fs:
-              type: ext4
-            mount:
-              opts: "$OPTS,extra_mount_opt"
-              path: /
     #
     # foundation.persist.from
     #

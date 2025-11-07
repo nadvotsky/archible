@@ -1,6 +1,8 @@
 #
 # foundation.storage.partition - manage disk storage partition table.
 #
+# Follow the project README for more information.
+#
 import typing
 
 import dataclasses

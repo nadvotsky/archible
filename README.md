@@ -1425,6 +1425,131 @@ consisting of the key fingerprint and keygrip.
     msg: Fingerprint for mykey is {{ _persist_gpg.gpg.mykey.fingerprint }}
 ```
 
+### `foundation.storage.partition`
+
+This action plugin manipulates the GUID Partition Table (GPT) of a disk.
+
+It is backed by *gptfdisk*, and provides a concise, declarative syntax for managing the entire partitioning routine,
+including formatting new filesystems and optionally mounting them.
+
+The plugin offers advanced validation, supports check mode, and integrates seamlessly with orchestration and bootstrap
+roles by returning structured metadata about all configured partitions.
+
+> **Note**: The exact set of prerequisites varies by layout and may require additional packages to be installed.
+> These typically include userspace tools specific to the selected filesystem, such as *btrfs-progs* or *xfsprogs*.
+
+**Parameters**:
+
+- `disk`: The absolute path to the block device to partition. It may also be provided as a symbolic link
+  (e.g., `/dev/disk/by-id/ata-SSD`).
+- `base`: The absolute path that serves as the root for all mount points.
+
+**Variable `layout`**:
+
+- `name`: The label assigned to the partition and its filesystem (when applicable).
+- `table`: A block describing partition table details.
+  - `type`: The partition type, given as an alias (`efi`, `root`), a short *gptfdisk* type code (`ef00`, `8300`),
+    or an explicit GUID expression (`C12A7328-F81F-11D2-BA4B-00A0C93EC93B`). Refer to the
+    [source code](./collections/collections/ansible_collections/foundation/storage/plugins/action/partition.py)
+    for a complete mapping.
+  - `size`: The size of the partition. Supports numeric units (`100G`, `250MB`), a percentage of the disk (`10%`),
+    or a special `auto` value that fills the remaining free space.
+- `fs`: An optional block describing filesystem creation.
+  - `type`: The filesystem name to create.
+  - `exec`: An optional template string that replaces the default command used for formatting. The following variables
+    are supported:
+    - `$PART` - the quoted path to the partition block device
+    - `$NAME` - the quoted `name` parameter
+    - `$FS` - the `type` parameter
+    - `$OPTS` - a set of recommended options based on the filesystem type
+- `mount`: An optional block describing the partition mounting.
+  - `path`: The absolute path to mount the filesystem to. Processed as provided, but prefixed with the `base` parameter
+    during the actual mount operation. This allows to work with canonical paths (e.g., `/boot`) without hard-coding
+    a prefix. Must be `none` for swap partitions.
+  - `mode`: The optional access mode and ownership of the mount point, in the format `mod:owner:group`.
+    Default: `755:root:root`.
+  - `opts`: An optional template string that forms mount options. Supports the `$OPTS` variable, which expands
+    to recommended options based on `fs.type`.
+  - `exec`: An optional template string overriding the default mount command. Supports the following variables:
+    - `$SRC`: the quoted path to the partition block device
+    - `$DST`: the quoted destination directory, composed of `base` and `path`.
+    - `$OPTS`: the evaluated mount options (either `opts` template or default fallback).
+
+**Examples**:
+
+```yaml
+#
+# This will create:
+#   - PARTLABEL=MY-ESP,  SIZE=(1000 ^ 3 bytes)
+#   - PARTLABEL=MY-ROOT, SIZE=(remaining free space)
+#
+# This will format:
+#   - mkfs.vfat -F 32 -n "MY-ESP" /dev/sd?1
+#   - mkfs.ext4 -F -L "MY-ROOT" -t ext4 -O fast_commit,...,extra_isize /dev/sd?2
+#
+# This will mount:
+#   - mount -o defaults,strictatime /dev/sd?2 /mnt
+#   - mkdir -p /mnt/efi
+#   - mount -o async,noatime,...,fmask=0023,dmask=0022 /dev/sd?1 /mnt/efi
+#
+# Note that the order of partition during the mount stage is automatically
+#  adjusted to ensure a correct sequence, even when nested mount points exist.
+#
+- name: Partition the disk
+  foundation.storage.partition:
+    disk: /dev/disk/by-id/ata-VendorC
+    base: /mnt
+  vars:
+    layout:
+      - name: MY-ESP
+        table:
+          type: efi
+          size: 1G
+        fs:
+          type: vfat
+        mount:
+          path: /efi
+
+      - name: MY-ROOT
+        table:
+          type: root
+          size: auto
+        fs:
+          type: ext4
+          exec: mkfs.ext4 -F -L $NAME -O $OPTS,extra_isize $PART
+        mount:
+          path: /
+          opts: defaults,strictatime
+
+  #
+  # Please note that metadata paths are not influenced by the `base` parameter.
+  #
+  register: _my_disk_layout
+
+#
+# `submission` metadata contains information about each partition.
+#
+# - MY-ESP is using fat
+# - MY-ROOT is using ext4
+#
+- name: Print the metadata of partitions
+  ansible.builtin.debug:
+    msg: "{{ item.name }} is using {{ item.fs_name }}"
+  loop: "{{ _my_disk_layout.submission }}"
+
+#
+# `fstab` metadata contains prepared fstab fields. Only partitions that define
+#   both `mount` and `fs` blocks are included.
+#
+# - PARTUUID=... /
+# - PARTUUID=... /efi
+#
+- name: Print the fstab fields
+  ansible.builtin.debug:
+    msg: "{{ item.fs_vfstype }} {{ item.fs_spec }} {{ item.fs_file }}"
+  loop: "{{ _my_disk_layout.fstab }}"
+```
+
 ### `foundation.system.env`
 
 This action plugin modifies the global system environment via the `/etc/environment` file.
