@@ -3,16 +3,9 @@
 SELF=$(basename "$0")
 COMMAND="$1"
 KERNEL_VERSION="$2"
-ENTRY_DIR="$3"
-KERNEL_IMAGE="$4"
 
-
-if 
-    [[ "$KERNEL_INSTALL_INITRD_GENERATOR" != "booster" ]] ||
-    [[ "$COMMAND" != "add" ]];
-then
-    exit 0
-fi
+[[ "$KERNEL_INSTALL_INITRD_GENERATOR" == "booster" ]] || exit 0
+[[ "$COMMAND" == "add" ]] || exit 0
 
 EXEC=("booster" "build" "--force")
 if [[ -n "$KERNEL_INSTALL_BOOSTER_UNIVERSAL" ]]; then
