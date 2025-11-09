@@ -14,16 +14,34 @@ ba_locale: en_US.UTF-8
 #
 bb_disk_id: ata-SSD
 bb_schema:
-  - name=EXEFI,type=efi,size=1G
-  - name=EXROOT,type=root,fs=ext4,size=85%
-  - name=EXVOLT,type=linux,fs=ext4
+  - name: EX-EFI
+    table:
+      type: efi
+      size: 1G
+    fs:
+      type: vfat
+    mount:
+      path: /boot
+
+  - name: EX-ROOT
+    table:
+      type: root
+      size: 85%
+    fs:
+      type: ext4
+    mount:
+      path: /
+
+  - name: EX-VOLT
+    table:
+      type: linux
+      size: auto
+    fs:
+      type: ext4
 
 #
 # Refer to the `./roles/ba-prelude/bc-bootstrap/defaults/main.yml`.
 #
 bc_root_password: example
-bc_mountopts_root: async,noatime,auto,dev,exec,noiversion,suid,rw,nouser,dax=always,nodiscard,noquota
-bc_mountopts_efi: "sync,noatime,auto,dev,exec,noiversion,suid,rw,nouser,fmask=0023,dmask=0022,check=s,discard,\
-  errors=remount-ro,iocharset=utf8,tz=UTC,flush,utf8"
 bc_keymap: us
 bc_timezone: Europe/Berlin

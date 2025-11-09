@@ -38,47 +38,6 @@
       register: _bc_pacstrap_invocation
       changed_when: _bc_pacstrap_invocation.rc == 0
 
-- name: Configure fstab
-  tags: prelude-bootstrap-fstab
-  block:
-    - name: Generate fstab via genfstab
-      become: true
-      ansible.builtin.shell:
-        cmd: >-
-          genfstab -t PARTUUID "{{ ba_mount_point }}" > "{{ ba_mount_point }}/etc/fstab"
-      register: _bc_genfstab_invocation
-      changed_when: _bc_genfstab_invocation.rc == 0
-
-    - name: Modify mount options
-      become: true
-      ansible.builtin.replace:
-        path: "{{ ba_mount_point }}/etc/fstab"
-        regexp: "\
-          (?P<spec>[^\\s]+)\\s+\
-          (?P<file>{{ item.file }})\\s+\
-          (?P<vfstype>\\w+)\\s+\
-          (?P<mntops>[\\w=,-]+)\\s+\
-          (?P<freq>[01])\\s+\
-          (?P<passno>\\d+)\\s*\
-          "
-        replace: >
-          \g<spec>
-          \g<file>
-          \g<vfstype>
-          {{ item.mntops }}
-          \g<freq>
-          \g<passno>
-        mode: "0644"
-        owner: 0
-        group: 0
-      loop:
-        - file: /
-          mntops: "{{ bc_mountopts_root }}"
-        - file: /boot
-          mntops: "{{ bc_mountopts_efi }}"
-      register: _bc_replace_invocation
-      failed_when: _bc_replace_invocation is not changed
-
 - name: Configure systemd-firstboot
   tags: prelude-bootstrap-firstboot
   block:

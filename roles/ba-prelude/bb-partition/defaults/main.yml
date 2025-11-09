@@ -5,8 +5,31 @@
 bb_disk_id: "{{ undef() }}"
 
 #
-# Refer to the files/apart/README.md for more info.
+# GPT layout of the target disk. This value is passed to the `foundation.storage.partition` action plugin. Follow
+#  the project README for syntax insights.
+#
+# Typical setups define a special ESP / EFI (Extensible Firmware Interface) partition with the type GUID
+#  C12A7328-F81F-11D2-BA4B-00A0C93EC93B, with the size of about 100M-1000M, and formatted with FAT32 filesystem.
+#  The computer's UEFI uses it in order to locate and pass the control to the bootloader during the startup.
+# The root partition is encouraged to use the dedicated root partition GUID, as it allows initramfs (and systemd)
+#  to automatically detect such partitions.
+#  See https://www.freedesktop.org/software/systemd/man/latest/systemd-gpt-auto-generator.html.
 #
 bb_schema:
-  - name=EFI,type=efi,size=1G
-  - name=ROOT,type=root,fs=ext4
+  - name: EFI
+    table:
+      type: efi
+      size: 1G
+    fs:
+      type: vfat
+    mount:
+      path: /boot
+
+  - name: ROOT
+    table:
+      type: root
+      size: auto
+    fs:
+      type: ext4
+    mount:
+      path: /

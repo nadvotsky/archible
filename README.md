@@ -244,9 +244,10 @@ While this approach adds some initial complexity, it offers several advantages o
 
 - **Description**: Partitions the disk using *gdisk* and *mkfs*.
 - **Tags**:
-  - `prelude-partition-check`
   - `prelude-partition-main`
+  - `prelude-partition-fstab`
 - **References**:
+  - `aa_newline`
   - `ba_mount_point`
 
 #### `bc-bootstrap`
@@ -255,7 +256,6 @@ While this approach adds some initial complexity, it offers several advantages o
 - **Tags**:
   - `prelude-bootstrap-deps`
   - `prelude-bootstrap-main`
-  - `prelude-bootstrap-fstab`
   - `prelude-bootstrap-firstboot`
 - **References**:
   - `ba_hostname`

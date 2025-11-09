@@ -1,102 +1,41 @@
 ---
-- name: Check disk partitioning prerequisites
-  tags: prelude-partition-check
-  vars:
-    _bb_disk_path: "/dev/disk/by-id/{{ bb_disk_id }}"
-  block:
-    - name: Ensure nothing is mounted at the mount point
-      become: true
-      ansible.builtin.command:
-        argv:
-          - findmnt
-          - "{{ ba_mount_point }}"
-      register: _bb_findmnt_invocation
-      failed_when: _bb_findmnt_invocation.rc == 0
-      changed_when: false
-
-    - name: Get disk stat
-      become: true
-      ansible.builtin.stat:
-        path: "{{ _bb_disk_path }}"
-        follow: true
-        get_checksum: false
-      register: _bb_disk_stat
-
-    - name: Fail if disk not available or not a block device
-      when: (_bb_disk_stat.stat.isblk | default(false)) is false
-      ansible.builtin.fail:
-        msg: Requested disk id {{ _bb_disk_path }} cannot be found
-
-    - name: Get a list of partitions for the disk
-      become: true
-      ansible.builtin.find:
-        paths: /dev/disk/by-id
-        file_type: link
-        patterns: "{{ bb_disk_id }}-part*"
-        hidden: true
-      register: _bb_disk_partitions
-
-    - name: Ensure none of the disk partitions are currently mounted
-      become: true
-      ansible.builtin.command:
-        argv:
-          - findmnt
-          - "{{ item.path }}"
-      register: _bb_findmnt_invocation
-      failed_when: _bb_findmnt_invocation.rc == 0
-      changed_when: false
-      loop: "{{ _bb_disk_partitions.files }}"
-
 - name: Perform disk partitioning
   tags: prelude-partition-main
   block:
-    - name: Prepare apart environment
+    - name: Partition disk and mount filesystems
+      foundation.storage.partition:
+        base: "{{ ba_mount_point }}"
+        disk: "/dev/disk/by-id/{{ bb_disk_id }}"
+      vars:
+        layout: "{{ bb_schema }}"
+      register: _bb_partition_invocation
+
+- name: Configure fstab
+  tags: prelude-bootstrap-fstab
+  when: _bb_partition_invocation is defined
+  block:
+    - name: Render fstab entries
       foundation.files.install:
-        base: /tmp/apart
         wipe: never
+        base: "{{ ba_mount_point }}/etc"
         perms: 755:644:root:root
       vars:
         targets:
           - dir: ./
             create: true
 
-          - file: ./apart.abs
-            perms: "444"
-            copy: apart/apart.abs
-
-          - file: ./abs
-            perms: "555"
-            url: https://github.com/abs-lang/abs/releases/latest/download/abs-linux-amd64
-
-    - name: Partition disk and mount filesystems with apart
-      become: true
-      ansible.builtin.command:
-        argv: >-
-          {%- set _binary = ["/tmp/apart/abs", "/tmp/apart/apart.abs"] -%}
-          {%- set _disk = ["--disk", "/dev/disk/by-id/{}".format(bb_disk_id)] -%}
-          {%- set _mount = ["--mount", ba_mount_point] -%}
-
-          {{ _binary + _disk + _mount + bb_schema }}
-      environment:
-        NO_COLOR: "1"
-      register: _bb_apart_invocation
-      changed_when: _bb_apart_invocation.rc == 0
-
-    - name: Print apart output
-      ansible.builtin.debug:
-        var: _bb_apart_invocation.stdout_lines
-
-    - name: Remove downloaded abs and apart from the temporary directory
-      ansible.builtin.file:
-        path: /tmp/apart
-        state: absent
-
-  rescue:
-    - name: Fail with hint about required packages
-      ansible.builtin.fail:
-        msg: >-
-          {%- set _pkgs = [
-            'util-linux', 'coreutils', 'gptfdisk',
-            'btrfs-progs', 'e2fsprogs', 'exfatprogs', 'xfsprogs', 'f2fs-tools', 'ntfs-3g', 'dosfstools',
-          ] -%}
-          Please make sure you have installed: {{ _pkgs | join(', ') }}
+          - file: ./fstab
+            content: >-
+              {%- set _lines = [] -%}
+              {%- for _fstab in _bb_partition_invocation.fstab -%}
+                {%- set _fields = [
+                  _fstab.fs_spec,
+                  _fstab.fs_file,
+                  _fstab.fs_vfstype,
+                  _fstab.fs_mntops,
+                  _fstab.fs_freq,
+                  _fstab.fs_passno,
+                ] -%}
+                {%- set _ = _lines.append(_fields | join(" ")) -%}
+              {%- endfor -%}
+              {{ _lines | join("" | aa_newline) }}

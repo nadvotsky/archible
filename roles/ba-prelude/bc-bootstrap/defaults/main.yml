@@ -5,16 +5,6 @@
 bc_root_password: "{{ undef() }}"
 
 #
-# Mount options for root partition.
-#
-bc_mountopts_root: defaults,noatime
-
-#
-# Mount options for EFI (ESP) partition.
-#
-bc_mountopts_efi: fmask=0137,dmask=0027,noatime
-
-#
 # VT keymap.
 #
 # Theoretically, layout switching can be achieved, but it is tricky:
