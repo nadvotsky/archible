@@ -102,17 +102,17 @@
       become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
+        perms: 750:640:root:root
       vars:
         targets:
-          - file: /boot/loader/loader.conf
-            perms: 777:root:root
+          - file: /efi/loader/loader.conf
             copy: systemd-boot/loader.conf
 
     - name: Remove systemd-boot directories that have no use
       when: aa_wipe == 'always'
       become: true
       ansible.builtin.file:
-        path: "/boot/EFI/{{ item }}"
+        path: "/efi/EFI/{{ item }}"
         state: absent
       loop:
         - systemd

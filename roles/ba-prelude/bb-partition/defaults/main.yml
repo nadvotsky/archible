@@ -23,7 +23,7 @@ bb_schema:
     fs:
       type: vfat
     mount:
-      path: /boot
+      path: /efi
 
   - name: ROOT
     table:
