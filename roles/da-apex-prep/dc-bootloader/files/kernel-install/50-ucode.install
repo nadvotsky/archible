@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+SELF=$(basename "$0")
+COMMAND="$1"
+
+[[ "$COMMAND" == "add" ]] || exit 0
+
+shopt -s nullglob extglob && UCODE_PATTERN="[[:alnum:]_-]"
+for ucode_src in /boot/+($UCODE_PATTERN)-ucode.img; do
+    [[ "$(basename -- $ucode_src)" =~ ^(${UCODE_PATTERN}+)-ucode.img$ ]]
+    ucode_dest="$KERNEL_INSTALL_STAGING_AREA/microcode-${BASH_REMATCH[1]}"
+
+    echo "+$SELF: $(cp --verbose "$ucode_src" "$ucode_dest")"
+done

@@ -2,9 +2,20 @@
 #
 # Linux kernel package to use. Fallbacks to 'linux' if not defined.
 #
-#  Examples: linux-zen, linux-lts, linux-rt, linux-hardened, and others.
+# Examples: linux-zen, linux-lts, linux-rt, linux-hardened, and others.
 #
 dc_kernel: "{{ undef() }}"
+
+#
+# CPU microcode package to install.
+#
+# Typical setups use `intel-ucode` or `amd-ucode`, but generally any package that installs microcode image
+#  to `/boot/*-ucode.img` is valid (e.g., intel-real-ucode-git). Resulting image will then be early loaded
+#  with the help of bootloader.
+#
+# This feature is disabled altogether if the value is undefined.
+#
+dc_microcode: "{{ undef() }}"
 
 #
 # List of kernel command-line parameters:

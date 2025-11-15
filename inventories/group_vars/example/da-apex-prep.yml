@@ -41,10 +41,10 @@ dc_cmdline:
   # amd_iommu: "off"
   # io_delay: "none"
   # no_timer_check: true
+  # dis_ucode_ldr: true
   lp: "0"
   parport: "0"
   enable_mtrr_cleanup: true
-  dis_ucode_ldr: true
   hpet_mmap: "1"
 
   #

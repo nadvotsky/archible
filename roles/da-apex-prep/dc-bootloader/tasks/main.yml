@@ -63,6 +63,27 @@
             perms: 755:root:root
             copy: kernel-install/60-booster.install
 
+- name: Configure CPU microcode
+  tags: apex-prep-bootloader-ucode
+  when: dc_microcode is defined
+  block:
+    - name: Install microcode packages
+      foundation.system.packages:
+      vars:
+        install:
+          - "{{ dc_microcode }}"
+
+    - name: Render kernel-install microcode plugin
+      become: true
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        perms: 755:755:root:root
+        base: /etc/kernel
+      vars:
+        targets:
+          - file: ./install.d/50-ucode.install
+            copy: kernel-install/50-ucode.install
+
 - name: Configure kernel
   tags: apex-prep-bootloader-kernel
   block:
