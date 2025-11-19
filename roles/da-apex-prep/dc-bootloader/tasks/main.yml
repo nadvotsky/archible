@@ -130,11 +130,11 @@
             copy: systemd-boot/loader.conf
 
     - name: Remove systemd-boot directories that have no use
-      when: aa_wipe == 'always'
       become: true
-      ansible.builtin.file:
-        path: "/efi/EFI/{{ item }}"
-        state: absent
-      loop:
-        - systemd
-        - Linux
+      foundation.files.install:
+        wipe: "{{ aa_wipe }}"
+        base: /efi/EFI
+      vars:
+        targets:
+          - dir: ./systemd
+          - dir: ./Linux
