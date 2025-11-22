@@ -51,9 +51,12 @@ fa_dir_subs:
 fa_dir_xdg:
   downloads: "{{ undef() }}"
   documents: "{{ undef() }}"
+  hub: "{{ undef() }}"
+
   pictures: "{{ undef() }}"
   videos: "{{ undef() }}"
   music: "{{ undef() }}"
+
   templates: "{{ undef() }}"
   publicshare: "{{ undef() }}"
   desktop: "{{ undef() }}"
