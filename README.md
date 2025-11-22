@@ -242,7 +242,7 @@ While this approach adds some initial complexity, it offers several advantages o
 
 #### `bb-partition`
 
-- **Description**: Partitions the disk using *gdisk* and *mkfs*.
+- **Description**: Partitions the disk using *gptfdisk* and *mkfs* and renders the *fstab* file.
 - **Tags**:
   - `prelude-partition-main`
   - `prelude-partition-fstab`
@@ -320,7 +320,8 @@ While this approach adds some initial complexity, it offers several advantages o
 
 #### `dc-bootloader`
 
-- **Description**: Installs the *booster* initramfs generator, a *kernel-install* hook, and the *systemd-boot* bootloader.
+- **Description**: Installs the *booster* initramfs generator, microcode and kernel, and configures
+  the *kernel-install* suite along with the *systemd-boot* bootloader.
 - **Tags**:
   - `apex-prep-bootloader-suite`
   - `apex-prep-bootloader-initrd`
@@ -333,7 +334,7 @@ While this approach adds some initial complexity, it offers several advantages o
 
 ### `ea-apex-system`
 
-- **Description**: Configures the *systemd* init system, *jourland* logging, *udev* devices, and related functionality.
+- **Description**: Configures the *systemd* init system, *journald* logging, *udev* devices, and related functionality.
 
 #### `ea-shared`
 
