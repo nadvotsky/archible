@@ -82,8 +82,24 @@ FEATURES = {
 }
 
 
-def cli_parse() -> argparse.Namespace:
+def cli_process_namespace() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="archible playbook crafter")
+    parser.add_argument(
+        "-P",
+        "--playbook",
+        metavar="playbook.yml",
+        help="playbook to run",
+        type=pathlib.Path,
+        default=pathlib.Path("./playbook.yml"),
+    )
+    parser.add_argument(
+        "-c",
+        "--ansible-cfg",
+        metavar="ansible.cfg",
+        help="path to the ansible config",
+        type=pathlib.Path,
+        default=pathlib.Path("./ansible.cfg"),
+    )
     parser.add_argument(
         "-X",
         "--feature",
@@ -96,7 +112,7 @@ def cli_parse() -> argparse.Namespace:
         "--host",
         metavar="host",
         help=(
-            "a template that replaces the 'hosts' field in playbook. "
+            "template that replaces the 'hosts' field in playbook. "
             "Placeholders are filled with split parts of the original value (e.g. my_{1} + example_apex = my_apex)"
         ),
         required=True,
@@ -106,7 +122,7 @@ def cli_parse() -> argparse.Namespace:
         "--var",
         action="append",
         metavar="key=val",
-        help="Additional variables to inject",
+        help="additional variables to inject",
     )
     parser.add_argument(
         "tag",
@@ -125,7 +141,7 @@ def cli_process_features(requests: collections.abc.Sequence[str]) -> list[Featur
             raise ValueError("Feature '{}' does not even closely match any of: {}".format(request, available_features))
 
         features.append(FEATURES[matches[0]])
-        print(" +feat: {} ({})".format(request, matches[0], features[-1]))
+        print(" +feat: {} ({})".format(request, matches[0]))
 
     return features
 
@@ -158,21 +174,6 @@ def cli_process_tags(expressions: collections.abc.Sequence[str]) -> tuple[list[s
     return include_tags, exclude_tags
 
 
-def cli_process() -> tuple[str, dict[str, str], list[str], list[str]]:
-    namespace = cli_parse()
-    print(namespace)
-
-    variables = cli_process_variables(namespace.var or tuple())
-    include_tags, exclude_tags = cli_process_tags(namespace.tag)
-
-    for feature in cli_process_features(namespace.feature or tuple()):
-        variables.update(feature.variables)
-        include_tags.extend(feature.include_tags)
-        exclude_tags.extend(feature.exclude_tags)
-
-    return namespace.host, variables, include_tags, exclude_tags
-
-
 def playbook_patch(host: str, playbook: pathlib.Path) -> str:
     split_regex = re.compile(r"-|_")
 
@@ -192,23 +193,33 @@ def playbook_patch(host: str, playbook: pathlib.Path) -> str:
     )
 
 
-def playbook_process(playbook: pathlib.Path, host: str, cmdline: list[str]) -> typing.Never:
+def playbook_process(playbook: pathlib.Path, config: pathlib.Path, host: str, cmdline: list[str]) -> typing.Never:
     memfd = pathlib.Path("/dev/fd/{}".format(os.memfd_create("playbook", flags=0)))
     memfd.write_bytes(playbook_patch(host, playbook).encode())
 
-    binary, arguments = shutil.which("ansible-playbook"), [*cmdline, str(memfd)]
+    binary, arguments, config_path = shutil.which("ansible-playbook"), [*cmdline, str(memfd)], str(config.resolve())
 
     print()
-    print(" +exec: {} {}".format(binary, shlex.join(arguments)))
+    print(" +exec: ANSIBLE_CONFIG={} {} {}".format(shlex.quote(config_path), binary, shlex.join(arguments)))
     print()
 
+    os.putenv("ANSIBLE_CONFIG", config_path)
     os.execv(binary, [binary, *arguments])
 
 
-if __name__ == "__main__":
-    playbook = pathlib.Path("./playbook.yml")
-    host, variables, include_tags, exclude_tags = cli_process()
+def main_build_tunes(ns: argparse.Namespace) -> tuple[dict[str, str], list[str], list[str]]:
+    variables = cli_process_variables(ns.var or tuple())
+    include_tags, exclude_tags = cli_process_tags(ns.tag)
 
+    for feature in cli_process_features(ns.feature or tuple()):
+        variables.update(feature.variables)
+        include_tags.extend(feature.include_tags)
+        exclude_tags.extend(feature.exclude_tags)
+
+    return variables, include_tags, exclude_tags
+
+
+def main_build_cmdline(variables: dict[str, str], include_tags: list[str], exclude_tags: list[str]) -> list[str]:
     cmdline = []
 
     if include_tags:
@@ -223,4 +234,13 @@ if __name__ == "__main__":
         cmdline.append("--extra-vars")
         cmdline.append(json.dumps(variables))
 
-    playbook_process(playbook, host, cmdline)
+    return cmdline
+
+
+if __name__ == "__main__":
+    ns, _ = cli_process_namespace(), print()
+
+    variables, include_tags, exclude_tags = main_build_tunes(ns)
+    cmdline = main_build_cmdline(variables, include_tags, exclude_tags)
+
+    playbook_process(ns.playbook, ns.ansible_cfg, ns.host, cmdline)

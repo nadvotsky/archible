@@ -142,7 +142,7 @@
     - name: Test foundation.persist.from
       foundation.persist.from:
         base: /mydir
-        persist: "{{ playbook_dir }}/persist"
+        persist: "{{ ansible_config_file | ansible.builtin.dirname }}/persist"
       vars:
         shells:
           - key: fookey/shell
@@ -158,7 +158,7 @@
     - name: Test foundation.persist.to
       foundation.persist.to:
         base: /mydir
-        persist: "{{ playbook_dir }}/persist"
+        persist: "{{ ansible_config_file | ansible.builtin.dirname }}/persist"
       vars:
         shells:
           - key: some/path

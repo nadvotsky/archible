@@ -3,4 +3,4 @@
 # Refer to the `./roles/aa-global/aa-shared/defaults/main.yml`.
 #
 aa_wipe: never
-aa_persist: "{{ playbook_dir }}/persist"
+aa_persist: "{{ ansible_config_file | ansible.builtin.dirname }}/persist"

@@ -1325,7 +1325,7 @@ effective fallbacks without using `ignore_errors: true`.
 - name: Restore files from persistence
   foundation.persist.from:
     base: /opt
-    persist: "{{ playbook_dir }}/persist"
+    persist: "{{ ansible_config_file | ansible.builtin.dirname }}/persist"
   vars:
     shells:
       - key: mykey/shell
@@ -1375,7 +1375,7 @@ It can capture output from shell commands or create archives from specified path
 - name: Save file to persistance
   foundation.persist.to:
     base: /opt
-    persist: "{{ playbook_dir }}/persist"
+    persist: "{{ ansible_config_file | ansible.builtin.dirname }}/persist"
   vars:
     shells:
       - key: some/path
