@@ -67,6 +67,18 @@ FEATURES = {
     "no-dev-containers": Feature(
         exclude_tags=["apex-dev-containers"],
     ),
+    "no-dev": Feature(
+        exclude_tags=(
+            "apex-dev-containers",
+            "apex-dev-cpp",
+            "apex-dev-rust",
+            "apex-dev-java",
+            "apex-dev-dotnet",
+            "apex-dev-go",
+            "apex-dev-python",
+            "apex-dev-javascript",
+        ),
+    ),
 }
 
 
