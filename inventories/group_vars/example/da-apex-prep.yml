@@ -100,8 +100,6 @@ dc_cmdline:
   # initrd.
   #
   rootdelay: "0"
-  rootfstype: "ext4"
-  rootflags: "async,noatime,dev,exec,suid,rw"
   rw: true
   booster.log: "error"
 

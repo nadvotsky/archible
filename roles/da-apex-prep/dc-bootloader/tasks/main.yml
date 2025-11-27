@@ -86,6 +86,16 @@
 
 - name: Configure kernel
   tags: apex-prep-bootloader-kernel
+  vars:
+    _dc_cmdline_ctx: >-
+      {%- set _ctx = {} -%}
+      {%- for _prop in ("rootfstype", "rootflags") -%}
+        {%- if _prop not in dc_cmdline -%}
+          {%- set _ = _ctx.update({_prop: none}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- set _ = _ctx.update({"skip": _ctx.keys() | length == 0 }) -%}
+      {{ _ctx }}
   block:
     - name: Install kernel-install pacman hook
       foundation.system.packages:
@@ -100,11 +110,43 @@
           - "{{ dc_kernel | default('linux') }}"
           - linux-firmware
 
+    - name: Fetch fstab content for root partition details
+      when: _dc_cmdline_ctx.skip is false
+      ansible.builtin.slurp:
+        src: /etc/fstab
+      register: _dc_fstab
+
     - name: Render kernel cmdline and install initrd
       become: true
       foundation.system.kernel:
         headless: "{{ ba_headless }}"
-      environment: "{{ dc_cmdline }}"
+      #
+      # If the `_dc_cmdline` does not contain `rootfstype` and `rootflags`, then they will be read from the /etc/fstab.
+      # Note that `rootflags` are read by the initrd and may not support some filesystem independent options, such as
+      #  `auto`, `noiversion`, and `nouser`.
+      #
+      environment: >-
+        {%- set _acc = dc_cmdline -%}
+        {%- if _dc_cmdline_ctx.skip is false -%}
+          {%- for _line in (_dc_fstab.content | b64decode).splitlines() -%}
+            {%- set _matches = _line | regex_search(
+              "\\/\\s+(\\w+)\\s+([\\w=,-]+)\\s+[01]\\s+\\d+\\s*",
+              "\\1",
+              "\\2",
+            ) -%}
+            {%- if _matches is not none -%}
+              {%- if "rootfstype" in _dc_cmdline_ctx -%}
+                {%- set _ = _acc.update(dict(rootfstype=_matches[0])) -%}
+              {%- endif -%}
+              {%- if "rootflags" in _dc_cmdline_ctx -%}
+                {%- set _ = _acc.update({
+                  "rootflags": _matches[1] | split(",") | reject("in", ["auto", "noiversion", "nouser"]) | join(",")
+                }) -%}
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+        {{ _acc }}
 
 - name: Configure bootloader
   tags: apex-prep-bootloader-main
