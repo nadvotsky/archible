@@ -567,7 +567,7 @@ $env.config = {
             max_results: 100,
             {% if he_shell_completion is true %}
             completer: {|spans|
-                ^carapace ($spans | first) nushell ...($spans | skip) | from json
+                ^carapace ($spans | first) nushell ...$spans | from json
                 #
                 # If aliases to non-builtin commands (such as ls) is expected to be used:
                 #
