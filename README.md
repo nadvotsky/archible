@@ -166,16 +166,18 @@ main:
 The installation environment needs to be prepared first:
 
 1) **(Optional, ArchISO) Increase Root Filesystem Size**:
-    - Needed only if planning to use complete Ansible installation and/or additional packages.
-    - At boot, press *E* to edit the boot entry and add `cow_space_size=3G` to the kernel parameters, and boot the system.
+    - Needed only if planning to use complete Ansible community distribution, additional packages and/or heavy backups.
+    - At boot, press *E* to edit the boot entry and add `cow_space_size=3G` to the kernel parameters, and boot the
+    system.
     - Alternatively, after booting, run `mount -o remount,size=3G /run/archiso/cowspace`.
-    - See the [Arch Wiki](https://wiki.archlinux.org/title/Archiso#Adjusting_the_size_of_the_root_file_system) for more info.
+    - See the [Arch Wiki](https://wiki.archlinux.org/title/Archiso#Adjusting_the_size_of_the_root_file_system) for
+    more info.
 2) **Install Ansible and Dependencies**:
     - Required: `arch-install-scripts ansible-core whois util-linux coreutils gptfdisk`.
     - Optional: `ansible` if the playbook is modified to use community modules.
     - File System Tools: `btrfs-progs e2fsprogs dosfstools xfsprogs ntfs-3g exfatprogs f2fs-tools`.
 3) **Transfer the Project**:
-    - Enable the OpenSSH daemon (already enabled for ArchIso) and set the password via `passwd`.
+    - Enable the OpenSSH daemon (already enabled for ArchISO) and set the password via `passwd`.
     - Alternatively, use `unison`, `rclone`, or any other solution.
 
 ### 5. Run the Playbook
