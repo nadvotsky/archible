@@ -269,7 +269,7 @@
         cmd: >-
           base64 -d > '{{ _hb_ulayout.home }}/unattended-keys.json'
           &&
-          chmod 700 '{{ _hb_ulayout.home }}/unattended-keys.json'
+          chmod 600 '{{ _hb_ulayout.home }}/unattended-keys.json'
         stdin: >-
           {%- set _acc = {} -%}
           {%- for _name, _master in _hb_masters.items() -%}
