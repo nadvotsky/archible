@@ -248,9 +248,11 @@ env = ELM_SCALE, {{ ga_scaling }}
 #
 general {
     border_size = {{ _spacing_medium }}
+
     gaps_in = {{ _spacing_big }}
     gaps_out = {{ _gap }}
-    # gaps_workspaces =
+    # float_gaps = 0
+    # gaps_workspaces = 0
 
     col.active_border = {{ _preset_active }}
     col.nogroup_border_active = {{ _preset_active }}
@@ -258,17 +260,17 @@ general {
     col.nogroup_border = {{ _preset_inactive }}
 
     layout = master
+    # locale = en_US
 
     resize_on_border = false
-    # extend_border_grab_area =
-    # hover_icon_on_border =
+    resize_corner = 0
+    # extend_border_grab_area = 15
+    # hover_icon_on_border = true
 
+    allow_tearing = true
+    modal_parent_blocking = true
     no_focus_fallback = true
     no_border_on_floating = false
-    allow_tearing = true
-    resize_corner = 0
-
-    # sensitivity = 1.0
 
     snap {
         enabled = true
@@ -286,12 +288,15 @@ general {
 #
 decoration {
     rounding = 0
+    # rounding_power = 2.0
+
     active_opacity = 1.0
     inactive_opacity = 1.0
     fullscreen_opacity = 1.0
 
     border_part_of_window = true
 
+    dim_modal = false
     dim_inactive = false
     # dim_strength = 0.5
     # dim_special = 0.9
@@ -333,7 +338,6 @@ decoration {
 
 animations {
     enabled = false
-    first_launch_animation = false
     workspace_wraparound = false
 }
 
@@ -358,6 +362,7 @@ input {
     sensitivity = {{ ga_mouse_speed }}
     force_no_accel = false
     left_handed = false
+    rotation = 0
 
     scroll_factor = 1.0
     natural_scroll = false
@@ -375,11 +380,25 @@ input {
 
     float_switch_override_focus = 2
     special_fallthrough = false
-}
 
-gestures {
-    workspace_swipe = false
-    workspace_swipe_create_new = false
+    touchpad {
+        scroll_factor = 1.0
+        natural_scroll = false
+
+        disable_while_typing = false
+        middle_button_emulation = false
+
+        tap-to-click = false
+        # tap_button_map =
+        clickfinger_behavior = false
+
+        tap-and-drag = false
+        drag_lock = false
+
+        flip_x = false
+        flip_y = false
+        drag_3fg = 0
+    }
 }
 
 #
@@ -409,6 +428,16 @@ group {
 
         font_family = {{ _font_pango }}
         font_size = {{ _font_size_pt }}
+
+        indicator_gap = 0
+        indicator_height = 0
+        gaps_in = 0
+        gaps_out = 0
+        keep_upper_gap = false
+
+        rounding = 0
+        gradient_rounding = 0
+        # gradient_rounding_power = 2.0
 
         text_color = {{ _preset_foreground }}
         col.active = {{ _preset_active }}
@@ -442,14 +471,17 @@ misc {
     vrr = 0
     mouse_move_enables_dpms = true
     key_press_enables_dpms = true
+    disable_scale_notification = false
 
     always_follow_on_dnd = true
     layers_hog_keyboard_focus = true
+    # name_vk_after_proc = true
     close_special_on_empty = false
     new_window_takes_over_fullscreen = 2
-    # exit_window_retains_fullscreen =
+    # exit_window_retains_fullscreen = false
     initial_workspace_tracking = 1
     middle_click_paste = false
+    size_limits_tiled = false
 
     enable_anr_dialog = false
     # anr_missed_pings = 1
@@ -458,18 +490,22 @@ misc {
     #? swallow_regex = .*
     # swallow_exception_regex
 
+    session_lock_xray = false
+    allow_session_lock_restore = false
+
     disable_autoreload = true
     focus_on_activate = false
     mouse_move_focuses_monitor = true
 
     render_unfocused_fps = 15
+    disable_xdg_env_checks = false
 }
 
 binds {
     pass_mouse_when_bound = false
     disable_keybind_grabbing = false
 
-    # scroll_event_delay =
+    # scroll_event_delay = 300
 
     workspace_back_and_forth = false
     workspace_center_on = 0
@@ -481,6 +517,9 @@ binds {
     ignore_group_lock = false
     movefocus_cycles_fullscreen = false
     movefocus_cycles_groupfirst = false
+
+    # allow_pin_fullscreen = false
+    # drag_threshold = 0
 }
 
 xwayland {
@@ -503,6 +542,8 @@ render {
     cm_fs_passthrough = 0
     cm_enabled = false
     cm_auto_hdr = 0
+    # cm_sdr_eotf = 0
+    # non_shader_cm = 3
     send_content_type = false
 
     new_render_scheduling = false
@@ -550,8 +591,12 @@ debug {
     suppress_errors = false
 
     disable_scale_checks = false
+    error_limit = 5
     error_position = 1
-    # damage_tracking
+    # damage_tracking = 2
+
+    # pass = false
+    # full_cm_proto = false
 }
 
 master {
