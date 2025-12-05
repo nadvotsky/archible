@@ -37,10 +37,8 @@
     - name: Install waybar packages
       foundation.system.packages:
       vars:
-        remove:
-          - waybar
         install:
-          - waybar-git
+          - waybar
 
     - name: Disable waybar service
       foundation.system.services:

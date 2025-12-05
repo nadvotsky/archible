@@ -75,6 +75,9 @@
 {%- endmacro -%}
 
 {%- macro _workspaces_ignore(_ignored_mon_name, _is_first) %}
+    {% if (_ignored_mon_name | ga_workspace_prefix(_is_first)) == "" %}
+            "^[0-9]+$",
+    {% endif %}
     {% for _mon_name, _mon in ga_monitors.items() %}
         {% if _mon_name != _ignored_mon_name %}
             "^{{ _mon_name | ga_workspace_prefix(loop.first) }}[0-9]+$",
