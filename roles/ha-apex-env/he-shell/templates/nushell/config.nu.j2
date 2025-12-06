@@ -25,18 +25,20 @@
 
 {%- macro _theme_render() -%}
     separator: {{ _preset_unimportant }},
-    leading_trailing_space_bg: { bg: {{ _preset_unimportant }} },
+    # leading_trailing_space_bg: { bg: {{ _preset_unimportant }} },
     search_result: { bg: {{ _preset_inactive }} fg: {{ _preset_alternative }} attr: b },
 
     header: {{ _preset_accent }}_bold,
     row_index: {{ _preset_unimportant }},
     hints: {{ _preset_unimportant }},
 
-    # [{}, [], {?}, $.one.two]
+    ## [{}, [], {?}, $.one.two]
     record: {{ _preset_neutral }},
     list: {{ _preset_neutral }},
     block: {{ _preset_neutral }},
     cell-path: {{ _preset_neutral }},
+    closure: {{ _preset_neutral }},
+    custom: {{ _preset_neutral }},
 
     bool: {{ _preset_important }}_bold,
     int: {{ _preset_important }}_bold,
@@ -52,9 +54,8 @@
 
     nothing: {{ _preset_foreground }},
     empty: {{ _preset_foreground }},
+    glob: {{ _preset_foreground }},
 
-    shape_and: {{ _preset_emphasis }}_bold,
-    shape_or: {{ _preset_emphasis }}_bold,
     shape_operator: {{ _preset_emphasis }}_bold,
     shape_keyword: {{ _preset_emphasis }}_bold,
     shape_internalcall: {{ _preset_emphasis }}_bold,
@@ -132,8 +133,7 @@
         text: {{ _preset_emphasis }}_bold,
         description_text: {{ _preset_alternative }},
         match_text: {{ _preset_complement }},
-        selected_text: { bg: {{ _preset_complement }}, fg: {{ _preset_inactive }}, attr: b },
-        selected_match_text: { bg: {{ _preset_complement }}, fg: {{ _preset_inactive }}, attr: b },
+        selected_text: { bg: {{ _preset_unimportant }}, fg: {{ _preset_complement }}, attr: b },
     },
 {%- endmacro -%}
 
@@ -531,14 +531,18 @@ $env.config = {
     show_banner: false,
     footer_mode: never,
     float_precision: 3,
-    use_ansi_coloring: true,
-    bracketed_paste: true,
+
     edit_mode: vi,
+    error_style: fancy,
+    bracketed_paste: true,
+
     use_kitty_protocol: true,
     highlight_resolved_externals: true,
+    use_ansi_coloring: true,
 
     table: {
         mode: compact,
+        show_empty: true,
         trim: {
             methodology: wrapping,
             truncating_suffix: "...",
@@ -562,12 +566,20 @@ $env.config = {
     },
 
     completions: {
+        algorithm: prefix,
+        sort: smart,
+        case_sensitive: false,
+
+        quick: true,
+        partial: true,
+        use_ls_colors: true,
+
         external: {
             enable: true,
             max_results: 100,
             {% if he_shell_completion is true %}
             completer: {|spans|
-                ^carapace ($spans | first) nushell ...$spans | from json
+                ^carapace $spans.0 nushell ...$spans | from json
                 #
                 # If aliases to non-builtin commands (such as ls) is expected to be used:
                 #
@@ -589,6 +601,8 @@ $env.config = {
     },
 
     filesize: {
+        unit: metric,
+        show_unit: true,
         precision: 2,
     },
 
