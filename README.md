@@ -1454,7 +1454,7 @@ roles by returning structured metadata about all configured partitions.
 - `table`: A block describing partition table details.
   - `type`: The partition type, given as an alias (`efi`, `root`), a short *gptfdisk* type code (`ef00`, `8300`),
     or an explicit GUID expression (`C12A7328-F81F-11D2-BA4B-00A0C93EC93B`). Refer to the
-    [source code](./collections/collections/ansible_collections/foundation/storage/plugins/action/partition.py)
+    [source code](./collections/ansible_collections/foundation/storage/plugins/action/partition.py)
     for a complete mapping.
   - `size`: The size of the partition. Supports numeric units (`100G`, `250MB`), a percentage of the disk (`10%`),
     or a special `auto` value that fills the remaining free space.
