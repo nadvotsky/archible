@@ -123,9 +123,9 @@ class Persist:
         #
         persist_stat = os.stat(self.persist)
         #
-        # Define a mode for directories, omitting the sticky bit if set.
+        # Extract a mode for directories, omitting unnecessary components.
         #
-        self.mode = persist_stat.st_mode & ~stat.S_ISVTX
+        self.mode = stat.S_IMODE(persist_stat.st_mode & ~stat.S_ISVTX & ~stat.S_ISUID & ~stat.S_ISGID)
         self.owner = persist_stat.st_uid
         self.group = persist_stat.st_gid
 
