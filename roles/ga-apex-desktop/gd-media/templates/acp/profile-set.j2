@@ -37,6 +37,7 @@
 {%- macro _profiles_render() -%}
     {% for _profile_name, _profile in _profiles.items() %}
         [Profile {{ _profile_name }}]
+        priority = {{ _profile.priority | default(0) }}
         input-mappings = {{ _profile.inputs | join(" ") }}
         output-mappings = {{ _profile.outputs | join(" ") }}
         skip-probe = no

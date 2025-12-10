@@ -29,7 +29,8 @@
     {% for _jack_name, _jack in _blacklist.jacks.items() %}
         [Jack {{ _jack_name }}]
         required = any
-        state.unplugged = yes
+        state.plugged = unknown
+        state.unplugged = unknown
         {##}
         {% if not loop.last %}{{ "" | aa_newline }}{% endif %}
     {% endfor %}
