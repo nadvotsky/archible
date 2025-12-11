@@ -96,6 +96,10 @@ gd_whitelist:
 #  Options: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n2706
 #  Paths: https://cgit.freedesktop.org/pulseaudio/pulseaudio/tree/src/modules/alsa/alsa-mixer.c#n2794
 #
+# To troubleshot newly created rules, use the following:
+#  1) give a rule 'default' name (so it would take precedence over /usr/share/alsa-card-profile)
+#  2) run any PipeWire ALSA debugging utility subcommand with enabled verbosity (e.g., `spa-acp-tool -vvvv lp`)
+#
 gd_cards: "{{ undef() }}"
   # <name>:
   #   #
