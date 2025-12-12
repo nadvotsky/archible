@@ -5,8 +5,10 @@
     - name: Install wezterm packages
       foundation.system.packages:
       vars:
-        install:
+        remove:
           - wezterm
+        install:
+          - wezterm-nightly-bin
 
     - name: Render wezterm configuration
       foundation.files.install:
