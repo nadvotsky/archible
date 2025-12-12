@@ -1,0 +1,6 @@
+{
+	//
+	// Signature verification.
+	//
+	"signature_error_highlighting": "no_public_key",
+}
