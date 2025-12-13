@@ -49,6 +49,7 @@
         NVD_BACKEND: "direct"
         GBM_BACKEND: "nvidia-drm"
         __GL_ALLOW_UNOFFICIAL_PROTOCOL: "1"
+        WEBKIT_DISABLE_DMABUF_RENDERER: "1"
 
 - name: Configure Intel graphics
   when: ga_stack | selectattr('type', 'eq', 'intel') | length == 1
