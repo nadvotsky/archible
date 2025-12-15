@@ -21,7 +21,7 @@
 
           - file: ./config.ini
             perms: 644:root:root
-            copy: ly/config.ini
+            template: ly/config.ini.j2
 
     - name: Enable ly service
       become: true
@@ -29,6 +29,6 @@
         headless: "{{ ba_headless }}"
       vars:
         units:
-          - ly.service
+          - "ly@tty{{ gb_tty }}.service"
         state:
           enable: true

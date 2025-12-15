@@ -1,0 +1,5 @@
+---
+#
+# TTY for login manager to use.
+#
+gb_tty: 2
