@@ -124,6 +124,7 @@
           - fuse-archive
           - libarchive
           - unarchiver
+          - unzip
           - 7zip
           - squashfs-tools
           # - p7zip-full-bin
