@@ -123,6 +123,7 @@
           - peazip-qt-bin
           - fuse-archive
           - libarchive
+          - unarchiver
           - 7zip
           - squashfs-tools
           # - p7zip-full-bin
