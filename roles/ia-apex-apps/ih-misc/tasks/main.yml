@@ -236,6 +236,7 @@
           #
           - jq
           - yq
+          - fq
           - fx
           - choose
           - gron
