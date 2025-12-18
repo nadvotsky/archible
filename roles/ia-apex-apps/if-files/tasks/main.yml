@@ -192,6 +192,22 @@
           - miniserve
           - darkhttpd
 
+    - name: Set miniserve environment variable
+      become: true
+      foundation.user.env:
+        section: apps
+        home: "{{ fa_dir_home }}"
+        subs: "{{ fa_dir_subs }}"
+      environment:
+        #
+        # Fixes a problem when the IPv6 stack is disabled.
+        #
+        MINISERVE_INTERFACE: "0.0.0.0"
+        MINISERVE_PORT: "20000"
+        MINISERVE_ENABLE_ZIP: "true"
+        MINISERVE_ENABLE_TAR_GZ: "true"
+        MINISERVE_ENABLE_TAR: "true"
+
 - name: Configure file searching
   tags: apex-apps-files-search
   block:
