@@ -61,6 +61,12 @@
 #    - deps (electron)
 #    - config (requires .obsidian)
 #
+#  basalt (https://github.com/erikjuhani/basalt):
+#   package: aur
+#   advantages:
+#    + feature (obsidian compatibility)
+#    + perf (rust, tui)
+#
 #  org-mode (https://orgmode.org/):
 #   package: pacman
 #   disadvantages:
@@ -139,6 +145,7 @@
 #       foundation.system.packages:
 #         install:
 #           - obsidian
+#           - basalt-bin
 
 #
 # Drawing configuration.
