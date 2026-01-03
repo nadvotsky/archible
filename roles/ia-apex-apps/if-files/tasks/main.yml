@@ -191,6 +191,7 @@
         install:
           - miniserve
           - darkhttpd
+          - localsend-bin
 
     - name: Set miniserve environment variable
       become: true
