@@ -140,8 +140,10 @@
           - dua-cli
           - ncdu
           - fclones
+          - gdu
           # - bleachbit
           # - czkawka-gui-bin
+          # - wiper-bin
 
 - name: Configure file editing
   tags: apex-apps-files-edit
