@@ -177,6 +177,7 @@
           - s-tui
           - btop
           - htop
+          - iotop
           #
           # Proc fs.
           #
@@ -259,6 +260,10 @@
           - aria2
           - wget
           - monolith
+          #
+          # Monitoring.
+          #
+          - bandwhich
           #
           # DNS.
           #
