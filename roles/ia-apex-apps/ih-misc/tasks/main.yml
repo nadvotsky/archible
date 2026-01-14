@@ -104,13 +104,19 @@
       foundation.system.packages:
       vars:
         install:
+          #
+          # Generic media.
+          #
+          - mpv
+          - ffmpeg
+          #
+          # Audio.
+          #
           - spotify-launcher
           #
           # Video.
           #
           - obs-studio
-          - mpv
-          - ffmpeg
           # - handbrake
           # - vidcutter
           #
