@@ -126,6 +126,11 @@
           - imagemagick
           # - gimp
           #
+          # Drawings.
+          #
+          # - rnote
+          # - xournalpp
+          #
           # Documents.
           #
           - evince
