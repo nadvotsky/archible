@@ -172,6 +172,8 @@
         install:
           - bat
           - viu
+          - mcat-bin
+          # - lightning-image-viewer-bin
 
     - name: Set bat environment variable
       become: true
