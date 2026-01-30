@@ -291,6 +291,11 @@
           - gping
           - mtr
           # - speedtest-go
+          #
+          # Remote files access.
+          #
+          # - termscp
+          # - filezilla
 
 - name: Configure mail utilities
   tags: apex-apps-misc-mail
