@@ -2,6 +2,7 @@
 Name=eth*
 Name=en*
 Name=wlan*
+Name=usb*
 
 [Network]
 DHCP=ipv4
