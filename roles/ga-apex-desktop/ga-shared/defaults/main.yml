@@ -65,9 +65,12 @@ ga_mouse_speed: -0.5
 #
 # Keyboard device.
 #
+#  The `caps:none` XKB option is used to disable Caps Lock,
+#   as it may be mistakenly activated during keycombo.
+#
 ga_keyboard_model: pc105
 ga_keyboard_layout: us
-ga_keyboard_options: grp:terminate:ctrl_alt_bksp
+ga_keyboard_options: caps:none,grp:terminate:ctrl_alt_bksp
 
 #
 # Monitor devices.
