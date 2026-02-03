@@ -67,10 +67,17 @@ ga_mouse_speed: -0.5
 #
 #  The `caps:none` XKB option is used to disable Caps Lock,
 #   as it may be mistakenly activated during keycombo.
+#  The `compose:rctrl` options enables XCompose, X client mappings for
+#   multi-key input sequences. This allows to type new characters using
+#   combinations of those that can be found on the keyboard. For example,
+#   it is possible to add diacritics to keys using <Compose> + <a> + <'> = á.
+#   In reality, this is not limited to diacritics and can be customized even
+#   further if needed. Refer to the
+#   https://linux.die.net/man/3/xcompose for more details.
 #
 ga_keyboard_model: pc105
 ga_keyboard_layout: us
-ga_keyboard_options: caps:none,grp:terminate:ctrl_alt_bksp
+ga_keyboard_options: caps:none,compose:rctrl,grp:terminate:ctrl_alt_bksp
 
 #
 # Monitor devices.
