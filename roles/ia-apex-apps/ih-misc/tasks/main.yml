@@ -140,6 +140,14 @@
           #
           # - perl-image-exiftool
           # - mat2
+          #
+          # Color Pickers.
+          #
+          # - xcolor
+          # - scolorpicker
+          # - colorgrab
+          # - gpick
+          # - eyedropper
 
     - name: Resolve spotify-launcher user layout
       foundation.user.layout:
