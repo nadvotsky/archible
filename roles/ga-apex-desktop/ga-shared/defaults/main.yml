@@ -65,8 +65,12 @@ ga_mouse_speed: -0.5
 #
 # Keyboard device.
 #
-#  The `caps:none` XKB option is used to disable Caps Lock,
-#   as it may be mistakenly activated during keycombo.
+#  The `caps:hyper` XKB option is used to disable default Caps Lock action
+#   (i.e. capitalization), as it may be mistakenly activated during keycombo.
+#   This virtually rebinds it to another `Hyper_L` button, which does not
+#   trigger capitalization, yet works as a regular bindable key.
+#   Also use 'grep caps /usr/share/X11/xkb/rules/base.lst' for more info.
+#
 #  The `compose:rctrl` options enables XCompose, X client mappings for
 #   multi-key input sequences. This allows to type new characters using
 #   combinations of those that can be found on the keyboard. For example,
@@ -77,7 +81,7 @@ ga_mouse_speed: -0.5
 #
 ga_keyboard_model: pc105
 ga_keyboard_layout: us
-ga_keyboard_options: caps:none,compose:rctrl,grp:terminate:ctrl_alt_bksp
+ga_keyboard_options: caps:hyper,compose:rctrl,grp:terminate:ctrl_alt_bksp
 
 #
 # Monitor devices.
@@ -545,11 +549,11 @@ ga_keys:
 
     tab_next:
       - :common Tab
-      - :wm CapsLock
+      - :wm Hyper
       - :wm MouseNext
     tab_prev:
       - :common :alt BackTab
-      - :wm :alt CapsLock
+      - :wm :alt Hyper
       - :wm MousePrev
     tabs:
       - :wm 1
