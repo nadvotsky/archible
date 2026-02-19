@@ -96,7 +96,7 @@
         | ga_parse_binds(actions_map=[("tabs", None)], **_parse_kwargs)
         | selectattr("mode_name", "eq", "wm")
     %}
-        bind = {{ _bind.line }}, changegroupactive, {{ loop.index }}
+        bind = {{ _bind.line }}, changegroupactive, {{ loop.index0 }}
     {% endfor %}
 {%- endmacro -%}
 
