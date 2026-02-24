@@ -1,24 +1,27 @@
 #
 # System settings.
 #
-tty = {{ gb_tty }}
 service_name = ly
 path = null
-min_refresh_delta = 5
 allow_empty_password = true
 
 #
 # Behavior settings.
 #
 lang = en
+
 vi_mode = false
-numlock = true
+vi_default_mode = normal
+
 animation = matrix
+animation_frame_delay = 5
 animation_timeout_sec = 0
+
 bigclock = en
 default_input = password
 asterisk = *
 auth_fails = 2
+numlock = true
 
 battery_id = null
 auto_login_service = ly-autologin
@@ -42,6 +45,9 @@ restart_cmd = /usr/bin/systemctl reboot
 
 sleep_key = F3
 sleep_cmd = /usr/bin/systemctl suspend
+
+hibernate_key = null
+hibernate_cmd = null
 
 brightness_down_key = null
 brightness_up_key = null
@@ -70,6 +76,7 @@ hide_borders = false
 
 initial_info_text = null
 hide_version_string = true
+hide_keyboard_locks = false
 
 margin_box_h = 5
 margin_box_v = 3
@@ -82,15 +89,19 @@ text_in_center = false
 # Exec settings.
 #
 session_log = null
+ly_log = null
+
 setup_cmd = /etc/ly/setup.sh
 login_cmd = null
 logout_cmd = null
-
-ly_log = null
+start_cmd = null
+inactivity_cmd = null
+inactivity_delay = 0
 
 waylandsessions = /usr/share/wayland-sessions
 
 x_cmd = /usr/bin/X -logverbose 0 -verbose 0 -quiet
+x_vt = null
 xinitrc = null
 xauth_cmd = /usr/bin/xauth
 xsessions = /usr/share/xsessions
