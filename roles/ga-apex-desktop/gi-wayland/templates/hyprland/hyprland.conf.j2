@@ -643,12 +643,9 @@ master {
 #
 # Rules.
 #
-windowrulev2 = suppressevent maximize, class:.*
+windowrule = match:class .*, suppress_event maximize
+windowrule = match:fullscreen 1, immediate on
 
-windowrulev2 = float, title:^.*([Ii]nsert)|([Cc]opy)|([Ss]elect)|([Cc]onfirm)|([Pp]rogress)|([Aa]dd).*$
-windowrulev2 = center, title:^.*([Ii]nsert)|([Cc]opy)|([Ss]elect)|([Cc]onfirm)|([Pp]rogress)|([Aa]dd).*$
+windowrule = match:title ^.*([Oo]pen)|[Ii]nsert)|([Cc]opy)|([Ss]elect)|([Cc]onfirm)|([Pp]rogress)|([Aa]dd).*$, float on, center on
 
-windowrulev2 = float, initialClass:hyprland-share-picker
-windowrulev2 = center, initialClass:hyprland-share-picker
-
-windowrulev2 = immediate, fullscreen:1
+windowrule = match:initial_class hyprland-share-picker, float on, center on
