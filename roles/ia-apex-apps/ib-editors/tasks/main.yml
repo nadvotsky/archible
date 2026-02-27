@@ -156,7 +156,7 @@
           - dir: ./User
             create: true
           - file: ./User/settings.json
-            template: vscode/settings.json.j2
+            copy: vscode/settings.json
 
           - file: "{{ fa_dir_config }}/code-flags.conf"
             content: "{{ _ib_vscode_flags | join('' | aa_newline) }}"
