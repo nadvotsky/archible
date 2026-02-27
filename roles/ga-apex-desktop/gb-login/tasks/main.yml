@@ -21,7 +21,7 @@
 
           - file: ./config.ini
             perms: 644:root:root
-            template: ly/config.ini.j2
+            copy: ly/config.ini
 
     - name: Enable ly service
       become: true
