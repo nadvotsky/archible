@@ -176,6 +176,8 @@
         "comments": "on",
         "strings": "on"
     },
+    "editor.acceptSuggestionOnCommitCharacter": false,
+    "editor.acceptSuggestionOnEnter": "off",
     "editor.renderLineHighlight": "all",
 
     //
