@@ -134,6 +134,7 @@
           # Documents.
           #
           - evince
+          - qpdf
           # - libreoffice-still
           #
           # Metadata.
