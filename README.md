@@ -167,7 +167,7 @@ The installation environment needs to be prepared first:
 
 1) **(Optional, ArchISO) Increase Root Filesystem Size**:
     - Needed only if planning to use complete Ansible community distribution, additional packages and/or heavy backups.
-    - At boot, press *E* to edit the boot entry and add `cow_space_size=3G` to the kernel parameters, and boot the
+    - At boot, press *E* to edit the boot entry and add `cow_spacesize=3G` to the kernel parameters, and boot the
     system.
     - Alternatively, after booting, run `mount -o remount,size=3G /run/archiso/cowspace`.
     - See the [Arch Wiki](https://wiki.archlinux.org/title/Archiso#Adjusting_the_size_of_the_root_file_system) for
