@@ -188,7 +188,7 @@ Use the command below to run the playbook. It is also possible to skip certain p
 ansible-playbook playbook.yml [--skip-tags apex-apps-browsers]
 ```
 
-That is it! For next steps, consired the following:
+That is it! For next steps, consider the following:
 
 - Explore [ansible-playbook](https://docs.ansible.com/ansible/latest/cli/ansible-playbook.html) options.
 - Develop new tasks and roles or extend existing ones.
@@ -213,7 +213,7 @@ This project uses a lexicographical prefixing system to organize roles. This sys
 While this approach adds some initial complexity, it offers several advantages over a more conventional organization:
 
 - **Clear Execution Order**: Lexicographical sorting clearly shows a role's position in the execution pipeline.
-- **Efficient Navigation**: Shell autocomplete (e.g., `cd r*/da<TAB>`) makes finding roles quick and easy.
+- **Efficient Navigation**: Shell autocomplete (e.g., `cd r<TAB>/da<TAB>`) makes finding roles quick and easy.
 - **Simplified Playbooks**: Eliminates the need for boilerplate `include_role` or `import_role` and avoids issues with
   nested roles tags.
 - **Clean Segregation**: A clear separation between shared and role-specific items.
@@ -1533,7 +1533,7 @@ roles by returning structured metadata about all configured partitions.
 #
 # `submission` metadata contains information about each partition.
 #
-# - MY-ESP is using fat
+# - MY-ESP is using vfat
 # - MY-ROOT is using ext4
 #
 - name: Print the metadata of partitions
