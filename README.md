@@ -1548,12 +1548,12 @@ roles by returning structured metadata about all configured partitions.
 # `fstab` metadata contains prepared fstab fields. Only partitions that define
 #   both `mount` and `fs` blocks are included.
 #
-# - PARTUUID=... /
-# - PARTUUID=... /efi
+# - PARTUUID=...  /      ext4
+# - PARTUUID=...  /efi   vfat
 #
 - name: Print the fstab fields
   ansible.builtin.debug:
-    msg: "{{ item.fs_vfstype }} {{ item.fs_spec }} {{ item.fs_file }}"
+    msg: "{{ item.fs_spec }} {{ item.fs_file }} {{ item.fs_vfstype }}"
   loop: "{{ _my_disk_layout.fstab }}"
 ```
 
