@@ -186,6 +186,9 @@ Use the command below to run the playbook. It is also possible to skip certain p
 
 ```shell
 ansible-playbook playbook.yml [--skip-tags apex-apps-browsers]
+
+# Or via dynamic wrapper that simplifies the playbook launch routine.
+python support/morph-playbook.py -H main_{1} ^apex-apps-browsers
 ```
 
 That is it! For next steps, consider the following:
