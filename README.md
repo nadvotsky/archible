@@ -1290,12 +1290,12 @@ It is backed by *bsdtar*, which can handle tar (with many compression formats), 
 ```yaml
 - name: Download and extract bat
   foundation.files.net_archive:
-  url: https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-x86_64-unknown-linux-gnu.tar.gz
-  dest: /tmp
-  perms: "owner:group"
-  strip: 1
-  creates:
-    - ./bat
+    url: https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-x86_64-unknown-linux-gnu.tar.gz
+    dest: /tmp
+    perms: "owner:group"
+    strip: 1
+    creates:
+      - ./bat
 ```
 
 ### `foundation.persist.from`
