@@ -147,6 +147,17 @@
           - file: ./hypr/hyprland.conf
             template: hyprland/hyprland.conf.j2
 
+    - name: Verify hyprland configuration
+      ansible.builtin.command:
+        argv:
+          - hyprland
+          - --verify-config
+          - --config
+          - "{{ fa_dir_config }}/hypr/hyprland.conf"
+      register: _gi_hyprland_verify_invocation
+      changed_when: false
+      failed_when: _gi_hyprland_verify_invocation.rc != 0
+
     - name: Remove hyprland UWSM launcher
       become: true
       foundation.files.install:
