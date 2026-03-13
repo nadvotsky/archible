@@ -1,2 +1,22 @@
 ---
-ea_dir_stubs: /usr/share/stubs
+#
+# Custom system (i.e. shared, global, non-user) directories.
+#
+ea_dir_bin: /usr/local/bin
+ea_dir_apps: /usr/local/share/applications
+ea_dir_stubs: /usr/local/share/stubs
+
+#
+# Practically, the same as XDG_DATA_DIRS.
+#
+ea_dirs_data:
+  - /usr/local/share
+  - /usr/share
+
+#
+# Per-session global PATH lookup.
+#
+ea_dirs_path:
+  - /usr/local/sbin
+  - /usr/local/bin
+  - /usr/bin

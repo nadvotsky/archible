@@ -53,7 +53,8 @@
         home: "{{ fa_dir_home }}"
         subs: "{{ fa_dir_subs }}"
       environment:
-        PATH: "{{ fa_dir_bin }}:/usr/local/sbin:/usr/local/bin:/usr/bin"
+        PATH: "{{ fa_dir_bin }}:{{ ea_dirs_path | join(':') }}"
+        XDG_DATA_DIR: "{{ ea_dirs_data | join(':') }}"
 
 - name: Configure user profile
   tags: apex-user-skel-profile
