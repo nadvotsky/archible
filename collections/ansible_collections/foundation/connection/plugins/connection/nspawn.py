@@ -85,7 +85,7 @@ class Connection(ConnectionBase):
     #
     # A constructor that only calls corresponding base constructor of class hierarchy.
     #
-    # The actual initializion of desired variables and stuff is implemented in the `_connect` method.
+    # The actual initialization of desired variables and stuff is implemented in the `_connect` method.
     #
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

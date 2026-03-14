@@ -2,7 +2,6 @@
 #
 # List of graphics stacks, where each defines its type and list of packages.
 #
-#
 ga_stack: "{{ undef() }}"
   # #
   # # Official NVIDIA drivers.
