@@ -66,29 +66,88 @@
       register: _fc_update_invocation
       changed_when: _fc_update_invocation.rc == 0
 
-- name: Configure XDG mime applications
+- name: Configure XDG MIME applications
   tags: apex-user-xdg-mime
+  vars:
+    #
+    # There are the following XDG MIME cache layers:
+    #  1) mime.cache - a binary file that contains all registered MIME types.
+    #     Managed via update-mime-database.
+    #
+    #  2) mimeinfo.cache - a text file that associates MIME types to ALL
+    #     supported application. Managed via update-desktop-database.
+    #
+    #  3) mimeapps.list - a text file that stores preferred associations.
+    #     Managed via xdg-mime.
+    #
+    _fc_mime_ctx: >-
+      {%- set _acc = {
+        'cache': [dict(path='{}/mime'.format(fa_dir_share), user=true)],
+        'info': [dict(path='{}/applications'.format(fa_dir_share), user=true)],
+        'apps': [dict(path='{}'.format(fa_dir_config), user=true, skipdir=true)]
+      } -%}
+      {%- for _dir in ea_dirs_data -%}
+        {%- set _ = _acc.cache.append(dict(path='{}/mime'.format(_dir))) -%}
+        {%- set _ = _acc.info.append(dict(path='{}/applications'.format(_dir))) -%}
+        {%- set _ = _acc.apps.append(dict(path='{}/applications'.format(_dir))) -%}
+      {%- endfor -%}
+      {{ _acc }}
   block:
-    - name: Install XDG Mime packages
+    - name: Install XDG MIME packages
       foundation.system.packages:
       vars:
         install:
           - desktop-file-utils
 
-    - name: Reset XDG Mime Applications
+    - name: Prepare XDG MIME state directories
       become: true
       foundation.files.install:
-        wipe: "{{ aa_wipe }}"
       vars:
-        targets:
-          - file: "{{ fa_dir_config }}/mimeapps.list"
-          - file: /usr/share/applications/mimeinfo.cache
-          - file: /usr/local/share/applications/mimeinfo.cache
+        targets: >-
+          {%- set _acc = [] -%}
+          {%- for _cache, _paths in {
+            "mime.cache": _fc_mime_ctx.cache,
+            "mimeinfo.cache": _fc_mime_ctx.info,
+            "mimeapps.list": _fc_mime_ctx.apps,
+          }.items() -%}
+            {%- for _el in _paths -%}
+              {%- set _ = _acc.append(
+                dict(
+                  file='{}/{}'.format(_el.path, _cache),
+                  wipe=aa_wipe,
+                  create=(_cache == 'mimeapps.list'),
+                  perms='644:{0}:{0}'.format(ca_name if _el.user is defined else 'root'),
+                )
+              ) -%}
+              {%- if _el.skipdir is not defined -%}
+                {%- set _ = _acc.append(
+                  dict(
+                    dir=(_el.path if _cache != 'mime.cache' else '{}/packages'.format(_el.path)),
+                    create=true,
+                    perms='755:{0}:{0}'.format(ca_name if _el.user is defined else 'root'),
+                  )
+                ) -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+          {{ _acc }}
 
-    - name: Update XDG desktop database
-      become: true
+    - name: Update XDG MIME cache
+      become: "{{ item.user is not defined }}"
+      ansible.builtin.command:
+        argv:
+          - update-mime-database
+          - "{{ item.path }}"
+      register: _fc_update_mime_cache_invocation
+      changed_when: _fc_update_mime_cache_invocation.rc != 0
+      loop: "{{ _fc_mime_ctx.cache }}"
+
+    - name: Update XDG MIME info cache
+      become: "{{ item.user is not defined }}"
       ansible.builtin.command:
         argv:
           - update-desktop-database
-      register: _fc_database_invocation
-      changed_when: _fc_database_invocation.rc == 0
+          - "{{ item.path }}"
+      register: _fc_update_mime_info_invocation
+      changed_when: _fc_update_mime_info_invocation.rc != 0
+      loop: "{{ _fc_mime_ctx.info }}"
