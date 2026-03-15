@@ -234,7 +234,7 @@
       become: true
       ansible.builtin.template:
         src: jetbrains/entry.desktop.j2
-        dest: "/usr/local/share/applications/{{ item.key }}.desktop"
+        dest: "{{ ea_dir_apps }}/{{ item.key }}.desktop"
         mode: "0644"
         owner: root
         group: root
@@ -247,7 +247,7 @@
       ansible.builtin.command:
         argv:
           - update-desktop-database
-          - /usr/local/share/applications
+          - "{{ ea_dir_apps }}"
       register: _ic_desktop_database_invocation
       changed_when: _ic_desktop_database_invocation.rc == 0
 

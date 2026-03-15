@@ -21,6 +21,6 @@
         wipe: "{{ aa_wipe }}"
       vars:
         targets:
-          - dir: /usr/local/share/applications
+          - dir: "{{ ea_dir_apps }}"
             perms: 755:root:root
             create: true

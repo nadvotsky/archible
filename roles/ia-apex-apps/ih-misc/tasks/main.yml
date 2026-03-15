@@ -360,7 +360,7 @@
         wipe: "{{ aa_wipe }}"
       vars:
         targets:
-          - file: /usr/local/share/applications/tutanota.desktop
+          - file: "{{ ea_dir_apps }}/tutanota.desktop"
             perms: 644:root:root
             copy: tutanota/tutanota.desktop
 
@@ -369,6 +369,7 @@
       ansible.builtin.command:
         argv:
           - update-desktop-database
+          - "{{ ea_dir_apps }}"
       register: _ih_database_invocation
       changed_when: _ih_database_invocation.rc == 0
 

@@ -193,11 +193,11 @@
         wipe: never
       vars:
         targets:
-          - file: /usr/local/bin/default-browser-stub
+          - file: "{{ ea_dir_bin }}/default-browser-stub"
             perms: 755:root:root
             copy: stub/default-browser-stub.sh
 
-          - file: /usr/local/share/applications/default-browser-stub.desktop
+          - file: "{{ ea_dir_apps }}/default-browser-stub.desktop"
             perms: 644:root:root
             copy: stub/default-browser-stub.desktop
 
@@ -206,7 +206,7 @@
       ansible.builtin.command:
         argv:
           - update-desktop-database
-          - /usr/local/share/applications
+          - "{{ ea_dir_apps }}"
       register: _ic_desktop_database_invocation
       changed_when: _ic_desktop_database_invocation.rc == 0
 
