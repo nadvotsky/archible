@@ -141,6 +141,8 @@ context.modules = [
                 node.passive = true
 
                 audio.rate = 48000
+                audio.channels = 1
+                audio.position = [ MONO ]
             }
             playback.props = {
                 node.name = "rnnoise-output"
@@ -148,7 +150,10 @@ context.modules = [
                 media.class = Audio/Source
 
                 priority.session = 9999
+
                 audio.rate = 48000
+                audio.channels = 1
+                audio.position = [ MONO ]
             }
         }
         flags = [ ifexists nofail ]
