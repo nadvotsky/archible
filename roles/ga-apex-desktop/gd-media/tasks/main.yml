@@ -33,7 +33,7 @@
         install: >-
           {{
             [
-              "pipewire", "pipewire-pulse", "wireplumber", "pavucontrol", "rtkit",
+              "pipewire", "pipewire-pulse", "wireplumber", "helvum", "pavucontrol", "rtkit",
               "noise-suppression-for-voice" if gd_rnnoise is true else none,
               "pipewire-jack" if gd_jack is true else none,
               "bluez" if gd_bluetooth is true else none,
