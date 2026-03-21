@@ -307,6 +307,10 @@
           - mtr
           # - speedtest-go
           #
+          # Network helpers.
+          #
+          - ipcalc
+          #
           # Remote files access.
           #
           # - termscp
