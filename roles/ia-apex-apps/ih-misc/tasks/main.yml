@@ -239,6 +239,11 @@
       vars:
         install:
           #
+          # Collection of various data utils (ts, pee, sponge, etc.).
+          #  More info can be found at https://joeyh.name/code/moreutils/.
+          #
+          - moreutils
+          #
           # Manual pages.
           #
           - tealdeer
