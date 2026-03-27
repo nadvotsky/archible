@@ -385,10 +385,12 @@ While this approach adds some initial complexity, it offers several advantages o
 - **Description**: Creates essential system directories.
 - **Tags**:
   - `apex-system-dirs-main`
-  - `apex-system-dirs-applications`
 - **References**:
   - `aa_wipe`
   - `ea_dir_apps`
+  - `ea_dir_addons`
+  - `ea_dir_bin`
+  - `ea_dir_entries`
   - `ea_dir_stubs`
 
 ### `fa-apex-user`
@@ -834,7 +836,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `ba_arch`
   - `ca_info_short`
   - `ca_name`
-  - `ea_dir_apps`
+  - `ea_dir_entries`
   - `fa_dir_cache`
   - `fa_dir_config`
   - `fa_dir_home`
@@ -854,7 +856,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `aa_wipe`
   - `ba_headless`
   - `ca_name`
-  - `ea_dir_apps`
+  - `ea_dir_entries`
   - `ea_dir_bin`
   - `fa_layout`
   - `ia_browsers`
@@ -933,7 +935,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `aa_wipe`
   - `ba_headless`
   - `ca_name`
-  - `ea_dir_apps`
+  - `ea_dir_entries`
   - `fa_dir_config`
   - `fa_dir_share`
   - `fa_layout`

@@ -197,7 +197,7 @@
             perms: 755:root:root
             copy: stub/default-browser-stub.sh
 
-          - file: "{{ ea_dir_apps }}/default-browser-stub.desktop"
+          - file: "{{ ea_dir_entries }}/default-browser-stub.desktop"
             perms: 644:root:root
             copy: stub/default-browser-stub.desktop
 
@@ -206,7 +206,7 @@
       ansible.builtin.command:
         argv:
           - update-desktop-database
-          - "{{ ea_dir_apps }}"
+          - "{{ ea_dir_entries }}"
       register: _ic_desktop_database_invocation
       changed_when: _ic_desktop_database_invocation.rc == 0
 

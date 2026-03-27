@@ -1,26 +1,19 @@
 ---
-- name: Configure system stubs
+- name: Configure system directories
   tags: apex-system-dirs-main
   block:
-    - name: Create system binary stubs directory
+    - name: Create system directories
       become: true
       foundation.files.install:
         wipe: "{{ aa_wipe }}"
-      vars:
-        targets:
-          - dir: "{{ ea_dir_stubs }}"
-            perms: 755:root:root
-            create: true
-
-- name: Configure system applications
-  tags: apex-system-dirs-applications
-  block:
-    - name: Create local system applications entries directory
-      become: true
-      foundation.files.install:
-        wipe: "{{ aa_wipe }}"
+        perms: 755:755:root:root
+        create: true
       vars:
         targets:
           - dir: "{{ ea_dir_apps }}"
-            perms: 755:root:root
-            create: true
+          - dir: "{{ ea_dir_bin }}"
+          - dir: "{{ ea_dir_entries }}"
+          - dir: "{{ ea_dir_stubs }}"
+
+          - dir: "{{ ea_dir_addons }}"
+            wipe: never

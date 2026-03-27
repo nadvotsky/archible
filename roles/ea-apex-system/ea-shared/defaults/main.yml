@@ -1,10 +1,21 @@
 ---
 #
-# Custom system (i.e. shared, global, non-user) directories.
+# Custom system (shared, global, non-user) directories
+#  to install additional software and integrations.
 #
+ea_dir_apps: /usr/local/lib
 ea_dir_bin: /usr/local/bin
-ea_dir_apps: /usr/local/share/applications
 ea_dir_stubs: /usr/local/share/stubs
+ea_dir_entries: /usr/local/share/applications
+
+#
+# Supplementary system directory that can be used to install
+#  globally available software.
+#
+# Please use `ea_dir_apps` if possible, as this directory is assumed to be
+#  shared with other third-party tools (e.g. AUR, CNI, etc.).
+#
+ea_dir_addons: /opt
 
 #
 # Practically, the same as XDG_DATA_DIRS.
