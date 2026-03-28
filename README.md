@@ -836,6 +836,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `ba_arch`
   - `ca_info_short`
   - `ca_name`
+  - `ea_dir_addons`
   - `ea_dir_entries`
   - `fa_dir_cache`
   - `fa_dir_config`
@@ -935,6 +936,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `aa_wipe`
   - `ba_headless`
   - `ca_name`
+  - `ea_dir_addons`
   - `ea_dir_entries`
   - `fa_dir_config`
   - `fa_dir_share`

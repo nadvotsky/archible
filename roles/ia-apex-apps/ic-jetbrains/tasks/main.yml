@@ -46,9 +46,9 @@
                 info_comm=_prod.comment,
                 code_lic=[_prod.license] if _prod.license is string else _prod.license,
                 plugins=_plugins,
-                dist_dir='/opt/jetbrains/ide/{}'.format(_codename),
-                dist_bin='/opt/jetbrains/ide/{}/bin/{}'.format(_codename, _codename if _codename != 'webide' else 'webstorm'),
-                dist_ico='/opt/jetbrains/ide/{}/bin/{}.svg'.format(_codename, _codename),
+                dist_dir='{}/jetbrains/ide/{}'.format(ea_dir_apps, _codename),
+                dist_bin='{}/jetbrains/ide/{}/bin/{}'.format(ea_dir_apps, _codename, _codename if _codename != 'webide' else 'webstorm'),
+                dist_ico='{}/jetbrains/ide/{}/bin/{}.svg'.format(ea_dir_apps, _codename, _codename),
                 dist_url=_release.downloads[_arch].link,
                 dist_ver='{}.{}'.format(_release.version, _release.build),
                 ide_cfg='{}/{}'.format(fa_dir_config, _codename),
@@ -65,21 +65,21 @@
           {{ _acc }}
 
         _ic_paths:
-          jre_dir: /opt/jetbrains/jre
-          jre_bin: /opt/jetbrains/jre/bin/java
+          jre_dir: "{{ ea_dir_apps }}/jetbrains/jre"
+          jre_bin: "{{ ea_dir_apps }}/jetbrains/jre/bin/java"
 
-          agent_dir: /opt/jetbrains/agent
-          agent_jar: /opt/jetbrains/agent/com.intellij.agent.jar
-          agent_key: /opt/jetbrains/agent/certs/private/main.pem
-          agent_crt: /opt/jetbrains/agent/certs/main.crt
+          agent_dir: "{{ ea_dir_apps }}/jetbrains/agent"
+          agent_jar: "{{ ea_dir_apps }}/jetbrains/agent/com.intellij.agent.jar"
+          agent_key: "{{ ea_dir_apps }}jetbrains/agent/certs/private/main.pem"
+          agent_crt: "{{ ea_dir_apps }}/jetbrains/agent/certs/main.crt"
 
-          vmopts_dir: /opt/jetbrains/vmoptions
-          vmopts_file: /opt/jetbrains/vmoptions/ide.vmoptions
+          vmopts_dir: "{{ ea_dir_apps }}/jetbrains/vmoptions"
+          vmopts_file: "{{ ea_dir_apps }}/jetbrains/vmoptions/ide.vmoptions"
 
-          props_dir: /opt/jetbrains/properties
-          props_file: /opt/jetbrains/properties/ide.properties
+          props_dir: "{{ ea_dir_apps }}/jetbrains/properties"
+          props_file: "{{ ea_dir_apps }}/jetbrains/properties/ide.properties"
 
-          dist_dir: /opt/jetbrains/ide
+          dist_dir: "{{ ea_dir_apps }}/jetbrains/ide"
 
           ide_cfg: "{{ ['${user.home}', fa_dir_config.removeprefix(fa_dir_home).lstrip('/'), '${ide.codename}'] | path_join }}"
           ide_sys: "{{ ['${user.home}', fa_dir_cache.removeprefix(fa_dir_home).lstrip('/'), '${ide.codename}'] | path_join }}"
@@ -97,7 +97,7 @@
         wipe: "{{ aa_wipe }}"
       vars:
         targets:
-          - dir: /opt/jetbrains
+          - dir: "{{ ea_dir_apps }}/jetbrains"
             perms: 755:root:root
             create: true
 

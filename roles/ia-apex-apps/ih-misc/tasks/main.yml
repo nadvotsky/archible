@@ -340,7 +340,7 @@
         wipe: "{{ aa_wipe }}"
       vars:
         targets:
-          - dir: /opt/tutanota
+          - dir: "{{ ea_dir_apps }}/tutanota"
             perms: 755:root:root
             create: true
 
@@ -358,7 +358,7 @@
           {%- endfor -%}
           {{ _ns.url }}
         strip: 2
-        dest: /opt/tutanota
+        dest: "{{ ea_dir_apps }}/tutanota"
         perms: root:root
         creates:
           - ./tutanota-desktop
@@ -371,7 +371,7 @@
         targets:
           - file: "{{ ea_dir_entries }}/tutanota.desktop"
             perms: 644:root:root
-            copy: tutanota/tutanota.desktop
+            template: tutanota/tutanota.desktop.j2
 
     - name: Update XDG desktop database
       become: true
