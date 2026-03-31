@@ -1,7 +1,7 @@
 ---
 - name: Perform initial preparation of the system
   tags: prelude
-  hosts: example_prelude
+  hosts: ~([\w-]+)_prelude
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }
@@ -12,7 +12,7 @@
 
 - name: Perform early preparation of the system
   tags: catalyst
-  hosts: example_catalyst
+  hosts: ~([\w-]+)_catalyst
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }
@@ -24,7 +24,7 @@
 
 - name: Perform main provisioning of the system
   tags: apex
-  hosts: example_apex
+  hosts: ~([\w-]+)_local
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }
@@ -84,7 +84,7 @@
 
 - name: Perform maintenance of the system
   tags: extra
-  hosts: example_extra
+  hosts: ~([\w-]+)_extra
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }

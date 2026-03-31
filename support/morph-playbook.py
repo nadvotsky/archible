@@ -186,7 +186,7 @@ def playbook_patch(host: str, playbook: pathlib.Path) -> str:
         return f"{prelude}{replacement}"
 
     return re.sub(
-        pattern=r"(?P<prelude>^\s+hosts:\s*)(?P<stage>[\w-]+)$",
+        pattern=r"(?P<prelude>^\s+hosts:\s*)(?P<stage>.+)$",
         repl=host_repl,
         string=playbook.read_text(),
         flags=re.MULTILINE,
