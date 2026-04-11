@@ -17,4 +17,4 @@ show_env = true
 
 [settings.python]
 precompiled_os = "unknown-linux-gnu"
-precompiled_arch = "{{ ba_arch }}"
+precompiled_arch = "{{ [ba_arch | replace("-", "_"), ba_arch_micro] | reject("equalto", "") | join("_") }}"

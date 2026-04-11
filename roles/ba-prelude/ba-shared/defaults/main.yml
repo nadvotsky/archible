@@ -29,16 +29,38 @@ ba_hostname: "{{ undef() }}"
 ba_cores: "{{ undef() }}"
 
 #
-# Target machine architecture.
+# Target machine architecture configuration.
 #
-# Supported values include: 'x86_64_v3', 'x86_64_v2', and 'aarch64'. This value combines different purposes:
-#  - Make use of optimized repositories for newer CPU instruction sets (_v3, _v4)
-#  - Prepare for possible ARM transition, at least for non-essential task
+# Supported values include: 'x86-64' and 'aarch64'.
+# This value allows to prepare for possible ARM transition,
+#  at least for non-essential task that support arm-native binaries (e.g. direct github releases).
 #
-# The current implementation is far from being ready, as both mentioned reasons above raise a lot of questions about
-#  software stack. In either case, here is some further information: https://wiki.cachyos.org/features/optimized_repos/.
+# The current implementation is far from being complete for Arch Linux ARM,
+#  mainly because for ARM computers/SoCs it is a matter of the software stack
+#  rather than configuration (e.g., picking the right repository).
 #
-ba_arch: "x86_64_v2"
+ba_arch: "x86-64"
+#
+# Target machine CPU microarchitecture level, which corresponds to the specific supported
+#  command set.
+#
+# Supported values for AMD64 (x86-64) architecture includes v2, v3, or v4.
+# Feel free to invoke `/lib64/ld-linux-<arch>.so.2 --help`.
+#
+# Also browse https://en.opensuse.org/X86-64_microarchitecture_levels for a brief introduction
+#  and https://gitlab.com/x86-psABIs/x86-64-ABI for a complete ABI reference.
+#
+# Please note that in case when both of the following conditions are true:
+#  a) heterogeneous provisioning and runtime environments
+#     (x86-64-v2 provisions for modern x86-64-v4) or (x86-64-v4 builds for x86-64-v2 with `-march=native`)
+#  b) custom optimized repositories for base packages
+#     (https://wiki.cachyos.org/features/optimized_repos/)
+# It may end up with broken installation that would require manual intervention using QEMU VM.
+#
+# Therefore, a rule of thumb is to install optimized builds preferably only for third-party apps
+#  that need not to be run during the provisioning.
+#
+ba_arch_micro: v2
 
 #
 # System locale.

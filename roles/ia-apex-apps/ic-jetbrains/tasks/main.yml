@@ -27,7 +27,7 @@
       ansible.builtin.set_fact:
         _ic_ctx: >-
           {%- set _acc = {} -%}
-          {%- set _arch = {'x86_64_v3': 'linux', 'x86_64_v2': 'linux', 'aarch64': 'linuxARM64'}[ba_arch] -%}
+          {%- set _arch = {'x86-64': 'linux', 'aarch64': 'linuxARM64'}[ba_arch] -%}
           {%- for _codename, _inv in ic_install | zip(_ic_ide_releases.results) -%}
             {%- set _prod = ic_products[_codename] -%}
             {%- set _release = _inv.json[_prod.release] | first -%}
@@ -137,7 +137,7 @@
           {%- set _regexp = 'jbr-release-(?P<major>\\d+\\.\\d+\\.\\d+)(?P<minor>b\\d+\\.\\d+)' -%}
           {%- set _major = _tag_name | regex_search(_regexp, '\\g<major>') | first -%}
           {%- set _minor = _tag_name | regex_search(_regexp, '\\g<minor>') | first -%}
-          {%- set _arch = {'x86_64_v3': 'x64', 'x86_64_v2': 'x64', 'aarch64': 'aarch64'}[ba_arch] -%}
+          {%- set _arch = {'x86-64': 'x64', 'aarch64': 'aarch64'}[ba_arch] -%}
           https://cache-redirector.jetbrains.com/intellij-jbr/jbr_jcef-{{ _major }}-linux-{{ _arch }}-{{ _minor }}.tar.gz
         dest: "{{ _ic_paths.jre_dir }}"
         perms: root:root

@@ -243,6 +243,7 @@ While this approach adds some initial complexity, it offers several advantages o
   - `ba_hostname`
   - `ba_cores`
   - `ba_arch`
+  - `ba_arch_micro`
   - `ba_locale`
 
 #### `bb-partition`
@@ -701,6 +702,7 @@ While this approach adds some initial complexity, it offers several advantages o
 - **References**:
   - `aa_wipe`
   - `ba_arch`
+  - `ba_arch_micro`
   - `ca_name`
   - `fa_dir_cache`
   - `fa_dir_config`

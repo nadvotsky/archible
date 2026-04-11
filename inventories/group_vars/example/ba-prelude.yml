@@ -6,7 +6,8 @@ ba_headless: true
 ba_mount_point: /mnt
 ba_hostname: example
 ba_cores: 8
-ba_arch: x86_64_v2
+ba_arch: x86-64
+ba_arch_micro: v2
 ba_locale: en_US.UTF-8
 
 #
