@@ -6,6 +6,10 @@ else
 	printf '%s' "$1" | xsel -b
 fi
 
+if (( ${#1} > 200 )); then
+	set -- "${1::200}..."
+fi
+
 notify-send \
 	--app-name="Default Browser Stub" \
 	--icon=applications-internet \
