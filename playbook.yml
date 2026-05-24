@@ -24,7 +24,7 @@
 
 - name: Perform main provisioning of the system
   tags: apex
-  hosts: ~([\w-]+)_local
+  hosts: ~([\w-]+)_apex
   gather_facts: false
   roles:
     - { role: aa-global/aa-shared }
